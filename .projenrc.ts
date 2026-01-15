@@ -1,7 +1,7 @@
 import { cdk, javascript } from 'projen';
 
 const project = new cdk.JsiiProject({
-  name: 'rocketleap-projen',
+  name: '@rocketleap/rocketleap-projen',
   repositoryUrl: 'https://github.com/rocketleap/rocketleap-projen',
   author: 'Rocketleap',
   authorAddress: 'info@rocketleap.com',

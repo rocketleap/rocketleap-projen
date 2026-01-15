@@ -1,5 +1,5 @@
 {
-  "name": "rocketleap-projen",
+  "name": "@rocketleap/rocketleap-projen",
   "repository": {
     "type": "git",
     "url": "https://github.com/rocketleap/rocketleap-projen"
@@ -64,9 +64,6 @@
   },
   "main": "lib/index.js",
   "license": "UNLICENSED",
-  "publishConfig": {
-    "access": "public"
-  },
   "version": "0.0.1",
   "packageManager": "yarn@4.9.2",
   "jest": {
