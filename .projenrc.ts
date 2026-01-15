@@ -11,6 +11,13 @@ const project = new cdk.JsiiProject({
   packageManager: javascript.NodePackageManager.YARN_BERRY,
   projenrcTs: true,
 
+  workflowBootstrapSteps: [
+    {
+      name: 'Enable Corepack',
+      run: 'corepack enable',
+    },
+  ],
+
   peerDeps: ['projen', 'constructs'],
   bundledDeps: [],
 
