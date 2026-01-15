@@ -20,10 +20,18 @@ const project = new cdk.JsiiProject({
   },
   projenrcTs: true,
 
+  workflowBootstrapSteps: [
+    {
+      uses: 'actions/setup-node@v4',
+      with: {
+        'node-version': '24',
+        cache: 'yarn',
+      },
+    },
+  ],
+
   peerDeps: ['projen', 'constructs'],
   bundledDeps: [],
-
-  jsiiVersion: '~5.7.0',
 
   prettier: true,
   prettierOptions: {

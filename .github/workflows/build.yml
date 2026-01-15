@@ -19,6 +19,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: yarn
       - name: Install dependencies
         run: yarn install
       - name: build
@@ -101,6 +105,10 @@ jobs:
       - name: Restore build artifact permissions
         run: cd dist && setfacl --restore=permissions-backup.acl
         continue-on-error: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: yarn
       - name: Checkout
         uses: actions/checkout@v5
         with:
