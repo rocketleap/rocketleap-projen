@@ -22,7 +22,7 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --no-immutable
       - name: build
         run: npx projen build
       - name: Find mutations
