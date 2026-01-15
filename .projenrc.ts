@@ -9,8 +9,15 @@ const project = new cdk.JsiiProject({
   licensed: false,
 
   packageManager: javascript.NodePackageManager.YARN_BERRY,
+  yarnBerryOptions: {
+    version: '4.9.2',
+    yarnRcOptions: {
+      compressionLevel: 'mixed',
+      enableGlobalCache: true,
+      nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
+    },
+  },
   projenrcTs: true,
-  mutableBuild: true,
 
   workflowBootstrapSteps: [
     {
