@@ -15,16 +15,16 @@ and pre-commit hooks.
 ```typescript
 import { RocketleapCdkProject } from '@rocketleap/rocketleap-projen'
 
-new RocketleapCdkProject(props: RocketleapCdkProjectOptions)
+new RocketleapCdkProject(options: RocketleapCdkProjectOptions)
 ```
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.Initializer.parameter.props">props</a></code> | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions">RocketleapCdkProjectOptions</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.Initializer.parameter.options">options</a></code> | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions">RocketleapCdkProjectOptions</a></code> | *No description.* |
 
 ---
 
-##### `props`<sup>Required</sup> <a name="props" id="@rocketleap/rocketleap-projen.RocketleapCdkProject.Initializer.parameter.props"></a>
+##### `options`<sup>Required</sup> <a name="options" id="@rocketleap/rocketleap-projen.RocketleapCdkProject.Initializer.parameter.options"></a>
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions">RocketleapCdkProjectOptions</a>
 
