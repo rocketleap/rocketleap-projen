@@ -14,8 +14,11 @@ const project = new cdk.JsiiProject({
 
   workflowBootstrapSteps: [
     {
-      name: 'Enable Corepack',
-      run: 'corepack enable',
+      uses: 'actions/setup-node@v4',
+      with: {
+        'node-version': '18',
+        cache: 'yarn',
+      },
     },
   ],
 
@@ -34,13 +37,7 @@ const project = new cdk.JsiiProject({
     },
   },
 
-  gitignore: [
-    '.idea',
-    '.vscode',
-    '*.js',
-    '*.d.ts',
-    '!.projenrc.ts',
-  ],
+  gitignore: ['.idea', '.vscode', '*.js', '*.d.ts', '!.projenrc.ts'],
 });
 
 project.package.addField('version', '0.0.1');

@@ -19,12 +19,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
-      - name: Enable Corepack
-        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: yarn
       - name: Install dependencies
-        run: yarn install --no-immutable
-      - name: CAT
-        run: cat yarn.lock
+        run: yarn install
       - name: build
         run: npx projen build
       - name: Find mutations
@@ -84,7 +84,6 @@ jobs:
         env:
           PULL_REQUEST_REF: ${{ github.event.pull_request.head.ref }}
         run: |-
-          yarn install
           git add .
           git commit -s -m "chore: self mutation"
           git push origin "HEAD:$PULL_REQUEST_REF"
@@ -106,8 +105,10 @@ jobs:
       - name: Restore build artifact permissions
         run: cd dist && setfacl --restore=permissions-backup.acl
         continue-on-error: true
-      - name: Enable Corepack
-        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: yarn
       - name: Checkout
         uses: actions/checkout@v5
         with:
