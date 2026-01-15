@@ -64,7 +64,7 @@
   },
   "main": "lib/index.js",
   "license": "UNLICENSED",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "packageManager": "yarn@4.9.2",
   "jest": {
     "coverageProvider": "v8",
