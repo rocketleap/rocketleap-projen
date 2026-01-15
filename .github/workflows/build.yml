@@ -23,6 +23,8 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: yarn install --no-immutable
+      - name: CAT
+        run: cat yarn.lock
       - name: build
         run: npx projen build
       - name: Find mutations
