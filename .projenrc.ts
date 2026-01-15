@@ -12,6 +12,7 @@ const project = new cdk.JsiiProject({
   yarnBerryOptions: {
     version: '4.9.2',
     yarnRcOptions: {
+      yarnPath: '.yarn/releases/yarn-4.9.2.cjs',
       compressionLevel: 'mixed',
       enableGlobalCache: true,
       nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
