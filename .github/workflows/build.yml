@@ -82,6 +82,7 @@ jobs:
         env:
           PULL_REQUEST_REF: ${{ github.event.pull_request.head.ref }}
         run: |-
+          yarn install
           git add .
           git commit -s -m "chore: self mutation"
           git push origin "HEAD:$PULL_REQUEST_REF"

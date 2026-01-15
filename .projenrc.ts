@@ -10,6 +10,7 @@ const project = new cdk.JsiiProject({
 
   packageManager: javascript.NodePackageManager.YARN_BERRY,
   projenrcTs: true,
+  mutableBuild: true,
 
   workflowBootstrapSteps: [
     {
