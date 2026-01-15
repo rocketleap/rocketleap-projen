@@ -5,8 +5,11 @@ const project = new cdk.JsiiProject({
   repositoryUrl: 'https://github.com/rocketleap/rocketleap-projen',
   author: 'Rocketleap',
   authorAddress: 'info@rocketleap.com',
-  defaultReleaseBranch: 'main',
   licensed: false,
+
+  defaultReleaseBranch: 'main',
+  releaseToNpm: true,
+  npmAccess: javascript.NpmAccess.PUBLIC,
 
   packageManager: javascript.NodePackageManager.YARN_BERRY,
   yarnBerryOptions: {
