@@ -1,1 +1,1 @@
-export * from './rocketleap-workload-project';
+export * from './cdk-project';
