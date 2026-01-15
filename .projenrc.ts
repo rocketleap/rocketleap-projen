@@ -1,7 +1,7 @@
 import { cdk, javascript } from 'projen';
 
 const project = new cdk.JsiiProject({
-  name: 'rocketleap-projen',
+  name: '@rocketleap/rocketleap-projen',
   repositoryUrl: 'https://github.com/rocketleap/rocketleap-projen',
   author: 'Rocketleap',
   authorAddress: 'info@rocketleap.com',
@@ -9,19 +9,19 @@ const project = new cdk.JsiiProject({
   licensed: false,
 
   packageManager: javascript.NodePackageManager.YARN_BERRY,
-  projenrcTs: true,
-
-  workflowBootstrapSteps: [
-    {
-      name: 'Enable Corepack',
-      run: 'corepack enable',
+  yarnBerryOptions: {
+    version: '4.9.2',
+    yarnRcOptions: {
+      yarnPath: '.yarn/releases/yarn-4.9.2.cjs',
+      compressionLevel: 'mixed',
+      enableGlobalCache: true,
+      nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
     },
-  ],
+  },
+  projenrcTs: true,
 
   peerDeps: ['projen', 'constructs'],
   bundledDeps: [],
-
-  jsiiVersion: '~5.7.0',
 
   prettier: true,
   prettierOptions: {
@@ -33,13 +33,7 @@ const project = new cdk.JsiiProject({
     },
   },
 
-  gitignore: [
-    '.idea',
-    '.vscode',
-    '*.js',
-    '*.d.ts',
-    '!.projenrc.ts',
-  ],
+  gitignore: ['.idea', '.vscode', '*.js', '*.d.ts', '!.projenrc.ts'],
 });
 
 project.package.addField('version', '0.0.1');
