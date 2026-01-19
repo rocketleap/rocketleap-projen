@@ -99,7 +99,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
     this.configureCdkJson();
 
-    this.package.addDeps(`construct@=${constructVersion}`); // Pin Constructs to exact version.
+    this.package.addDeps(`constructs@=${constructVersion}`); // Pin Constructs to exact version.
     this.package.addDevDeps('@rocketleap/rocketleap-projen'); // Add this library to dev deps.
 
     // Generate sample .projenrc.ts only during project initialization
