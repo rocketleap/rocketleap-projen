@@ -1,28 +1,7 @@
 repos:
   - repo: local
     hooks:
-      - id: yarn-eslint
-        name: ESLint
-        entry: sh -c "CI=true yarn eslint --max-warnings=0 ."
+      - id: release
+        name: Release
+        entry: sh -c "npx projen release"
         language: system
-        pass_filenames: false
-      - id: yarn-prettier
-        name: Prettier
-        entry: sh -c "CI=true yarn prettier --check ."
-        language: system
-        pass_filenames: false
-      - id: yarn-compile
-        name: Compile
-        entry: sh -c "CI=true yarn compile"
-        language: system
-        pass_filenames: false
-      - id: yarn-test
-        name: Test
-        entry: sh -c "CI=true yarn test"
-        language: system
-        pass_filenames: false
-      - id: yarn-package
-        name: Package
-        entry: sh -c "CI=true yarn package"
-        language: system
-        pass_filenames: false

@@ -30,8 +30,8 @@ export interface PreCommitHook {
  * Pre-commit hooks for CDK projects
  */
 export const CDK_PRE_COMMIT_HOOKS: PreCommitHook[] = [
+  { id: 'yarn-clean', name: 'Clean', entry: 'sh -c "CI=true yarn clean"' },
   { id: 'yarn-package', name: 'Packages', entry: 'sh -c "CI=true yarn"' },
-  { id: 'yarn-format', name: 'Format', entry: 'sh -c "CI=true yarn format:ci"' },
   { id: 'yarn-lint', name: 'Lint', entry: 'sh -c "CI=true yarn lint:ci"' },
   { id: 'yarn-build', name: 'Build', entry: 'sh -c "CI=true yarn build"' },
   { id: 'yarn-test', name: 'Tests', entry: 'sh -c "CI=true yarn test:ci"' },
@@ -41,11 +41,7 @@ export const CDK_PRE_COMMIT_HOOKS: PreCommitHook[] = [
  * Pre-commit hooks for JSII library projects
  */
 export const JSII_PRE_COMMIT_HOOKS: PreCommitHook[] = [
-  { id: 'yarn-eslint', name: 'ESLint', entry: 'sh -c "CI=true yarn eslint --max-warnings=0 ."', passFilenames: false },
-  { id: 'yarn-prettier', name: 'Prettier', entry: 'sh -c "CI=true yarn prettier --check ."', passFilenames: false },
-  { id: 'yarn-compile', name: 'Compile', entry: 'sh -c "CI=true yarn compile"', passFilenames: false },
-  { id: 'yarn-test', name: 'Test', entry: 'sh -c "CI=true yarn test"', passFilenames: false },
-  { id: 'yarn-package', name: 'Package', entry: 'sh -c "CI=true yarn package"', passFilenames: false },
+  { id: 'release', name: 'Release', entry: 'sh -c "npx projen release"' },
 ];
 
 /**

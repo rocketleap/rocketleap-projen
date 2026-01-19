@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { awscdk, JsonPatch, SampleFile } from 'projen';
+import { awscdk, JsonPatch, SampleFile, TextFile } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
 import { COMPILE_CONFIGURATION } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
@@ -11,14 +11,20 @@ import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
 
 /**
- * A projen project for Rocketleap CDK projects.
+ * Base projen project for Rocketleap CDK projects.
  *
  * This project type generates a fully configured AWS CDK TypeScript application
  * with Rocketleap's standard configuration including ESLint, Prettier, Yarn Berry,
  * and pre-commit hooks.
+ *
+ * Use PlatformCdkProject for platform infrastructure (includes license).
+ * Use WorkloadCdkProject for customer workloads (no license).
  */
-export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
-  constructor(options: RocketleapCdkProjectOptions) {
+abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
+  protected readonly company: string;
+  protected readonly projectName: string;
+
+  protected constructor(options: RocketleapCdkProjectOptions) {
     const company = options.company;
     const project = options.project;
     const cdkVersion = options.cdkVersion ?? '2.232.1';
@@ -26,7 +32,8 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
     const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.104.1';
 
     super({
-      name: `@${company}/${project}`,
+      ...options,
+      name: `${project}`,
       packageName: `@${company}/${project}`,
 
       deps: [`@rocketleap/building-blocks-cdk@npm:@${company}/building-blocks-cdk@${buildingBlocksVersion}`],
@@ -51,6 +58,10 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...PRETTIER_CONFIGURATION,
       ...GIT_CONFIGURATION,
     });
+
+    this.company = company;
+    this.projectName = project;
+
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, {
@@ -69,33 +80,84 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
     this.package.addDeps(`constructs@=${constructVersion}`); // Pin Constructs to exact version.
     this.package.addDevDeps('@rocketleap/rocketleap-projen'); // Add this library to dev deps.
-
-    this.generateSampleProjenrc(company, project);
   }
 
-  /**
-   * Generates a sample .projenrc.ts file during project initialization
-   */
-  private generateSampleProjenrc(company: string, project: string): void {
+  private configureCdkJson(): void {
+    this.cdkConfig.json.patch(JsonPatch.add('/versionReporting', false));
+  }
+
+  protected generateSampleProjenrc(projectClass: string): void {
     const rcFile = resolve(this.outdir, '.projenrc.ts');
     if (existsSync(rcFile)) {
       return; // already exists
     }
 
     new SampleFile(this, '.projenrc.ts', {
-      contents: `import { RocketleapCdkProject } from '@rocketleap/rocketleap-projen';
+      contents: `import { ${projectClass} } from '@rocketleap/rocketleap-projen';
 
-const project = new RocketleapCdkProject({
-  company: '${company}',
-  project: '${project}',
+const project = new ${projectClass}({
+  company: '${this.company}',
+  project: '${this.projectName}',
 });
 
 project.synth();
 `,
     });
   }
+}
 
-  private configureCdkJson(): void {
-    this.cdkConfig.json.patch(JsonPatch.add('/versionReporting', false));
+/**
+ * Projen project for Rocketleap Platform CDK projects.
+ *
+ * This is for platform infrastructure code (e.g., root-cdk, vpc-cdk, iam-cdk).
+ * Includes the Norberhuis Onderneming B.V. license.
+ */
+export class RocketleapPlatformCdkProject extends RocketleapBaseCdkProject {
+  constructor(options: RocketleapCdkProjectOptions) {
+    super(options);
+
+    this.configureLicense();
+    this.generateSampleProjenrc('PlatformCdkProject');
+  }
+
+  private configureLicense(): void {
+    this.package.addField('license', 'SEE LICENSE IN LICENSE.md');
+
+    new TextFile(this, 'LICENSE.md', {
+      lines: [
+        'Norberhuis Onderneming B.V. - Infrastructure as Code License',
+        '',
+        'Version 1.4, 18 Januari 2024',
+        '',
+        'A license agreement is entered into between Norberhuis Onderneming B.V. ("Licensor") and the individual or entity using the software ("Licensee").',
+        'See the signed contract for the full agreement and license principal. The signed contract overrules any points made here.',
+        '',
+        'Below is a summary of the major points related to the license:',
+        '',
+        '1. The Licensor grants the Licensee a non-exclusive and non-transferable right to use the IaC platform for setting up a platform within the Licensee\'s own environment, hereinafter referred to as "the License". The License exclusively includes a right to use. The Licensee accepts this right to use.',
+        '2. The Licensee is authorized to use the License to setup up one AWS Organization. The License is exclusively limited to the configuration of AWS Accounts that are part of this AWS Organization.',
+        '3. The Licensor owns all (intellectual property) rights to the IaC Platform and will retain all rights - in the broadest sense of the word - during and after this agreement. This includes, but is not limited to, rights to the source code, compiled code, user interfaces, documentation, ideas, designs, inventions, discoveries, tangible or intangible. This includes, at a minimum, all copyrights, patent rights, trade secret rights, trademark rights, moral rights and other intellectual property rights.',
+        '4. This agreement expressly does not intend to transfer rights to the Licensee and does not imply such transfer, but solely grants the Licensee the right to use.',
+        '5. The Licensor does not grant a License to sell, distribute, or publish the IaC Platform or derivative works of the IaC Platform without explicit written consent of the Licensor. The Licensee is explicitly prohibited from selling, distributing, or publishing the License, the IaC platform, or derivative works of the IaC platform. The Licensor does not waive any moral rights as mentioned in Article 25 of the Copyright Act.',
+        '6. The License is non-transferable and can only be used by the Licensee and its subsidiaries, with the exception of the transfer as described in Article 9 of the license agreement.',
+        '7. The Licensor retains the right and also intends to use the IaC Platform and to sell licenses of the IaC Platform to third parties.',
+        '8. The Licensee waives all rights and, as necessary upon first request, transfers all ownership to the Licensor arising from suggestions, requests for improvement, recommendations, and other feedback.',
+        '9. The Licensee accepts that parts of the IaC Platform may contain open-source software and make use of it. The IaC platform does not contain open-source software with licenses that force other software to open source in case of usage.',
+      ],
+    });
+  }
+}
+
+/**
+ * Projen project for customer workload CDK projects.
+ *
+ * This is for customer-specific workload code that runs on the platform.
+ * Does NOT include the platform license.
+ */
+export class RocketleapWorkloadCdkProject extends RocketleapBaseCdkProject {
+  constructor(options: RocketleapCdkProjectOptions) {
+    super(options);
+
+    this.generateSampleProjenrc('WorkloadCdkProject');
   }
 }
