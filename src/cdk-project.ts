@@ -1,4 +1,4 @@
-import { awscdk, JsonPatch } from 'projen';
+import { awscdk, JsonPatch, SampleFile } from 'projen';
 import { COMPILE_CONFIGURATION } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { GIT_CONFIGURATION } from './common/git';
@@ -97,7 +97,31 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
       'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
     });
     this.configureCdkJson();
-    this.package.addDeps(`Construct@=${constructVersion}`);
+
+    this.package.addDeps(`construct@=${constructVersion}`); // Pin Constructs to exact version.
+    this.package.addDevDeps('@rocketleap/rocketleap-projen'); // Add this library to dev deps.
+
+    // Generate sample .projenrc.ts only during project initialization
+    if (this.initProject) {
+      this.generateSampleProjenrc(company, project);
+    }
+  }
+
+  /**
+   * Generates a sample .projenrc.ts file during project initialization
+   */
+  private generateSampleProjenrc(company: string, project: string): void {
+    new SampleFile(this, '.projenrc.ts', {
+      contents: `import { RocketleapCdkProject } from '@rocketleap/rocketleap-projen';
+
+const project = new RocketleapCdkProject({
+  company: '${company}',
+  project: '${project}',
+});
+
+project.synth();
+`,
+    });
   }
 
   private configureCdkJson(): void {
