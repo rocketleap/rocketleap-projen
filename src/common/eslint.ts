@@ -53,6 +53,10 @@ export function configureEsLint(eslint: javascript.Eslint): void {
     ],
   );
   eslint.addPlugins(...['@typescript-eslint', 'import', 'jest', 'prettier']);
+  eslint.addRules({
+    // Allow empty interfaces that extend other interfaces (common pattern for CDK props)
+    '@typescript-eslint/no-empty-object-type': 'off',
+  });
   eslint.addOverride({
     files: ['*.test.ts'],
     rules: {
