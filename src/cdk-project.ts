@@ -53,7 +53,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
   constructor(options: RocketleapCdkProjectOptions) {
     const company = options.company;
     const project = options.project;
-    const cdkVersion = options.cdkVersion ?? '2.233.0';
+    const cdkVersion = options.cdkVersion ?? '2.232.1';
     const constructVersion = options.constructVersion ?? '10.4.4';
     const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.104.1';
 
