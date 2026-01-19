@@ -15,13 +15,20 @@ const project = new cdk.JsiiProject({
   yarnBerryOptions: {
     version: '4.9.2',
     yarnRcOptions: {
-      yarnPath: '.yarn/releases/yarn-4.9.2.cjs',
       compressionLevel: 'mixed',
       enableGlobalCache: true,
       nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
+      // checksumBehavior: javascript.YarnChecksumBehavior.UPDATE,
     },
   },
   projenrcTs: true,
+
+  workflowBootstrapSteps: [
+    {
+      name: 'Enable Corepack',
+      run: 'corepack enable',
+    },
+  ],
 
   peerDeps: ['projen', 'constructs'],
   bundledDeps: [],
@@ -43,6 +50,10 @@ project.release?.publisher.publishToNpm({
   distTag: 'latest',
   npmProvenance: true,
   prePublishSteps: [
+    {
+      name: 'Enable Corepack',
+      run: 'corepack enable',
+    },
     {
       name: 'Checkout',
       uses: 'actions/checkout@v5',

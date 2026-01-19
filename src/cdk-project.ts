@@ -98,7 +98,6 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
               npmAlwaysAuth: true,
             },
           },
-          yarnPath: '.yarn/releases/yarn-4.9.2.cjs',
         },
       },
 
