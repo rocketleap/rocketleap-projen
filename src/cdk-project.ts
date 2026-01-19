@@ -30,7 +30,7 @@ export interface RocketleapCdkProjectOptions {
 
   /**
    * The Rocketleap building blocks CDK version to use.
-   * @default '0.105.0-RC1'
+   * @default '0.104.1'
    */
   readonly buildingBlocksVersion?: string;
 }
@@ -58,7 +58,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
     const project = options.project;
     const cdkVersion = options.cdkVersion ?? '2.233.0';
     const constructVersion = options.constructVersion ?? '10.4.4';
-    const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.105.0';
+    const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.104.1';
 
     super({
       name: project,

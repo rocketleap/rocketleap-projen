@@ -1687,7 +1687,7 @@ public readonly buildingBlocksVersion: string;
 ```
 
 - *Type:* string
-- *Default:* '0.105.0-RC1'
+- *Default:* '0.104.1'
 
 The Rocketleap building blocks CDK version to use.
 
