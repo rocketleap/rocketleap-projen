@@ -97,6 +97,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
       'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
     });
     this.configureCdkJson();
+    this.package.addDeps(`Construct@=${constructVersion}`);
   }
 
   private configureCdkJson(): void {
