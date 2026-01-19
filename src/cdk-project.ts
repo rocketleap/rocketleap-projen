@@ -5,7 +5,7 @@ import { GIT_CONFIGURATION } from './common/git';
 import { configurePackageJson } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
-import { YARN_CONFIGURATION } from './common/yarn';
+import { createYarnConfiguration } from './common/yarn';
 
 /**
  * Options for RocketleapCdkProject
@@ -77,7 +77,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
       licensed: false,
 
-      ...YARN_CONFIGURATION,
+      ...createYarnConfiguration(company),
       ...COMPILE_CONFIGURATION,
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
@@ -96,6 +96,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
       'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
       'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
     });
+
     this.configureCdkJson();
 
     this.package.addDeps(`construct@=${constructVersion}`); // Pin Constructs to exact version.
