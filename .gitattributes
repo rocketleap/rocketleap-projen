@@ -13,6 +13,7 @@
 /.mergify.yml linguist-generated
 /.npmignore linguist-generated
 /.pnp.* binary linguist-vendored
+/.pre-commit-config.yaml linguist-generated
 /.prettierignore linguist-generated
 /.prettierrc.json linguist-generated
 /.projen/** linguist-generated

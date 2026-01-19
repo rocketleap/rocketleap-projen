@@ -735,8 +735,6 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.property.cdkDeps">cdkDeps</a></code> | <code>projen.awscdk.AwsCdkDeps</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.property.cdkTasks">cdkTasks</a></code> | <code>projen.awscdk.CdkTasks</code> | Common CDK tasks. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.property.cdkVersion">cdkVersion</a></code> | <code>string</code> | The CDK version this app is using. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.property.company">company</a></code> | <code>string</code> | The company identifier. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProject.property.projectName">projectName</a></code> | <code>string</code> | The project name. |
 
 ---
 
@@ -1555,30 +1553,6 @@ public readonly cdkVersion: string;
 - *Type:* string
 
 The CDK version this app is using.
-
----
-
-##### `company`<sup>Required</sup> <a name="company" id="@rocketleap/rocketleap-projen.RocketleapCdkProject.property.company"></a>
-
-```typescript
-public readonly company: string;
-```
-
-- *Type:* string
-
-The company identifier.
-
----
-
-##### `projectName`<sup>Required</sup> <a name="projectName" id="@rocketleap/rocketleap-projen.RocketleapCdkProject.property.projectName"></a>
-
-```typescript
-public readonly projectName: string;
-```
-
-- *Type:* string
-
-The project name.
 
 ---
 

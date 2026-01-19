@@ -1,4 +1,11 @@
 import { cdk, javascript, JsonPatch } from 'projen';
+import { ACTIONS_CONFIGURATION } from './src/common/actions';
+import { configureEsLint, ESLINT_CONFIGURATION } from './src/common/eslint';
+import { GIT_CONFIGURATION } from './src/common/git';
+import { configurePackageJson } from './src/common/package-json';
+import { createPreCommitConfig, JSII_PRE_COMMIT_HOOKS } from './src/common/pre-commit';
+import { PRETTIER_CONFIGURATION } from './src/common/prettier';
+import { YARN_CONFIGURATION } from './src/common/yarn';
 
 const project = new cdk.JsiiProject({
   name: '@rocketleap/rocketleap-projen',
@@ -11,74 +18,27 @@ const project = new cdk.JsiiProject({
   releaseToNpm: true,
   npmAccess: javascript.NpmAccess.PUBLIC,
 
-  packageManager: javascript.NodePackageManager.YARN_BERRY,
-  yarnBerryOptions: {
-    version: '4.9.2',
-    yarnRcOptions: {
-      compressionLevel: 'mixed',
-      enableGlobalCache: true,
-      nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
-      // checksumBehavior: javascript.YarnChecksumBehavior.UPDATE,
-    },
-  },
   projenrcTs: true,
 
-  workflowBootstrapSteps: [
-    {
-      name: 'Enable Corepack',
-      run: 'corepack enable',
-    },
-  ],
+  workflowBootstrapSteps: ACTIONS_CONFIGURATION.workflowBootstrapSteps,
 
   peerDeps: ['projen', 'constructs'],
   bundledDeps: [],
 
-  prettier: true,
-  prettierOptions: {
-    settings: {
-      printWidth: 120,
-      singleQuote: true,
-      trailingComma: javascript.TrailingComma.ALL,
-      semi: true,
-    },
-  },
-
-  gitignore: ['.idea', '.vscode', '*.js', '*.d.ts', '!.projenrc.ts'],
+  ...YARN_CONFIGURATION,
+  ...ESLINT_CONFIGURATION,
+  ...PRETTIER_CONFIGURATION,
+  ...GIT_CONFIGURATION,
 });
+configureEsLint(project.eslint!);
+createPreCommitConfig(project, JSII_PRE_COMMIT_HOOKS);
+configurePackageJson(project, {});
+
 project.release?.publisher.publishToNpm({
   registry: 'registry.npmjs.org',
   distTag: 'latest',
   npmProvenance: true,
-  prePublishSteps: [
-    {
-      name: 'Enable Corepack',
-      run: 'corepack enable',
-    },
-    {
-      name: 'Checkout',
-      uses: 'actions/checkout@v5',
-      with: {
-        path: '.repo',
-      },
-    },
-    {
-      name: 'Install Dependencies',
-      run: 'cd .repo && yarn install --immutable',
-    },
-    {
-      name: 'Extract build artifact',
-      run: 'tar --strip-components=1 -xzvf dist/js/*.tgz -C .repo',
-    },
-    {
-      name: 'Move build artifact out of the way',
-      run: 'mv dist dist.old',
-    },
-    {
-      name: 'Create js artifact',
-      run: 'cd .repo && npx projen package:js',
-    },
-    { name: 'Collect js artifact', run: 'mv .repo/dist dist' },
-  ],
+  prePublishSteps: ACTIONS_CONFIGURATION.npmPrePublishSteps,
   postPublishSteps: [
     {
       name: 'Release to GitHub',
@@ -95,8 +55,8 @@ project.release?.publisher.publishToNpm({
 project.tryFindObjectFile('.github/workflows/release.yml')?.patch(
   JsonPatch.add('/jobs/release_npm/permissions', {
     'id-token': 'write',
-    contents: 'read',
-    packages: 'write',
+    'contents': 'read',
+    'packages': 'write',
   }),
 );
 

@@ -41,12 +41,17 @@
       "type": "build"
     },
     {
+      "name": "eslint-plugin-jest",
+      "version": "^28.x.x",
+      "type": "build"
+    },
+    {
       "name": "eslint-plugin-prettier",
       "type": "build"
     },
     {
       "name": "eslint",
-      "version": "^9",
+      "version": "^8",
       "type": "build"
     },
     {
