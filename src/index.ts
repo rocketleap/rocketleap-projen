@@ -1,4 +1,5 @@
 export * from './cdk-project';
+export * from './cdk-project-options.generated';
 export * as format from './common/prettier';
 export * as lint from './common/eslint';
 export * as packages from './common/yarn';

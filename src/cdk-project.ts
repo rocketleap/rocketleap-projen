@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { awscdk, JsonPatch, SampleFile } from 'projen';
+import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
 import { COMPILE_CONFIGURATION } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { GIT_CONFIGURATION } from './common/git';
@@ -6,41 +9,6 @@ import { configurePackageJson } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
-
-/**
- * Options for RocketleapCdkProject
- */
-export interface RocketleapCdkProjectOptions {
-  /**
-   * The company identifier used for package scoping.
-   * @example 'rocketleap'
-   */
-  readonly company: string;
-
-  /**
-   * The project name.
-   * @example 'root-cdk'
-   */
-  readonly project: string;
-
-  /**
-   * The AWS CDK version to use.
-   * @default '2.233.0'
-   */
-  readonly cdkVersion?: string;
-
-  /**
-   * The constructs library version to use.
-   * @default '10.4.4'
-   */
-  readonly constructVersion?: string;
-
-  /**
-   * The Rocketleap building blocks CDK version to use.
-   * @default '0.104.1'
-   */
-  readonly buildingBlocksVersion?: string;
-}
 
 /**
  * A projen project for Rocketleap CDK projects.
@@ -58,7 +26,7 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
     const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.104.1';
 
     super({
-      name: project,
+      name: `@${company}/${project}`,
       packageName: `@${company}/${project}`,
 
       deps: [`@rocketleap/building-blocks-cdk@npm:@${company}/building-blocks-cdk@${buildingBlocksVersion}`],
@@ -102,16 +70,18 @@ export class RocketleapCdkProject extends awscdk.AwsCdkTypeScriptApp {
     this.package.addDeps(`constructs@=${constructVersion}`); // Pin Constructs to exact version.
     this.package.addDevDeps('@rocketleap/rocketleap-projen'); // Add this library to dev deps.
 
-    // Generate sample .projenrc.ts only during project initialization
-    if (this.initProject) {
-      this.generateSampleProjenrc(company, project);
-    }
+    this.generateSampleProjenrc(company, project);
   }
 
   /**
    * Generates a sample .projenrc.ts file during project initialization
    */
   private generateSampleProjenrc(company: string, project: string): void {
+    const rcFile = resolve(this.outdir, '.projenrc.ts');
+    if (existsSync(rcFile)) {
+      return; // already exists
+    }
+
     new SampleFile(this, '.projenrc.ts', {
       contents: `import { RocketleapCdkProject } from '@rocketleap/rocketleap-projen';
 

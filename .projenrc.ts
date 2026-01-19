@@ -1,3 +1,5 @@
+import { PrimitiveType } from '@jsii/spec';
+import { ProjenStruct, Struct } from '@mrgrain/jsii-struct-builder';
 import { cdk, javascript, JsonPatch } from 'projen';
 import { ACTIONS_CONFIGURATION } from './src/common/actions';
 import { configureEsLint, ESLINT_CONFIGURATION } from './src/common/eslint';
@@ -23,6 +25,7 @@ const project = new cdk.JsiiProject({
   workflowBootstrapSteps: ACTIONS_CONFIGURATION.workflowBootstrapSteps,
 
   peerDeps: ['projen', 'constructs'],
+  devDeps: ['@mrgrain/jsii-struct-builder'],
   bundledDeps: [],
 
   ...YARN_CONFIGURATION,
@@ -59,5 +62,54 @@ project.tryFindObjectFile('.github/workflows/release.yml')?.patch(
     'packages': 'write',
   }),
 );
+
+new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/cdk-project-options.generated.ts' })
+  .mixin(Struct.fromFqn('projen.awscdk.AwsCdkTypeScriptAppOptions'))
+  .omit('cdkVersion')
+  .omit('name')
+  .omit('defaultReleaseBranch')
+  .add({
+    name: 'company',
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The company identifier used for package scoping.',
+      example: "'rocketleap'",
+    },
+  })
+  .add({
+    name: 'project',
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The project name.',
+      example: "'root-cdk'",
+    },
+  })
+  .add({
+    name: 'cdkVersion',
+    optional: true,
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The AWS CDK version to use in the project.',
+      default: "'2.232.1'",
+    },
+  })
+  .add({
+    name: 'constructVersion',
+    optional: true,
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The constructs library version to use.',
+      default: "'10.4.4'",
+    },
+  })
+  .add({
+    name: 'buildingBlocksVersion',
+    optional: true,
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The Rocketleap building blocks CDK version to use.',
+      default: "'0.104.1'",
+    },
+  });
 
 project.synth();

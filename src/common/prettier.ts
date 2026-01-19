@@ -34,6 +34,7 @@ export const PRETTIER_CONFIGURATION = {
         '.pre-commit-config.yaml',
         '.github/',
         '.mergify.yml',
+        '*.generated.ts',
         // CDK-specific files
         'cdk.json',
         'cdk.out/',

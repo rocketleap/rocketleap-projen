@@ -16,6 +16,7 @@ jest.config.json
 .pre-commit-config.yaml
 .github/
 .mergify.yml
+*.generated.ts
 cdk.json
 cdk.out/
 .cdk.staging/

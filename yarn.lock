@@ -898,12 +898,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jsii/spec@npm:1.125.0, @jsii/spec@npm:^1.124.0, @jsii/spec@npm:^1.125.0":
+"@jsii/spec@npm:1.125.0, @jsii/spec@npm:^1.117.0, @jsii/spec@npm:^1.124.0, @jsii/spec@npm:^1.125.0":
   version: 1.125.0
   resolution: "@jsii/spec@npm:1.125.0"
   dependencies:
     ajv: "npm:^8.17.1"
   checksum: 10/a51af00b5e8626823c25c7acf5ae23bfb155834c391ed56b1c9201f7071c3204513f2c9f13352bc1874ee158680e37917c9666ceaa8a3cbb73949b58b4043ad5
+  languageName: node
+  linkType: hard
+
+"@mrgrain/jsii-struct-builder@npm:^0.7.64":
+  version: 0.7.64
+  resolution: "@mrgrain/jsii-struct-builder@npm:0.7.64"
+  dependencies:
+    "@jsii/spec": "npm:^1.117.0"
+  peerDependencies:
+    projen: x.x.x
+  checksum: 10/a73c5a048bd8f8615bfa6feb1ca9c69dff6fd6c2efc25a0cc7fccb19e356c67e1fd517dfe752dc60667479f9a24b2ad32604e8feb912850820fc65ee77d2bbf9
   languageName: node
   linkType: hard
 
@@ -1022,6 +1033,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@rocketleap/rocketleap-projen@workspace:."
   dependencies:
+    "@mrgrain/jsii-struct-builder": "npm:^0.7.64"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^25.0.8"
     "@typescript-eslint/eslint-plugin": "npm:^8"
