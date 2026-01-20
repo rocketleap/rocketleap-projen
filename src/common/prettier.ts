@@ -16,6 +16,8 @@ export const PRETTIER_CONFIGURATION = {
     ignoreFileOptions: {
       ignorePatterns: [
         // Build artifacts
+        '**/*.js',
+        '**/*.d.ts',
         'dist/',
         'lib/',
         'node_modules/',

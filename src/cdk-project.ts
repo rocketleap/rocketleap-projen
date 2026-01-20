@@ -74,9 +74,9 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'diff': 'cdk diff --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
       'diff:ci': 'cdk diff --ci --app "yarn ts-node --prefer-ts-exts $0";',
-      'deploy': 'cdk deploy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
+      'deploy': 'cdk deploy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
       'deploy:ci': 'cdk deploy --ci --all --require-approval never --app "yarn ts-node --prefer-ts-exts $0";',
-      'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
+      'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
       'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
       'test:ci': 'jest --ci --maxWorkers=2',
     });
