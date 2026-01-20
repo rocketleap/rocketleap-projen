@@ -67,6 +67,8 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, {
+      'format': 'prettier --write .',
+      'format:ci': 'prettier --check .',
       'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
