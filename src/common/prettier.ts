@@ -43,6 +43,7 @@ export const PRETTIER_CONFIGURATION = {
         '.claude/',
         '.pnp.cjs',
         'API.md',
+        'LICENSE.md',
       ],
     },
   },
