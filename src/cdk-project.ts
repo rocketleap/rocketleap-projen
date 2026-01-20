@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { awscdk, JsonPatch, SampleFile, TextFile } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
+import { CDK_CONFIGURATION } from './common/cdk';
 import { COMPILE_CONFIGURATION } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { GIT_CONFIGURATION } from './common/git';
@@ -57,6 +58,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
       ...GIT_CONFIGURATION,
+      ...CDK_CONFIGURATION,
     });
 
     this.company = company;
