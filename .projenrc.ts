@@ -25,7 +25,7 @@ const project = new cdk.JsiiProject({
   workflowBootstrapSteps: ACTIONS_CONFIGURATION.workflowBootstrapSteps,
 
   peerDeps: ['projen', 'constructs'],
-  devDeps: ['@mrgrain/jsii-struct-builder'],
+  devDeps: ['@mrgrain/jsii-struct-builder', 'aws-cdk-lib'],
   bundledDeps: [],
 
   ...YARN_CONFIGURATION,

@@ -274,13 +274,13 @@
       },
       "steps": [
         {
-          "exec": "yarn dlx npm-check-updates@18 --upgrade --target=minor --peer --no-deprecated --dep=dev,peer,prod,optional --filter=@mrgrain/jsii-struct-builder,@types/jest,@types/node,eslint-config-prettier,eslint-import-resolver-typescript,eslint-plugin-import,eslint-plugin-prettier,jest,jsii-diff,jsii-pacmak,prettier,projen,ts-jest,ts-node,typescript,constructs"
+          "exec": "yarn dlx npm-check-updates@18 --upgrade --target=minor --peer --no-deprecated --dep=dev,peer,prod,optional --filter=@mrgrain/jsii-struct-builder,@types/jest,@types/node,aws-cdk-lib,eslint-config-prettier,eslint-import-resolver-typescript,eslint-plugin-import,eslint-plugin-prettier,jest,jsii-diff,jsii-pacmak,prettier,projen,ts-jest,ts-node,typescript,constructs"
         },
         {
           "exec": "yarn install"
         },
         {
-          "exec": "yarn up @mrgrain/jsii-struct-builder @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser commit-and-tag-version constructs eslint-config-prettier eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-jest eslint-plugin-prettier eslint jest jest-junit jsii-diff jsii-docgen jsii-pacmak jsii-rosetta jsii prettier projen ts-jest ts-node typescript"
+          "exec": "yarn up @mrgrain/jsii-struct-builder @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk-lib commit-and-tag-version constructs eslint-config-prettier eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-jest eslint-plugin-prettier eslint jest jest-junit jsii-diff jsii-docgen jsii-pacmak jsii-rosetta jsii prettier projen ts-jest ts-node typescript"
         },
         {
           "exec": "npx projen"

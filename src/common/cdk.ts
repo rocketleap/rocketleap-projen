@@ -1,5 +1,5 @@
-import { CdkFeatureFlags, ICdkFeatureFlags } from 'projen/lib/awscdk';
+import { CdkConfigCommonOptions, CdkFeatureFlags } from 'projen/lib/awscdk';
 
-export const CDK_CONFIGURATION = {
-  ...CdkFeatureFlags.V2.fromLocalAwsCdkLib(),
-} as ICdkFeatureFlags;
+export const CDK_CONFIGURATION: CdkConfigCommonOptions = {
+  featureFlags: CdkFeatureFlags.V2.fromLocalAwsCdkLib(),
+};
