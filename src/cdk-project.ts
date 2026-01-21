@@ -67,18 +67,24 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, {
+      // Custom scripts
       'format': 'prettier --write .',
       'format:ci': 'prettier --check .',
-      'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'diff': 'cdk diff --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
       'diff:ci': 'cdk diff --ci --app "yarn ts-node --prefer-ts-exts $0";',
-      'deploy': 'cdk deploy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
       'deploy:ci': 'cdk deploy --ci --all --require-approval never --app "yarn ts-node --prefer-ts-exts $0";',
-      'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
       'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
       'test:ci': 'jest --ci --maxWorkers=2',
+      'test:update-snapshots': 'jest --updateSnapshot',
+      // Overwrites projen default: npx cdk synth -q
+      'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
+      // Overwrites projen default: npx cdk diff
+      'diff': 'cdk diff --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
+      // Overwrites projen default: npx cdk deploy
+      'deploy': 'cdk deploy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
+      // Overwrites projen default: npx cdk destroy
+      'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
     });
 
     this.configureCdkJson();
