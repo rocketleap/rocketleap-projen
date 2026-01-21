@@ -67,24 +67,27 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, {
-      // Custom scripts
-      'format': 'prettier --write .',
-      'format:ci': 'prettier --check .',
-      'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'diff:ci': 'cdk diff --ci --app "yarn ts-node --prefer-ts-exts $0";',
-      'deploy:ci': 'cdk deploy --ci --all --require-approval never --app "yarn ts-node --prefer-ts-exts $0";',
-      'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
+      'format': "prettier --write . '!**/*.{js,d.ts}'",
+      'format:ci': "prettier -c . '!**/*.{js,d.ts}'",
+      'lint': 'eslint --fix .',
+      'lint:ci': 'eslint --max-warnings=0 .',
+      'build': 'tsc',
+      'clean': 'find bin src test -type f \\( -name "*.js" -o -name "*.d.ts" \\) -delete',
+      'watch': 'tsc -w',
+      'test': 'jest',
       'test:ci': 'jest --ci --maxWorkers=2',
       'test:update-snapshots': 'jest --updateSnapshot',
-      // Overwrites projen default: npx cdk synth -q
       'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      // Overwrites projen default: npx cdk diff
+      'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
+      'bootstrap:compliant':
+        'cdk bootstrap --output cdk.out/$0/ --bootstrap-kms-key-id $(aws cloudformation list-exports --query "Exports[?Name==\'Platform-CompanyKeyId-v1\'].Value" --output text) --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
+      'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
       'diff': 'cdk diff --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-      // Overwrites projen default: npx cdk deploy
-      'deploy': 'cdk deploy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
-      // Overwrites projen default: npx cdk destroy
-      'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" -e ${1:---all};',
+      'diff:ci': 'cdk diff --ci --app "yarn ts-node --prefer-ts-exts $0";',
+      'deploy': 'cdk deploy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
+      'deploy:ci': 'cdk deploy --ci --all --require-approval never --app "yarn ts-node --prefer-ts-exts $0";',
+      'destroy': 'cdk destroy --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
+      'destroy:all': 'cdk destroy --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts bin/$0.ts";',
     });
 
     this.configureCdkJson();
