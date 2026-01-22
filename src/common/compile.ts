@@ -10,7 +10,7 @@ export const COMPILE_CONFIGURATION = {
       inlineSourceMap: true,
       inlineSources: true,
       lib: ['es2020'],
-      module: 'CommonJS',
+      module: 'NodeNext',
       noEmitOnError: false,
       noFallthroughCasesInSwitch: true,
       noImplicitAny: true,
