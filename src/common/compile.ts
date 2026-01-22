@@ -1,6 +1,8 @@
 export const COMPILE_CONFIGURATION = {
   tsconfig: {
     compilerOptions: {
+      rootDir: '',
+      outDir: '',
       alwaysStrict: true,
       declaration: true,
       esModuleInterop: true,
