@@ -37,8 +37,6 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       name: `${project}`,
       packageName: `@${company}/${project}`,
 
-      deps: [`@rocketleap/building-blocks-cdk@npm:@${company}/building-blocks-cdk@${buildingBlocksVersion}`],
-
       cdkVersion: cdkVersion,
       constructsVersion: constructVersion,
       cdkVersionPinning: true,
@@ -52,6 +50,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       pullRequestTemplate: false,
 
       licensed: false,
+      autoDetectBin: false,
 
       ...createYarnConfiguration(company),
       ...COMPILE_CONFIGURATION,
@@ -98,7 +97,11 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       '@types/js-yaml@4.0.9',
       'jest-mock-extended@^4.0.0',
     ];
-    const dependencies = [`constructs@=${constructVersion}`, 'source-map-support@^0.5.21'];
+    const dependencies = [
+      `@rocketleap/building-blocks-cdk@npm:@${company}/building-blocks-cdk@${buildingBlocksVersion}`,
+      `constructs@=${constructVersion}`,
+      'source-map-support@^0.5.21',
+    ];
 
     this.package.addDevDeps(...devDependencies);
     this.package.addDeps(...dependencies);
