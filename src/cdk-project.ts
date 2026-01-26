@@ -91,8 +91,17 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
     this.configureCdkJson();
 
-    this.package.addDeps(`constructs@=${constructVersion}`); // Pin Constructs to exact version.
-    this.package.addDevDeps('@rocketleap/rocketleap-projen'); // Add this library to dev deps.
+    const devDependencies = [
+      '@jest/globals@^30.2.0',
+      '@rocketleap/rocketleap-projen',
+      '@types/aws-lambda@8.10.159',
+      '@types/js-yaml@4.0.9',
+      'jest-mock-extended@^4.0.0',
+    ];
+    const dependencies = [`constructs@=${constructVersion}`, 'source-map-support@^0.5.21'];
+
+    this.package.addDevDeps(...devDependencies);
+    this.package.addDeps(...dependencies);
   }
 
   private configureCdkJson(): void {
