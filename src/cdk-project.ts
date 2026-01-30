@@ -77,6 +77,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       'test:ci': 'jest --ci --maxWorkers=2',
       'test:update-snapshots': 'jest --updateSnapshot',
       'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
+      'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'bootstrap:compliant':
         'cdk bootstrap --output cdk.out/$0/ --bootstrap-kms-key-id $(aws cloudformation list-exports --query "Exports[?Name==\'Platform-CompanyKeyId-v1\'].Value" --output text) --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
