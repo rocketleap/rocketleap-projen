@@ -74,7 +74,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       'clean': 'find bin src test -type f \\( -name "*.js" -o -name "*.d.ts" \\) -delete',
       'watch': 'tsc -w',
       'test': 'jest',
-      'test:ci': 'jest --ci --maxWorkers=2',
+      'test:ci': 'jest --ci',
       'test:update-snapshots': 'jest --updateSnapshot',
       'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
       'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
