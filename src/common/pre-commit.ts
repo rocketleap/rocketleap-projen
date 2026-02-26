@@ -33,7 +33,7 @@ export const CDK_PRE_COMMIT_HOOKS: PreCommitHook[] = [
   { id: 'yarn-clean', name: 'Clean', entry: 'sh -c "CI=true yarn clean"' },
   { id: 'yarn-package', name: 'Packages', entry: 'sh -c "CI=true yarn"' },
   { id: 'yarn-lint', name: 'Lint', entry: 'sh -c "CI=true yarn lint:ci"' },
-  { id: 'yarn-build', name: 'Build', entry: 'sh -c "CI=true yarn build"' },
+  { id: 'yarn-build', name: 'Build', entry: 'sh -c "CI=true tsc"' },
   { id: 'yarn-test', name: 'Tests', entry: 'sh -c "CI=true yarn test:ci"' },
 ];
 
