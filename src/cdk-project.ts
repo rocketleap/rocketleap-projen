@@ -111,6 +111,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
   private configureCdkJson(): void {
     this.cdkConfig.json.patch(JsonPatch.add('/versionReporting', false));
+    this.cdkConfig.json.patch(JsonPatch.add('/context/@aws-cdk~1aws-s3:accessLogsPolicyNotAdded', true));
   }
 
   protected generateSampleProjenrc(projectClass: string): void {
