@@ -56,6 +56,8 @@ export function configureEsLint(eslint: javascript.Eslint): void {
   eslint.addRules({
     // Allow empty interfaces that extend other interfaces (common pattern for CDK props)
     '@typescript-eslint/no-empty-object-type': 'off',
+    // Allow unused variables in destructuring when using rest elements (e.g. const { a, ...rest } = props)
+    '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
   });
   eslint.addOverride({
     files: ['*.test.ts'],
