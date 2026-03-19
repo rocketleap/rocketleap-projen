@@ -17,6 +17,7 @@ const project = new cdk.JsiiProject({
   licensed: false,
 
   defaultReleaseBranch: 'main',
+  majorVersion: 1,
   releaseToNpm: true,
   npmAccess: javascript.NpmAccess.PUBLIC,
 
