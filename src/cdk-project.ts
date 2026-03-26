@@ -1,15 +1,16 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { awscdk, JsonPatch, SampleFile, TextFile } from 'projen';
+import { awscdk, JsonPatch, SampleFile, TextFile, typescript } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
 import { CDK_CONFIGURATION } from './common/cdk';
-import { COMPILE_CONFIGURATION } from './common/compile';
+import { COMPILE_CONFIGURATION, LIBRARY_COMPILE_CONFIGURATION } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { GIT_CONFIGURATION } from './common/git';
-import { configurePackageJson } from './common/package-json';
+import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
+import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-options.generated';
 
 /**
  * Base projen project for Rocketleap CDK projects.
@@ -65,30 +66,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
-    configurePackageJson(this, {
-      'format': "prettier --write . '!**/*.{js,d.ts}'",
-      'format:ci': "prettier -c . '!**/*.{js,d.ts}'",
-      'lint': 'eslint --fix .',
-      'lint:ci': 'eslint --max-warnings=0 .',
-      'build': 'tsc',
-      'clean': 'find bin src test -type f \\( -name "*.js" -o -name "*.d.ts" \\) -delete',
-      'watch': 'tsc -w',
-      'test': 'jest',
-      'test:ci': 'jest --ci',
-      'test:update-snapshots': 'jest --updateSnapshot',
-      'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'bootstrap:compliant':
-        'cdk bootstrap --output cdk.out/$0/ --bootstrap-kms-key-id $(aws cloudformation list-exports --query "Exports[?Name==\'Platform-CompanyKeyId-v1\'].Value" --output text) --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-      'diff': 'cdk diff --output cdk.out/$0/ -e --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-      'diff:ci': 'cdk diff --ci --app "yarn ts-node --prefer-ts-exts $0";',
-      'deploy':
-        'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-      'deploy:ci': 'cdk deploy --concurrency 10 --ci --all --app "yarn ts-node --prefer-ts-exts $0";',
-      'destroy': 'cdk destroy --output cdk.out/$0/ -e --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-      'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
-    });
+    configurePackageJson(this, CDK_SCRIPTS);
 
     this.configureCdkJson();
 
@@ -186,5 +164,56 @@ export class RocketleapWorkloadCdkProject extends RocketleapBaseCdkProject {
     super(options);
 
     this.generateSampleProjenrc('WorkloadCdkProject');
+  }
+}
+
+/**
+ * Projen project for Rocketleap CDK construct library projects.
+ *
+ * This is for CDK construct libraries (e.g., building-blocks-cdk).
+ * Includes CDK peer dependencies and publishing configuration for GitHub Packages.
+ */
+export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
+  constructor(options: RocketleapLibraryCdkProjectOptions) {
+    const company = options.company;
+    const project = options.project;
+    const cdkVersion = options.cdkVersion ?? '2.238.0';
+    const constructVersion = options.constructVersion ?? '10.4.5';
+
+    super({
+      ...options,
+      name: `@${company}/${project}`,
+
+      defaultReleaseBranch: 'main',
+      projenrcTs: true,
+      githubOptions: {
+        mergify: false,
+        workflows: false,
+      },
+      pullRequestTemplate: false,
+
+      licensed: false,
+      autoDetectBin: false,
+
+      ...createYarnConfiguration(company),
+      ...LIBRARY_COMPILE_CONFIGURATION,
+      ...ESLINT_CONFIGURATION,
+      ...PRETTIER_CONFIGURATION,
+      ...GIT_CONFIGURATION,
+    });
+
+    configureEsLint(this.eslint!);
+    createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
+    configurePackageJson(this, LIBRARY_SCRIPTS);
+
+    this.package.addField('main', 'dist/index.js');
+    this.package.addField('types', 'dist/index.d.ts');
+    this.package.addField('files', ['API.md', 'dist/']);
+    this.package.addField('publishConfig', {
+      registry: 'https://npm.pkg.github.com/',
+    });
+
+    this.package.addPeerDeps(`aws-cdk-lib@=${cdkVersion}`, `constructs@=${constructVersion}`);
+    this.package.addDevDeps(`aws-cdk-lib@${cdkVersion}`, `constructs@${constructVersion}`);
   }
 }

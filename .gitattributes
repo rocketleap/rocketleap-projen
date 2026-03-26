@@ -27,5 +27,6 @@
 /API.md linguist-generated
 /package.json linguist-generated
 /src/cdk-project-options.generated.ts linguist-generated
+/src/library-cdk-project-options.generated.ts linguist-generated
 /tsconfig.dev.json linguist-generated linguist-language=JSON-with-Comments
 /yarn.lock linguist-generated

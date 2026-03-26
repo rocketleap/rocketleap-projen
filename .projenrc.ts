@@ -113,4 +113,46 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
     },
   });
 
+new ProjenStruct(project, {
+  name: 'RocketleapLibraryCdkProjectOptions',
+  filePath: 'src/library-cdk-project-options.generated.ts',
+})
+  .mixin(Struct.fromFqn('projen.typescript.TypeScriptProjectOptions'))
+  .omit('name')
+  .omit('defaultReleaseBranch')
+  .add({
+    name: 'company',
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The company identifier used for package scoping.',
+      example: "'rocketleap'",
+    },
+  })
+  .add({
+    name: 'project',
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The project name.',
+      example: "'building-blocks-cdk'",
+    },
+  })
+  .add({
+    name: 'cdkVersion',
+    optional: true,
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The AWS CDK version to use as peer dependency.',
+      default: "'2.238.0'",
+    },
+  })
+  .add({
+    name: 'constructVersion',
+    optional: true,
+    type: { primitive: PrimitiveType.String },
+    docs: {
+      summary: 'The constructs library version to use as peer dependency.',
+      default: "'10.4.5'",
+    },
+  });
+
 project.synth();
