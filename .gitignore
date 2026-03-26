@@ -75,3 +75,4 @@ tsconfig.json
 !/.pre-commit-config.yaml
 !/.projenrc.ts
 !/src/cdk-project-options.generated.ts
+!/src/library-cdk-project-options.generated.ts
