@@ -21,16 +21,16 @@ export const CDK_SCRIPTS = {
   'build': 'tsc',
   'clean': 'find bin src test -type f \\( -name "*.js" -o -name "*.d.ts" \\) -delete',
   'watch': 'tsc -w',
-  'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-  'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-  'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --prefer-ts-exts bin/$0.ts";',
-  'diff': 'cdk diff --output cdk.out/$0/ -e --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-  'diff:ci': 'cdk diff --ci --app "yarn ts-node --prefer-ts-exts $0";',
+  'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
+  'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
+  'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
+  'diff': 'cdk diff --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
+  'diff:ci': 'cdk diff --ci --app "yarn ts-node --swc --prefer-ts-exts $0";',
   'deploy':
-    'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-  'deploy:ci': 'cdk deploy --concurrency 10 --ci --all --app "yarn ts-node --prefer-ts-exts $0";',
-  'destroy': 'cdk destroy --output cdk.out/$0/ -e --app "yarn ts-node --prefer-ts-exts bin/$0.ts" ${1:---all};',
-  'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --prefer-ts-exts $0";',
+    'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
+  'deploy:ci': 'cdk deploy --concurrency 10 --ci --all --app "yarn ts-node --swc --prefer-ts-exts $0";',
+  'destroy': 'cdk destroy --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
+  'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --swc --prefer-ts-exts $0";',
 };
 
 /**
