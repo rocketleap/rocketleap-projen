@@ -51,6 +51,7 @@ __pycache__/
 .cdk.staging
 cdk.out
 release.diff
+!/src/logs/
 /test-reports/
 junit.xml
 /coverage/
