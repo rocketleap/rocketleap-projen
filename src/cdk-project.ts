@@ -3,7 +3,12 @@ import { resolve } from 'node:path';
 import { awscdk, JsonPatch, SampleFile, TextFile, typescript } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
 import { CDK_CONFIGURATION } from './common/cdk';
-import { COMPILE_CONFIGURATION, LIBRARY_COMPILE_CONFIGURATION } from './common/compile';
+import {
+  COMPILE_CONFIGURATION,
+  configureSwc,
+  LIBRARY_COMPILE_CONFIGURATION,
+  SWC_CONFIGURATION,
+} from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { GIT_CONFIGURATION } from './common/git';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
@@ -43,7 +48,6 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       cdkVersionPinning: true,
 
       defaultReleaseBranch: 'main',
-      projenrcTs: true,
       githubOptions: {
         mergify: false,
         workflows: false,
@@ -59,11 +63,13 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...PRETTIER_CONFIGURATION,
       ...GIT_CONFIGURATION,
       ...CDK_CONFIGURATION,
+      ...SWC_CONFIGURATION,
     });
 
     this.company = company;
     this.projectName = project;
 
+    configureSwc(this);
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, CDK_SCRIPTS);
@@ -185,7 +191,6 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
       name: `@${company}/${project}`,
 
       defaultReleaseBranch: 'main',
-      projenrcTs: true,
       githubOptions: {
         mergify: false,
         workflows: false,
@@ -200,8 +205,10 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
       ...GIT_CONFIGURATION,
+      ...SWC_CONFIGURATION,
     });
 
+    configureSwc(this);
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, LIBRARY_SCRIPTS);

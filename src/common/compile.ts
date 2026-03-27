@@ -1,3 +1,8 @@
+import { Jest, Transform } from 'projen/lib/javascript';
+import { NodeProject } from 'projen/lib/javascript/node-project';
+
+export const COMPILE_TARGET = 'ES2020';
+
 /**
  * Common compiler options shared across all Rocketleap project types.
  */
@@ -22,7 +27,7 @@ export const COMMON_COMPILE_CONFIGURATION = {
   strictNullChecks: true,
   strictPropertyInitialization: true,
   stripInternal: true,
-  target: 'ES2020',
+  target: COMPILE_TARGET,
 };
 
 /**
@@ -68,3 +73,28 @@ export const LIBRARY_COMPILE_CONFIGURATION = {
     include: ['src/**/*.ts', 'test/**/*.ts'],
   },
 };
+
+/**
+ * SWC configuration for fast transpilation in Jest tests and CDK commands.
+ * SWC only transpiles — type checking remains via tsc in the build step.
+ */
+export const SWC_CONFIGURATION = {
+  projenrcTsOptions: { swc: true },
+  jestOptions: {
+    jestConfig: {
+      transform: {
+        '^.+\\.[t]sx?$': new Transform('@swc/jest', {
+          jsc: { target: COMPILE_TARGET.toLowerCase() },
+        }),
+      },
+    },
+  },
+};
+
+/**
+ * Configures SWC-related settings that must be applied after project construction.
+ */
+export function configureSwc(project: NodeProject): void {
+  Jest.of(project)!.config.workerIdleMemoryLimit = '512MB';
+  project.addDevDeps('@swc/jest');
+}
