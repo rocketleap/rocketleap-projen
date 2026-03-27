@@ -35,6 +35,7 @@ export function createYarnConfiguration(company: string) {
         npmScopes: {
           [company]: {
             npmRegistryServer: 'https://npm.pkg.github.com/',
+            npmPublishRegistry: 'https://npm.pkg.github.com/',
             npmAlwaysAuth: true,
           },
         },
