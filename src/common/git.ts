@@ -30,5 +30,7 @@ export const GIT_CONFIGURATION = {
     'cdk.out',
     // Rocketleap release files
     'release.diff',
+    // Negate src/logs/ so it is not caught by projen's default "logs" pattern
+    '!/src/logs/',
   ],
 };
