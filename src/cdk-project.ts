@@ -213,12 +213,17 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, LIBRARY_SCRIPTS);
 
+    this.package.addField('license', 'SEE LICENSE IN LICENSE.md');
     this.package.addField('main', 'dist/index.js');
     this.package.addField('types', 'dist/index.d.ts');
     this.package.addField('files', ['API.md', 'dist/']);
     this.package.addField('publishConfig', {
       registry: 'https://npm.pkg.github.com/',
     });
+
+    this.npmignore?.addPatterns('!/dist');
+
+    this.testTask.reset('jest');
 
     this.package.addPeerDeps(`aws-cdk-lib@=${cdkVersion}`, `constructs@=${constructVersion}`);
     this.package.addDevDeps(`aws-cdk-lib@${cdkVersion}`, `constructs@${constructVersion}`);
