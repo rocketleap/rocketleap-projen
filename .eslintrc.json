@@ -113,29 +113,15 @@
     "no-bitwise": [
       "error"
     ],
-    "@typescript-eslint/member-ordering": [
-      "error",
-      {
-        "default": [
-          "public-static-field",
-          "public-static-method",
-          "protected-static-field",
-          "protected-static-method",
-          "private-static-field",
-          "private-static-method",
-          "field",
-          "constructor",
-          "method"
-        ]
-      }
-    ],
+    "@typescript-eslint/member-ordering": "off",
     "@typescript-eslint/no-empty-object-type": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
         "ignoreRestSiblings": true
       }
-    ]
+    ],
+    "jest/no-identical-title": "off"
   },
   "overrides": [
     {

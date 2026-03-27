@@ -58,6 +58,10 @@ export function configureEsLint(eslint: javascript.Eslint): void {
     '@typescript-eslint/no-empty-object-type': 'off',
     // Allow unused variables in destructuring when using rest elements (e.g. const { a, ...rest } = props)
     '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    // Disable member ordering — CDK constructs commonly mix static methods and fields
+    '@typescript-eslint/member-ordering': 'off',
+    // Allow identical test titles across different describe blocks
+    'jest/no-identical-title': 'off',
   });
   eslint.addOverride({
     files: ['*.test.ts'],
