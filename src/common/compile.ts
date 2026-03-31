@@ -79,6 +79,7 @@ export const LIBRARY_COMPILE_CONFIGURATION = {
  * SWC only transpiles — type checking remains via tsc in the build step.
  */
 export const SWC_CONFIGURATION = {
+  projenrcTs: true,
   projenrcTsOptions: { swc: true },
   jestOptions: {
     jestConfig: {
@@ -96,5 +97,5 @@ export const SWC_CONFIGURATION = {
  */
 export function configureSwc(project: NodeProject): void {
   Jest.of(project)!.config.workerIdleMemoryLimit = '512MB';
-  project.addDevDeps('@swc/jest');
+  project.addDevDeps('@swc/core', '@swc/jest');
 }
