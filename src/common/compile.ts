@@ -1,7 +1,7 @@
 import { Jest, Transform } from 'projen/lib/javascript';
 import { NodeProject } from 'projen/lib/javascript/node-project';
 
-export const COMPILE_TARGET = 'ES2020';
+export const COMPILE_TARGET = 'ES2022';
 
 /**
  * Common compiler options shared across all Rocketleap project types.
@@ -13,8 +13,8 @@ export const COMMON_COMPILE_CONFIGURATION = {
   experimentalDecorators: true,
   inlineSourceMap: true,
   inlineSources: true,
-  lib: ['es2020'],
-  module: 'CommonJS',
+  lib: ['es2022'],
+  module: 'NodeNext',
   noEmitOnError: false,
   noFallthroughCasesInSwitch: true,
   noImplicitAny: true,
@@ -37,7 +37,7 @@ export const COMPILE_CONFIGURATION = {
   tsconfig: {
     compilerOptions: {
       rootDir: '',
-      outDir: '',
+      outDir: 'dist',
       ...COMMON_COMPILE_CONFIGURATION,
     },
     include: ['src/**/*.ts', 'bin/**/*ts'],
