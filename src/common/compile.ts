@@ -36,7 +36,7 @@ export const COMMON_COMPILE_CONFIGURATION = {
 export const COMPILE_CONFIGURATION = {
   tsconfig: {
     compilerOptions: {
-      rootDir: '',
+      rootDir: '.',
       outDir: 'dist',
       ...COMMON_COMPILE_CONFIGURATION,
     },
