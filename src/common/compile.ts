@@ -38,7 +38,7 @@ export const COMPILE_CONFIGURATION = {
   tsconfig: {
     compilerOptions: {
       rootDir: '.',
-      outDir: 'dist',
+      outDir: '.',
       ...COMMON_COMPILE_CONFIGURATION,
     },
     include: ['src/**/*.ts', 'bin/**/*ts'],
