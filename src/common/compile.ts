@@ -23,6 +23,7 @@ export const COMMON_COMPILE_CONFIGURATION = {
   noUnusedLocals: true,
   noUnusedParameters: true,
   resolveJsonModule: true,
+  skipLibCheck: true,
   strict: true,
   strictNullChecks: true,
   strictPropertyInitialization: true,
