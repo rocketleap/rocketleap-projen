@@ -14,7 +14,7 @@ export const COMMON_COMPILE_CONFIGURATION = {
   inlineSourceMap: true,
   inlineSources: true,
   lib: ['es2022'],
-  module: 'NodeNext',
+  module: 'CommonJS',
   noEmitOnError: false,
   noFallthroughCasesInSwitch: true,
   noImplicitAny: true,
