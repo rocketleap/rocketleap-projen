@@ -191,7 +191,6 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
       name: `@${company}/${project}`,
 
       defaultReleaseBranch: 'main',
-      projenrcTs: true,
       githubOptions: {
         mergify: false,
         workflows: false,
