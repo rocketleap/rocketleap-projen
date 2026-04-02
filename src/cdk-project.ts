@@ -5,6 +5,8 @@ import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
 import { CDK_CONFIGURATION } from './common/cdk';
 import {
   COMPILE_CONFIGURATION,
+  COMPILE_TARGET,
+  COMMON_COMPILE_CONFIGURATION,
   configureSwc,
   LIBRARY_COMPILE_CONFIGURATION,
   SWC_CONFIGURATION,
@@ -68,6 +70,22 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
     this.company = company;
     this.projectName = project;
+
+    // Force-override tsconfig settings that AwsCdkTypeScriptApp overwrites
+    this.tsconfig?.file.patch(
+      JsonPatch.replace('/compilerOptions/target', COMPILE_TARGET),
+      JsonPatch.replace('/compilerOptions/module', COMMON_COMPILE_CONFIGURATION.module),
+      JsonPatch.replace('/compilerOptions/lib', COMMON_COMPILE_CONFIGURATION.lib),
+      JsonPatch.replace('/compilerOptions/rootDir', '.'),
+      JsonPatch.replace('/compilerOptions/outDir', '.'),
+      JsonPatch.add('/compilerOptions/skipLibCheck', true),
+    );
+    this.tsconfigDev?.file.patch(
+      JsonPatch.replace('/compilerOptions/target', COMPILE_TARGET),
+      JsonPatch.replace('/compilerOptions/module', COMMON_COMPILE_CONFIGURATION.module),
+      JsonPatch.replace('/compilerOptions/lib', COMMON_COMPILE_CONFIGURATION.lib),
+      JsonPatch.add('/compilerOptions/skipLibCheck', true),
+    );
 
     configureSwc(this);
     configureEsLint(this.eslint!);
