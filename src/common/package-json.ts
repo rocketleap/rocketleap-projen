@@ -28,7 +28,8 @@ export const CDK_SCRIPTS = {
   'diff:ci': 'cdk diff --ci --app "yarn ts-node --swc --prefer-ts-exts $0";',
   'deploy':
     'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
-  'deploy:ci': 'cdk deploy --concurrency 10 --ci --all --require-approval never --app "yarn ts-node --swc --prefer-ts-exts $0";',
+  'deploy:ci':
+    'cdk deploy --concurrency 10 --ci --all --require-approval never --app "yarn ts-node --swc --prefer-ts-exts $0";',
   'destroy': 'cdk destroy --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --swc --prefer-ts-exts $0";',
 };
