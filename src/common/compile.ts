@@ -95,8 +95,13 @@ export const SWC_CONFIGURATION = {
 
 /**
  * Configures SWC-related settings that must be applied after project construction.
+ *
+ * Clears the .swc cache directory before running projen to prevent stale transpile
+ * cache from using outdated dependency versions (e.g. after updating rocketleap-projen).
  */
 export function configureSwc(project: NodeProject): void {
   Jest.of(project)!.config.workerIdleMemoryLimit = '512MB';
   project.addDevDeps('@swc/core', '@swc/jest');
+
+  project.defaultTask!.prependExec('rm -rf .swc');
 }
