@@ -69,6 +69,14 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     this.company = company;
     this.projectName = project;
 
+    // Override projen's default PATH which uses `yarn exec` — that fails during
+    // `projen new` because yarn needs a lockfile that doesn't exist yet.
+    // Since we use nodeLinker: node-modules, referencing node_modules/.bin directly works.
+    this.tasks.addEnvironment(
+      'PATH',
+      '$(node --print "require(\'path\').resolve(\'node_modules/.bin\') + \':\' + process.env.PATH")',
+    );
+
     configureSwc(this);
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
@@ -207,6 +215,14 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
       ...GIT_CONFIGURATION,
       ...SWC_CONFIGURATION,
     });
+
+    // Override projen's default PATH which uses `yarn exec` — that fails during
+    // `projen new` because yarn needs a lockfile that doesn't exist yet.
+    // Since we use nodeLinker: node-modules, referencing node_modules/.bin directly works.
+    this.tasks.addEnvironment(
+      'PATH',
+      '$(node --print "require(\'path\').resolve(\'node_modules/.bin\') + \':\' + process.env.PATH")',
+    );
 
     configureSwc(this);
     configureEsLint(this.eslint!);
