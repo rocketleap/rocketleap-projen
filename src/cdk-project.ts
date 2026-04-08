@@ -74,7 +74,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     // Since we use nodeLinker: node-modules, referencing node_modules/.bin directly works.
     this.tasks.addEnvironment(
       'PATH',
-      '$(node --print "require(\'path\').resolve(\'node_modules/.bin\') + \':\' + process.env.PATH")',
+      "$(node --print \"require('path').resolve('node_modules/.bin') + ':' + process.env.PATH\")",
     );
 
     configureSwc(this);
@@ -221,7 +221,7 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
     // Since we use nodeLinker: node-modules, referencing node_modules/.bin directly works.
     this.tasks.addEnvironment(
       'PATH',
-      '$(node --print "require(\'path\').resolve(\'node_modules/.bin\') + \':\' + process.env.PATH")',
+      "$(node --print \"require('path').resolve('node_modules/.bin') + ':' + process.env.PATH\")",
     );
 
     configureSwc(this);
