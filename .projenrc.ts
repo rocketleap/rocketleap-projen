@@ -91,7 +91,7 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
     type: { primitive: PrimitiveType.String },
     docs: {
       summary: 'The AWS CDK version to use in the project.',
-      default: "'2.232.1'",
+      default: "'2.248.0'",
     },
   })
   .add({
@@ -100,7 +100,7 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
     type: { primitive: PrimitiveType.String },
     docs: {
       summary: 'The constructs library version to use.',
-      default: "'10.4.4'",
+      default: "'10.5.0'",
     },
   })
   .add({
@@ -109,7 +109,7 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
     type: { primitive: PrimitiveType.String },
     docs: {
       summary: 'The Rocketleap building blocks CDK version to use.',
-      default: "'0.104.1'",
+      default: "'0.106.0'",
     },
   });
 
@@ -142,7 +142,7 @@ new ProjenStruct(project, {
     type: { primitive: PrimitiveType.String },
     docs: {
       summary: 'The AWS CDK version to use as peer dependency.',
-      default: "'2.238.0'",
+      default: "'2.248.0'",
     },
   })
   .add({
@@ -151,7 +151,7 @@ new ProjenStruct(project, {
     type: { primitive: PrimitiveType.String },
     docs: {
       summary: 'The constructs library version to use as peer dependency.',
-      default: "'10.4.5'",
+      default: "'10.5.0'",
     },
   });
 

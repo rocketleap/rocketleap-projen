@@ -1085,12 +1085,12 @@ export interface RocketleapLibraryCdkProjectOptions {
   readonly project: string;
   /**
    * The AWS CDK version to use as peer dependency.
-   * @default '2.238.0'
+   * @default '2.248.0'
    */
   readonly cdkVersion?: string;
   /**
    * The constructs library version to use as peer dependency.
-   * @default '10.4.5'
+   * @default '10.5.0'
    */
   readonly constructVersion?: string;
 }

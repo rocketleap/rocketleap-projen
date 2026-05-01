@@ -1246,17 +1246,17 @@ export interface RocketleapCdkProjectOptions {
   readonly project: string;
   /**
    * The AWS CDK version to use in the project.
-   * @default '2.232.1'
+   * @default '2.248.0'
    */
   readonly cdkVersion?: string;
   /**
    * The constructs library version to use.
-   * @default '10.4.4'
+   * @default '10.5.0'
    */
   readonly constructVersion?: string;
   /**
    * The Rocketleap building blocks CDK version to use.
-   * @default '0.104.1'
+   * @default '0.106.0'
    */
   readonly buildingBlocksVersion?: string;
 }
