@@ -5204,7 +5204,7 @@ public readonly buildingBlocksVersion: string;
 ```
 
 - *Type:* string
-- *Default:* '0.104.1'
+- *Default:* 'LATEST'
 
 The Rocketleap building blocks CDK version to use.
 
@@ -5434,7 +5434,7 @@ public readonly cdkVersion: string;
 ```
 
 - *Type:* string
-- *Default:* '2.232.1'
+- *Default:* 'LATEST'
 
 The AWS CDK version to use in the project.
 
@@ -5557,7 +5557,7 @@ public readonly constructVersion: string;
 ```
 
 - *Type:* string
-- *Default:* '10.4.4'
+- *Default:* 'LATEST'
 
 The constructs library version to use.
 
@@ -8018,7 +8018,7 @@ public readonly cdkVersion: string;
 ```
 
 - *Type:* string
-- *Default:* '2.238.0'
+- *Default:* 'LATEST'
 
 The AWS CDK version to use as peer dependency.
 
@@ -8113,7 +8113,7 @@ public readonly constructVersion: string;
 ```
 
 - *Type:* string
-- *Default:* '10.4.5'
+- *Default:* 'LATEST'
 
 The constructs library version to use as peer dependency.
 
