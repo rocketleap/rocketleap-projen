@@ -111,6 +111,15 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
       summary: 'The Rocketleap building blocks CDK version to use.',
       default: "'LATEST'",
     },
+  })
+  .add({
+    name: 'pipeline',
+    type: { fqn: '@rocketleap/rocketleap-projen.PipelineOptions' },
+    docs: {
+      summary: 'Configuration for the generated CDK pipeline GitHub Actions workflows.',
+      remarks:
+        'Drives the matrix of (environment, workload) pairs used by pr-main.yml and push-main.yml, and optionally enables the GitOps production-promotion flow.',
+    },
   });
 
 new ProjenStruct(project, {

@@ -4685,6 +4685,166 @@ public readonly DEFAULT_TS_JEST_TRANFORM_PATTERN: string;
 
 ## Structs <a name="Structs" id="Structs"></a>
 
+### PipelineMatrixEntry <a name="PipelineMatrixEntry" id="@rocketleap/rocketleap-projen.PipelineMatrixEntry"></a>
+
+A (environment, workload) pair the pipeline iterates over.
+
+`environment` maps to the CDK app file segment used by `yarn diff:ci` /
+`yarn deploy:ci` (which look at `bin/<environment>.ts` or
+`bin/<environment>/<workload>.ts`).
+
+`workload` is only used by multi-app projects (e.g. platform-cdk).
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineMatrixEntry.Initializer"></a>
+
+```typescript
+import { PipelineMatrixEntry } from '@rocketleap/rocketleap-projen'
+
+const pipelineMatrixEntry: PipelineMatrixEntry = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry.property.environment">environment</a></code> | <code>string</code> | The GitHub Actions environment / CDK app file segment. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
+
+---
+
+##### `environment`<sup>Required</sup> <a name="environment" id="@rocketleap/rocketleap-projen.PipelineMatrixEntry.property.environment"></a>
+
+```typescript
+public readonly environment: string;
+```
+
+- *Type:* string
+
+The GitHub Actions environment / CDK app file segment.
+
+---
+
+*Example*
+
+```typescript
+'prodeu'
+```
+
+
+##### `workload`<sup>Optional</sup> <a name="workload" id="@rocketleap/rocketleap-projen.PipelineMatrixEntry.property.workload"></a>
+
+```typescript
+public readonly workload: string;
+```
+
+- *Type:* string
+
+Optional workload name for multi-app projects.
+
+---
+
+*Example*
+
+```typescript
+'example-ecs'
+```
+
+
+### PipelineOptions <a name="PipelineOptions" id="@rocketleap/rocketleap-projen.PipelineOptions"></a>
+
+Pipeline workflow configuration for a Rocketleap CDK project.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
+
+```typescript
+import { PipelineOptions } from '@rocketleap/rocketleap-projen'
+
+const pipelineOptions: PipelineOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.matrix">matrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs the pipeline iterates over for diff (on PRs) and deploy (on push to main). |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.productionPromotionFlow">productionPromotionFlow</a></code> | <code><a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions">ProductionPromotionFlowOptions</a></code> | Enable the GitOps-style production promotion flow. |
+
+---
+
+##### `matrix`<sup>Required</sup> <a name="matrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.matrix"></a>
+
+```typescript
+public readonly matrix: PipelineMatrixEntry[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
+
+Matrix of (environment, workload) pairs the pipeline iterates over for diff (on PRs) and deploy (on push to main).
+
+A single entry collapses to a non-matrix job; multiple entries fan out
+via a GitHub Actions `strategy.matrix` block.
+
+---
+
+##### `productionPromotionFlow`<sup>Optional</sup> <a name="productionPromotionFlow" id="@rocketleap/rocketleap-projen.PipelineOptions.property.productionPromotionFlow"></a>
+
+```typescript
+public readonly productionPromotionFlow: ProductionPromotionFlowOptions;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions">ProductionPromotionFlowOptions</a>
+- *Default:* production flow disabled
+
+Enable the GitOps-style production promotion flow.
+
+Omit to skip the
+production flow entirely (e.g. iam-cdk, root-cdk).
+
+---
+
+### ProductionPromotionFlowOptions <a name="ProductionPromotionFlowOptions" id="@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions"></a>
+
+Configuration for the GitOps-style production promotion flow.
+
+When set on `PipelineOptions`:
+  - emits `.github/workflows/action-promote-pr.yml`
+  - extends `push-main.yml` with a `promote` job that opens a PR from
+    `main` → `production` (the GitOps promotion gate)
+  - emits `.github/workflows/push-production.yml` that deploys
+    `matrix` on commits to the `production` branch.
+
+The model: `main` is the desired-state branch for non-prod, `production`
+is the desired-state branch for prod, and the auto-opened promotion PR is
+the human approval point between them.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions.Initializer"></a>
+
+```typescript
+import { ProductionPromotionFlowOptions } from '@rocketleap/rocketleap-projen'
+
+const productionPromotionFlowOptions: ProductionPromotionFlowOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions.property.matrix">matrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-production.yml`. |
+
+---
+
+##### `matrix`<sup>Required</sup> <a name="matrix" id="@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions.property.matrix"></a>
+
+```typescript
+public readonly matrix: PipelineMatrixEntry[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
+
+Matrix of (environment, workload) pairs deployed by `push-production.yml`.
+
+---
+
 ### RocketleapCdkProjectOptions <a name="RocketleapCdkProjectOptions" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions"></a>
 
 RocketleapCdkProjectOptions.
@@ -4702,6 +4862,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.company">company</a></code> | <code>string</code> | The company identifier used for package scoping. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pipeline">pipeline</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions">PipelineOptions</a></code> | Configuration for the generated CDK pipeline GitHub Actions workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.project">project</a></code> | <code>string</code> | The project name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | Allow the project to include `peerDependencies` and `bundledDependencies`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.app">app</a></code> | <code>string</code> | The command line to execute in order to synthesize the CDK application (language specific). |
@@ -4894,6 +5055,20 @@ public readonly company: string;
 - *Type:* string
 
 The company identifier used for package scoping.
+
+---
+
+##### `pipeline`<sup>Required</sup> <a name="pipeline" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pipeline"></a>
+
+```typescript
+public readonly pipeline: PipelineOptions;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineOptions">PipelineOptions</a>
+
+Configuration for the generated CDK pipeline GitHub Actions workflows.
+
+Drives the matrix of (environment, workload) pairs used by pr-main.yml and push-main.yml, and optionally enables the GitOps production-promotion flow.
 
 ---
 

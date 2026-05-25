@@ -14,6 +14,7 @@ import { GIT_CONFIGURATION } from './common/git';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
+import { addCdkPipelineWorkflows } from './common/workflows';
 import { configureTaskPath, createYarnConfiguration } from './common/yarn';
 import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-options.generated';
 
@@ -74,6 +75,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, CDK_SCRIPTS);
+    addCdkPipelineWorkflows(this, options.pipeline);
 
     this.configureCdkJson();
 
