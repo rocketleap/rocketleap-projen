@@ -52,13 +52,24 @@ export interface ProductionPromotionFlowOptions {
  */
 export interface PipelineOptions {
   /**
-   * Matrix of (environment, workload) pairs the pipeline iterates over for
-   * diff (on PRs) and deploy (on push to main).
+   * Matrix of (environment, workload) pairs deployed by `push-main.yml`
+   * on pushes to `main` / `dev`.
    *
    * A single entry collapses to a non-matrix job; multiple entries fan out
    * via a GitHub Actions `strategy.matrix` block.
    */
   readonly matrix: PipelineMatrixEntry[];
+  /**
+   * Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs
+   * to `main` / `dev`. Defaults to `matrix` when omitted.
+   *
+   * Typically set to staging / production-like environments so a PR previews
+   * the change that will eventually reach prod (rather than the dev deploy
+   * the push-main job runs).
+   *
+   * @default - falls back to `matrix`
+   */
+  readonly prDiffMatrix?: PipelineMatrixEntry[];
   /**
    * Enable the GitOps-style production promotion flow. Omit to skip the
    * production flow entirely (e.g. iam-cdk, root-cdk).
@@ -305,6 +316,7 @@ export function addActionDiffWorkflow(project: Project): void {
               with: {
                 github_token: '${{ secrets.GITHUB_TOKEN }}',
                 job_name: '${{ inputs.job-name }} / diff',
+                per_page: 100,
               },
             },
             {
@@ -566,10 +578,14 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
     throw new Error('pipeline.productionPromotionFlow.matrix must contain at least one entry');
   }
 
+  if (options.prDiffMatrix && options.prDiffMatrix.length === 0) {
+    throw new Error('pipeline.prDiffMatrix must contain at least one entry when provided');
+  }
+
   addActionBuildWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project);
-  addPrMainWorkflow(project, options.matrix);
+  addPrMainWorkflow(project, options.prDiffMatrix ?? options.matrix);
   addPushMainWorkflow(project, options.matrix, options.productionPromotionFlow);
 
   if (options.productionPromotionFlow) {
