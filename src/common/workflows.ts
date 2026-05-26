@@ -58,18 +58,18 @@ export interface PipelineOptions {
    * A single entry collapses to a non-matrix job; multiple entries fan out
    * via a GitHub Actions `strategy.matrix` block.
    */
-  readonly matrix: PipelineMatrixEntry[];
+  readonly deployMatrix: PipelineMatrixEntry[];
   /**
    * Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs
-   * to `main` / `dev`. Defaults to `matrix` when omitted.
+   * to `main` / `dev`. Defaults to `deployMatrix` when omitted.
    *
    * Typically set to staging / production-like environments so a PR previews
    * the change that will eventually reach prod (rather than the dev deploy
    * the push-main job runs).
    *
-   * @default - falls back to `matrix`
+   * @default - falls back to `deployMatrix`
    */
-  readonly prDiffMatrix?: PipelineMatrixEntry[];
+  readonly diffMatrix?: PipelineMatrixEntry[];
   /**
    * Enable the GitOps-style production promotion flow. Omit to skip the
    * production flow entirely (e.g. iam-cdk, root-cdk).
@@ -571,22 +571,21 @@ export function addPushProductionWorkflow(project: Project, matrix: PipelineMatr
  *     `productionPromotionFlow` is set
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
-  if (!options.matrix || options.matrix.length === 0) {
-    throw new Error('pipeline.matrix must contain at least one entry');
+  if (!options.deployMatrix || options.deployMatrix.length === 0) {
+    throw new Error('pipeline.deployMatrix must contain at least one entry');
+  }
+  if (options.diffMatrix && options.diffMatrix.length === 0) {
+    throw new Error('pipeline.diffMatrix must contain at least one entry when provided');
   }
   if (options.productionPromotionFlow && options.productionPromotionFlow.matrix.length === 0) {
     throw new Error('pipeline.productionPromotionFlow.matrix must contain at least one entry');
   }
 
-  if (options.prDiffMatrix && options.prDiffMatrix.length === 0) {
-    throw new Error('pipeline.prDiffMatrix must contain at least one entry when provided');
-  }
-
   addActionBuildWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project);
-  addPrMainWorkflow(project, options.prDiffMatrix ?? options.matrix);
-  addPushMainWorkflow(project, options.matrix, options.productionPromotionFlow);
+  addPrMainWorkflow(project, options.diffMatrix ?? options.deployMatrix);
+  addPushMainWorkflow(project, options.deployMatrix, options.productionPromotionFlow);
 
   if (options.productionPromotionFlow) {
     addActionPromotePrWorkflow(project);
