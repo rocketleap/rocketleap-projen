@@ -29,22 +29,27 @@ const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'iam-cdk',
   pipeline: {
-    matrix: [{ environment: 'iam' }],
+    deployMatrix: [{ environment: 'iam' }],
   },
 });
 ```
 
-After (multi-workload project with GitOps production promotion — e.g.
-`platform-cdk`):
+After (multi-workload project with separate PR diff target and GitOps
+production promotion — e.g. `platform-cdk`):
 
 ```ts
 const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'platform-cdk',
   pipeline: {
-    matrix: [
+    deployMatrix: [
       { environment: 'dev', workload: 'example-ecs' },
       { environment: 'dev', workload: 'example-lambda' },
+    ],
+    // Optional. Defaults to deployMatrix when omitted.
+    diffMatrix: [
+      { environment: 'staging', workload: 'example-ecs' },
+      { environment: 'platform', workload: 'management' },
     ],
     productionPromotionFlow: {
       matrix: [

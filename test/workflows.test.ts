@@ -109,7 +109,7 @@ describe('push-production workflow', () => {
 describe('addCdkPipelineWorkflows', () => {
   test('simple flow emits 5 files (no production promotion)', () => {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { matrix: [{ environment: 'iam' }] });
+    addCdkPipelineWorkflows(project, { deployMatrix: [{ environment: 'iam' }] });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-deploy.yml']).toBeDefined();
@@ -123,7 +123,7 @@ describe('addCdkPipelineWorkflows', () => {
   test('GitOps production flow emits 7 files', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      matrix: [{ environment: 'dev', workload: 'example-ecs' }],
+      deployMatrix: [{ environment: 'dev', workload: 'example-ecs' }],
       productionPromotionFlow: {
         matrix: [{ environment: 'prodeu', workload: 'example-ecs' }],
       },
@@ -133,16 +133,16 @@ describe('addCdkPipelineWorkflows', () => {
     expect(snapshot['.github/workflows/push-production.yml']).toBeDefined();
   });
 
-  test('empty matrix throws', () => {
+  test('empty deployMatrix throws', () => {
     const project = newProject();
-    expect(() => addCdkPipelineWorkflows(project, { matrix: [] })).toThrow('pipeline.matrix');
+    expect(() => addCdkPipelineWorkflows(project, { deployMatrix: [] })).toThrow('pipeline.deployMatrix');
   });
 
-  test('prDiffMatrix drives pr-main when supplied; matrix still drives push-main', () => {
+  test('diffMatrix drives pr-main when supplied; deployMatrix still drives push-main', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      matrix: [{ environment: 'dev', workload: 'example-ecs' }],
-      prDiffMatrix: [
+      deployMatrix: [{ environment: 'dev', workload: 'example-ecs' }],
+      diffMatrix: [
         { environment: 'staging', workload: 'example-ecs' },
         { environment: 'platform', workload: 'management' },
       ],
@@ -155,11 +155,21 @@ describe('addCdkPipelineWorkflows', () => {
     expect(snapshot['.github/workflows/push-main.yml']).not.toContain('staging');
   });
 
+  test('diffMatrix defaults to deployMatrix when omitted', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, {
+      deployMatrix: [{ environment: 'iam' }],
+    });
+    const snapshot = synthSnapshot(project);
+    expect(snapshot['.github/workflows/pr-main.yml']).toContain('environment: iam');
+    expect(snapshot['.github/workflows/push-main.yml']).toContain('environment: iam');
+  });
+
   test('empty productionPromotionFlow.matrix throws', () => {
     const project = newProject();
     expect(() =>
       addCdkPipelineWorkflows(project, {
-        matrix: [{ environment: 'dev' }],
+        deployMatrix: [{ environment: 'dev' }],
         productionPromotionFlow: { matrix: [] },
       }),
     ).toThrow('productionPromotionFlow');

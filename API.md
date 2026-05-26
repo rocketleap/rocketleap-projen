@@ -4766,16 +4766,16 @@ const pipelineOptions: PipelineOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.matrix">matrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.prDiffMatrix">prDiffMatrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `matrix` when omitted. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployMatrix">deployMatrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffMatrix">diffMatrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMatrix` when omitted. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.productionPromotionFlow">productionPromotionFlow</a></code> | <code><a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions">ProductionPromotionFlowOptions</a></code> | Enable the GitOps-style production promotion flow. |
 
 ---
 
-##### `matrix`<sup>Required</sup> <a name="matrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.matrix"></a>
+##### `deployMatrix`<sup>Required</sup> <a name="deployMatrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.deployMatrix"></a>
 
 ```typescript
-public readonly matrix: PipelineMatrixEntry[];
+public readonly deployMatrix: PipelineMatrixEntry[];
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
@@ -4787,16 +4787,16 @@ via a GitHub Actions `strategy.matrix` block.
 
 ---
 
-##### `prDiffMatrix`<sup>Optional</sup> <a name="prDiffMatrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.prDiffMatrix"></a>
+##### `diffMatrix`<sup>Optional</sup> <a name="diffMatrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.diffMatrix"></a>
 
 ```typescript
-public readonly prDiffMatrix: PipelineMatrixEntry[];
+public readonly diffMatrix: PipelineMatrixEntry[];
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
-- *Default:* falls back to `matrix`
+- *Default:* falls back to `deployMatrix`
 
-Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `matrix` when omitted.
+Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMatrix` when omitted.
 
 Typically set to staging / production-like environments so a PR previews
 the change that will eventually reach prod (rather than the dev deploy
