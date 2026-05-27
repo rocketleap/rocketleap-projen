@@ -29,7 +29,7 @@ const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'iam-cdk',
   pipeline: {
-    deployMatrix: [{ environment: 'iam' }],
+    deployMain: [{ environment: 'iam' }],
   },
 });
 ```
@@ -42,21 +42,26 @@ const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'platform-cdk',
   pipeline: {
-    deployMatrix: [
+    // Deployed by push-main.yml on main / dev.
+    deployMain: [
       { environment: 'dev', workload: 'example-ecs' },
       { environment: 'dev', workload: 'example-lambda' },
     ],
-    // Optional. Defaults to deployMatrix when omitted.
-    diffMatrix: [
+    // Diffed by pr-main.yml. Optional — defaults to deployMain.
+    diffMain: [
       { environment: 'staging', workload: 'example-ecs' },
       { environment: 'platform', workload: 'management' },
     ],
-    productionPromotionFlow: {
-      matrix: [
-        { environment: 'prodeu', workload: 'example-ecs' },
-        { environment: 'produs', workload: 'example-ecs' },
-      ],
-    },
+    // Presence enables the GitOps production flow:
+    //   - emits action-promote-pr.yml + push-production.yml
+    //   - injects promote + production-diff jobs into push-main.yml
+    deployProduction: [
+      { environment: 'prodeu', workload: 'example-ecs' },
+      { environment: 'produs', workload: 'example-ecs' },
+    ],
+    // Diffed on the auto-opened main→production promote PR.
+    // Optional — defaults to deployProduction.
+    // diffProduction: [ ... ],
   },
 });
 ```

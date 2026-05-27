@@ -79,11 +79,13 @@ describe('pr-main and push-main workflows', () => {
     expect(pr).toContain('example-lambda');
   });
 
-  test('productionPromotionFlow injects promote job into push-main', () => {
+  test('production diff matrix injects promote job into push-main', () => {
     const project = newProject();
-    addPushMainWorkflow(project, [{ environment: 'dev', workload: 'example-ecs' }], {
-      matrix: [{ environment: 'prodeu', workload: 'example-ecs' }],
-    });
+    addPushMainWorkflow(
+      project,
+      [{ environment: 'dev', workload: 'example-ecs' }],
+      [{ environment: 'prodeu', workload: 'example-ecs' }],
+    );
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
     expect(push).toContain('promote:');
     expect(push).toContain('action-promote-pr.yml');
@@ -109,7 +111,7 @@ describe('push-production workflow', () => {
 describe('addCdkPipelineWorkflows', () => {
   test('simple flow emits 5 files (no production promotion)', () => {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { deployMatrix: [{ environment: 'iam' }] });
+    addCdkPipelineWorkflows(project, { deployMain: [{ environment: 'iam' }] });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-deploy.yml']).toBeDefined();
@@ -120,29 +122,27 @@ describe('addCdkPipelineWorkflows', () => {
     expect(snapshot['.github/workflows/push-production.yml']).toBeUndefined();
   });
 
-  test('GitOps production flow emits 7 files', () => {
+  test('GitOps production flow emits 7 files when deployProduction is set', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      deployMatrix: [{ environment: 'dev', workload: 'example-ecs' }],
-      productionPromotionFlow: {
-        matrix: [{ environment: 'prodeu', workload: 'example-ecs' }],
-      },
+      deployMain: [{ environment: 'dev', workload: 'example-ecs' }],
+      deployProduction: [{ environment: 'prodeu', workload: 'example-ecs' }],
     });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/action-promote-pr.yml']).toBeDefined();
     expect(snapshot['.github/workflows/push-production.yml']).toBeDefined();
   });
 
-  test('empty deployMatrix throws', () => {
+  test('empty deployMain throws', () => {
     const project = newProject();
-    expect(() => addCdkPipelineWorkflows(project, { deployMatrix: [] })).toThrow('pipeline.deployMatrix');
+    expect(() => addCdkPipelineWorkflows(project, { deployMain: [] })).toThrow('pipeline.deployMain');
   });
 
-  test('diffMatrix drives pr-main when supplied; deployMatrix still drives push-main', () => {
+  test('diffMain drives pr-main when supplied; deployMain still drives push-main', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      deployMatrix: [{ environment: 'dev', workload: 'example-ecs' }],
-      diffMatrix: [
+      deployMain: [{ environment: 'dev', workload: 'example-ecs' }],
+      diffMain: [
         { environment: 'staging', workload: 'example-ecs' },
         { environment: 'platform', workload: 'management' },
       ],
@@ -155,23 +155,37 @@ describe('addCdkPipelineWorkflows', () => {
     expect(snapshot['.github/workflows/push-main.yml']).not.toContain('staging');
   });
 
-  test('diffMatrix defaults to deployMatrix when omitted', () => {
+  test('diffMain defaults to deployMain when omitted', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      deployMatrix: [{ environment: 'iam' }],
+      deployMain: [{ environment: 'iam' }],
     });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/pr-main.yml']).toContain('environment: iam');
     expect(snapshot['.github/workflows/push-main.yml']).toContain('environment: iam');
   });
 
-  test('empty productionPromotionFlow.matrix throws', () => {
+  test('diffProduction drives the production-diff comment when supplied; deployProduction drives push-production', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, {
+      deployMain: [{ environment: 'dev' }],
+      deployProduction: [{ environment: 'prodeu', workload: 'example-ecs' }],
+      diffProduction: [{ environment: 'platform', workload: 'management' }],
+    });
+    const snapshot = synthSnapshot(project);
+    expect(snapshot['.github/workflows/push-main.yml']).toContain('management');
+    expect(snapshot['.github/workflows/push-main.yml']).not.toContain('prodeu');
+    expect(snapshot['.github/workflows/push-production.yml']).toContain('prodeu');
+    expect(snapshot['.github/workflows/push-production.yml']).not.toContain('management');
+  });
+
+  test('empty deployProduction throws', () => {
     const project = newProject();
     expect(() =>
       addCdkPipelineWorkflows(project, {
-        deployMatrix: [{ environment: 'dev' }],
-        productionPromotionFlow: { matrix: [] },
+        deployMain: [{ environment: 'dev' }],
+        deployProduction: [],
       }),
-    ).toThrow('productionPromotionFlow');
+    ).toThrow('pipeline.deployProduction');
   });
 });
