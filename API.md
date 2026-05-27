@@ -4685,6 +4685,45 @@ public readonly DEFAULT_TS_JEST_TRANFORM_PATTERN: string;
 
 ## Structs <a name="Structs" id="Structs"></a>
 
+### CdkDiffOptions <a name="CdkDiffOptions" id="@rocketleap/rocketleap-projen.CdkDiffOptions"></a>
+
+Configuration for the `corymhall/cdk-diff-action@v2` step run inside the generated PR diff workflows (`pr-main.yml` / `pr-production.yml`).
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.CdkDiffOptions.Initializer"></a>
+
+```typescript
+import { CdkDiffOptions } from '@rocketleap/rocketleap-projen'
+
+const cdkDiffOptions: CdkDiffOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions.property.failOnDestructiveChanges">failOnDestructiveChanges</a></code> | <code>boolean</code> | Fail the diff workflow when destructive changes are detected. |
+
+---
+
+##### `failOnDestructiveChanges`<sup>Optional</sup> <a name="failOnDestructiveChanges" id="@rocketleap/rocketleap-projen.CdkDiffOptions.property.failOnDestructiveChanges"></a>
+
+```typescript
+public readonly failOnDestructiveChanges: boolean;
+```
+
+- *Type:* boolean
+- *Default:* false
+
+Fail the diff workflow when destructive changes are detected.
+
+Default: `false` — destructive changes are surfaced in the rich PR
+comment for reviewer attention but don't block the workflow. The
+reviewer (and, for prod, the GitOps promotion PR) is the gate; CI
+just shows what would change. Set to `true` to make destructive
+changes a hard fail on PR CI.
+
+---
+
 ### PipelineMatrixEntry <a name="PipelineMatrixEntry" id="@rocketleap/rocketleap-projen.PipelineMatrixEntry"></a>
 
 A (environment, workload) pair the pipeline iterates over.
@@ -4772,6 +4811,7 @@ const pipelineOptions: PipelineOptions = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain">deployMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployProduction">deployProduction</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-production.yml` on pushes to `production`. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffMain">diffMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMain` when omitted. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffProduction">diffProduction</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed on the auto-opened main → production promote PR. |
@@ -4790,6 +4830,19 @@ Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to
 
 A single entry without a `workload` collapses to a non-matrix job;
 otherwise the workflow fans out via a `strategy.matrix` block.
+
+---
+
+##### `cdkDiff`<sup>Optional</sup> <a name="cdkDiff" id="@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff"></a>
+
+```typescript
+public readonly cdkDiff: CdkDiffOptions;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a>
+- *Default:* failOnDestructiveChanges: false
+
+Customize the `corymhall/cdk-diff-action` step used in the PR diff workflows.
 
 ---
 

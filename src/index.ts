@@ -9,12 +9,14 @@ export * as actions from './common/actions';
 export {
   PipelineOptions,
   PipelineMatrixEntry,
+  CdkDiffOptions,
   addCdkPipelineWorkflows,
   addActionBuildWorkflow,
   addActionDeployWorkflow,
   addActionDiffWorkflow,
   addActionPromotePrWorkflow,
   addPrMainWorkflow,
+  addPrProductionWorkflow,
   addPushMainWorkflow,
   addPushProductionWorkflow,
 } from './common/workflows';
