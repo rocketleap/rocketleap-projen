@@ -152,8 +152,10 @@ function checkoutStep(extraWith?: Record<string, unknown>): Record<string, unkno
     name: 'Checkout',
     uses: 'actions/checkout@v5',
     with: {
-      ref: '${{ github.event.pull_request.head.ref }}',
-      repository: '${{ github.event.pull_request.head.repo.full_name }}',
+      // Fall back to the workflow ref/repo on push / workflow_dispatch
+      // events where `github.event.pull_request` is undefined.
+      ref: '${{ github.event.pull_request.head.ref || github.ref }}',
+      repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
       ...extraWith,
     },
   };
@@ -187,8 +189,8 @@ export function addActionBuildWorkflow(project: Project): void {
               name: 'Checkout',
               uses: 'actions/checkout@v5',
               with: {
-                ref: '${{ inputs.ref || github.event.pull_request.head.ref }}',
-                repository: '${{ github.event.pull_request.head.repo.full_name }}',
+                ref: '${{ inputs.ref || github.event.pull_request.head.ref || github.ref }}',
+                repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
               },
             },
             ...bootstrapSteps(),
@@ -273,12 +275,6 @@ export function addActionDiffWorkflow(project: Project): void {
               description:
                 'The PR number to post the link to for the diff. If not supplied, the pr-number is looked up.',
               required: false,
-            },
-          },
-          outputs: {
-            'cache-key': {
-              description: 'The output of the CDK diff command in the cache.',
-              value: '${{jobs.diff.outputs.cache-key}}',
             },
           },
         },
@@ -429,9 +425,14 @@ function matrixBlock(entries: PipelineMatrixEntry[]): Record<string, unknown> {
   };
 }
 
+// Used as both the caller job's `name` and the `job-name` input passed into
+// the reusable workflow. Keeping them identical lets `Tiryoh/gha-jobid-action`
+// match the GH-displayed job name (`<caller name> / <inner job name>`).
+const MATRIX_DIFF_JOB_NAME = 'Diff (${{ matrix.workloads.environment }}, ${{ matrix.workloads.name }})';
+
 function callActionWith(extra: Record<string, unknown>): Record<string, unknown> {
   return {
-    'job-name': 'Diff (${{matrix.workloads.environment}}, ${{matrix.workloads.name}})',
+    'job-name': MATRIX_DIFF_JOB_NAME,
     'environment': '${{ matrix.workloads.environment }}',
     'workload': '${{ matrix.workloads.name }}',
     ...extra,
@@ -445,7 +446,7 @@ function diffJob(
 ): Record<string, unknown> {
   const isMatrix = matrix.length > 1 || (matrix[0] && matrix[0].workload !== undefined);
   const job: Record<string, unknown> = {
-    name: 'Diff',
+    name: isMatrix ? MATRIX_DIFF_JOB_NAME : 'Diff',
     ...(needs ? { needs } : {}),
     uses: './.github/workflows/action-diff.yml',
   };
@@ -489,6 +490,9 @@ function deployJob(name: string, matrix: PipelineMatrixEntry[], needs?: string[]
 }
 
 export function addPrMainWorkflow(project: Project, matrix: PipelineMatrixEntry[]): void {
+  if (!matrix || matrix.length === 0) {
+    throw new Error('addPrMainWorkflow: matrix must contain at least one entry');
+  }
   new YamlFile(project, '.github/workflows/pr-main.yml', {
     obj: {
       name: 'PR: Main Branch',
@@ -509,6 +513,12 @@ export function addPushMainWorkflow(
   deployMatrix: PipelineMatrixEntry[],
   productionDiffMatrix?: PipelineMatrixEntry[],
 ): void {
+  if (!deployMatrix || deployMatrix.length === 0) {
+    throw new Error('addPushMainWorkflow: deployMatrix must contain at least one entry');
+  }
+  if (productionDiffMatrix && productionDiffMatrix.length === 0) {
+    throw new Error('addPushMainWorkflow: productionDiffMatrix must contain at least one entry when provided');
+  }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
     deploy: deployJob('Deploy', deployMatrix, ['build']),
@@ -544,6 +554,9 @@ export function addPushMainWorkflow(
 }
 
 export function addPushProductionWorkflow(project: Project, matrix: PipelineMatrixEntry[]): void {
+  if (!matrix || matrix.length === 0) {
+    throw new Error('addPushProductionWorkflow: matrix must contain at least one entry');
+  }
   new YamlFile(project, '.github/workflows/push-production.yml', {
     obj: {
       name: 'Push: Production Branch',
