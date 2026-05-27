@@ -15,6 +15,7 @@ export {
   addActionDiffWorkflow,
   addActionPromotePrWorkflow,
   addPrMainWorkflow,
+  addPrProductionWorkflow,
   addPushMainWorkflow,
   addPushProductionWorkflow,
 } from './common/workflows';

@@ -266,21 +266,15 @@ export function addActionDiffWorkflow(project: Project): void {
             'job-name': {
               type: 'string',
               required: true,
-              description: 'The name of the job given to calling this action. It is required to retrieve the job id.',
+              description:
+                'Display name for this matrix entry; passed to cdk-diff-action as `title` so each matrix entry gets its own PR comment.',
             },
             'environment': { type: 'string', required: true },
             'workload': { type: 'string', required: false },
-            'pr-number': {
-              type: 'string',
-              description:
-                'The PR number to post the link to for the diff. If not supplied, the pr-number is looked up.',
-              required: false,
-            },
           },
         },
       },
       env: {
-        PR_NUMBER: '${{ github.event.number }}',
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
       },
       permissions: PERMISSIONS_PR,
@@ -304,40 +298,16 @@ export function addActionDiffWorkflow(project: Project): void {
             { run: 'yarn install' },
             { run: 'yarn build' },
             {
+              name: 'Synth',
+              run: 'yarn synth:ci ${{env.cdk_app_file}}',
+            },
+            {
               name: 'Diff',
-              run: 'yarn diff:ci ${{env.cdk_app_file}}',
-            },
-            {
-              name: 'Get Current Job Log URL',
-              uses: 'Tiryoh/gha-jobid-action@v1',
-              id: 'jobs',
+              uses: 'corymhall/cdk-diff-action@v2',
               with: {
-                github_token: '${{ secrets.GITHUB_TOKEN }}',
-                job_name: '${{ inputs.job-name }} / diff',
-                per_page: 100,
+                githubToken: '${{ secrets.GITHUB_TOKEN }}',
+                title: '${{ inputs.job-name }}',
               },
-            },
-            {
-              name: 'Set PR Comment',
-              shell: 'bash',
-              run: [
-                'if [ "${{inputs.workload}}" == "" ]; then',
-                '  echo \'pr_comment="Link to diff for ${{inputs.environment}} ${{steps.jobs.outputs.html_url}}#step:9:1"\' >> "$GITHUB_ENV"',
-                'else',
-                '  echo \'pr_comment="Link to diff for ${{inputs.environment}} ${{inputs.workload}} ${{steps.jobs.outputs.html_url}}#step:9:1"\' >> "$GITHUB_ENV"',
-                'fi',
-              ].join('\n'),
-            },
-            {
-              name: 'Comment to PR',
-              shell: 'bash',
-              run: [
-                'if [ "${{inputs.pr-number}}" == "" ]; then',
-                '  gh pr comment $PR_NUMBER -b ${{env.pr_comment}}',
-                'else',
-                '  gh pr comment ${{ inputs.pr-number }} -b ${{env.pr_comment}}',
-                'fi',
-              ].join('\n'),
             },
           ],
         },
@@ -511,20 +481,17 @@ export function addPrMainWorkflow(project: Project, matrix: PipelineMatrixEntry[
 export function addPushMainWorkflow(
   project: Project,
   deployMatrix: PipelineMatrixEntry[],
-  productionDiffMatrix?: PipelineMatrixEntry[],
+  includePromote: boolean = false,
 ): void {
   if (!deployMatrix || deployMatrix.length === 0) {
     throw new Error('addPushMainWorkflow: deployMatrix must contain at least one entry');
-  }
-  if (productionDiffMatrix && productionDiffMatrix.length === 0) {
-    throw new Error('addPushMainWorkflow: productionDiffMatrix must contain at least one entry when provided');
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
     deploy: deployJob('Deploy', deployMatrix, ['build']),
   };
 
-  if (productionDiffMatrix) {
+  if (includePromote) {
     jobs.promote = {
       name: 'Create Promote PR',
       needs: ['deploy'],
@@ -534,9 +501,6 @@ export function addPushMainWorkflow(
         'source-branch': 'main',
       },
     };
-    jobs['production-diff'] = diffJob(productionDiffMatrix, ['promote'], {
-      'pr-number': '${{ needs.promote.outputs.pr-number }}',
-    });
   }
 
   new YamlFile(project, '.github/workflows/push-main.yml', {
@@ -549,6 +513,25 @@ export function addPushMainWorkflow(
       permissions: PERMISSIONS_PUSH,
       concurrency: 'main',
       jobs,
+    },
+  });
+}
+
+export function addPrProductionWorkflow(project: Project, matrix: PipelineMatrixEntry[]): void {
+  if (!matrix || matrix.length === 0) {
+    throw new Error('addPrProductionWorkflow: matrix must contain at least one entry');
+  }
+  new YamlFile(project, '.github/workflows/pr-production.yml', {
+    obj: {
+      name: 'PR: Production Branch',
+      on: {
+        pull_request: { branches: ['production'] },
+      },
+      permissions: PERMISSIONS_PR,
+      jobs: {
+        build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
+        diff: diffJob(matrix, ['build']),
+      },
     },
   });
 }
@@ -582,10 +565,12 @@ export function addPushProductionWorkflow(project: Project, matrix: PipelineMatr
  *   - `pr-main.yml` — runs build + diff on PRs against `main` / `dev`
  *     using `diffMain` (or `deployMain` as fallback)
  *   - `push-main.yml` — runs build + deploy on pushes to `main` / `dev`
- *     using `deployMain`, plus the promote + production-diff jobs when
- *     `deployProduction` is set
- *   - `action-promote-pr.yml` + `push-production.yml` — only when
- *     `deployProduction` is set
+ *     using `deployMain`, plus the `promote` job when `deployProduction`
+ *     is set
+ *   - `action-promote-pr.yml`, `push-production.yml`, `pr-production.yml` —
+ *     only when `deployProduction` is set. `pr-production.yml` runs build +
+ *     diff against the auto-opened promote PR so cdk-diff-action can post
+ *     rich diff comments on it.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.deployMain || options.deployMain.length === 0) {
@@ -601,18 +586,15 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
     throw new Error('pipeline.diffProduction must contain at least one entry when provided');
   }
 
-  const productionDiffMatrix = options.deployProduction
-    ? (options.diffProduction ?? options.deployProduction)
-    : undefined;
-
   addActionBuildWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project);
   addPrMainWorkflow(project, options.diffMain ?? options.deployMain);
-  addPushMainWorkflow(project, options.deployMain, productionDiffMatrix);
+  addPushMainWorkflow(project, options.deployMain, options.deployProduction !== undefined);
 
   if (options.deployProduction) {
     addActionPromotePrWorkflow(project);
     addPushProductionWorkflow(project, options.deployProduction);
+    addPrProductionWorkflow(project, options.diffProduction ?? options.deployProduction);
   }
 }

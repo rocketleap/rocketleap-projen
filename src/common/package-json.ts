@@ -26,6 +26,7 @@ export const CDK_SCRIPTS = {
   'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
   'diff': 'cdk diff --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'diff:ci': 'cdk diff --ci --app "yarn ts-node --swc --prefer-ts-exts $0";',
+  'synth:ci': 'cdk synth --ci --app "yarn ts-node --swc --prefer-ts-exts $0" --quiet;',
   'deploy':
     'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'deploy:ci':
