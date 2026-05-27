@@ -423,19 +423,8 @@ function matrixBlock(entries: PipelineMatrixEntry[]): Record<string, unknown> {
   };
 }
 
-// Used as both the caller job's `name` and the `job-name` input passed into
-// the reusable workflow. Keeping them identical lets `Tiryoh/gha-jobid-action`
-// match the GH-displayed job name (`<caller name> / <inner job name>`).
-const MATRIX_DIFF_JOB_NAME = 'Diff (${{ matrix.workloads.environment }}, ${{ matrix.workloads.name }})';
-
-function callActionWith(extra: Record<string, unknown>): Record<string, unknown> {
-  return {
-    'job-name': MATRIX_DIFF_JOB_NAME,
-    'environment': '${{ matrix.workloads.environment }}',
-    'workload': '${{ matrix.workloads.name }}',
-    ...extra,
-  };
-}
+const MATRIX_DIFF_JOB_NAME_WITH_WORKLOAD = 'Diff (${{ matrix.workloads.environment }}, ${{ matrix.workloads.name }})';
+const MATRIX_DIFF_JOB_NAME_ENV_ONLY = 'Diff (${{ matrix.workloads.environment }})';
 
 function diffJob(
   matrix: PipelineMatrixEntry[],
@@ -443,14 +432,21 @@ function diffJob(
   extraWith?: Record<string, unknown>,
 ): Record<string, unknown> {
   const isMatrix = matrix.length > 1 || (matrix[0] && matrix[0].workload !== undefined);
+  const hasWorkload = matrix.some((e) => e.workload !== undefined);
+  const matrixJobName = hasWorkload ? MATRIX_DIFF_JOB_NAME_WITH_WORKLOAD : MATRIX_DIFF_JOB_NAME_ENV_ONLY;
   const job: Record<string, unknown> = {
-    name: isMatrix ? MATRIX_DIFF_JOB_NAME : 'Diff',
+    name: isMatrix ? matrixJobName : 'Diff',
     ...(needs ? { needs } : {}),
     uses: './.github/workflows/action-diff.yml',
   };
   if (isMatrix) {
     job.strategy = matrixBlock(matrix);
-    job.with = callActionWith(extraWith ?? {});
+    job.with = {
+      'job-name': matrixJobName,
+      'environment': '${{ matrix.workloads.environment }}',
+      ...(hasWorkload ? { workload: '${{ matrix.workloads.name }}' } : {}),
+      ...(extraWith ?? {}),
+    };
   } else {
     job.with = {
       'job-name': 'Diff',
@@ -463,6 +459,7 @@ function diffJob(
 
 function deployJob(name: string, matrix: PipelineMatrixEntry[], needs?: string[]): Record<string, unknown> {
   const isMatrix = matrix.length > 1 || (matrix[0] && matrix[0].workload !== undefined);
+  const hasWorkload = matrix.some((e) => e.workload !== undefined);
   const job: Record<string, unknown> = {
     name,
     ...(needs ? { needs } : {}),
@@ -479,7 +476,7 @@ function deployJob(name: string, matrix: PipelineMatrixEntry[], needs?: string[]
     };
     job.with = {
       environment: '${{ matrix.workloads.environment }}',
-      workload: '${{ matrix.workloads.name }}',
+      ...(hasWorkload ? { workload: '${{ matrix.workloads.name }}' } : {}),
     };
   } else {
     job.with = { environment: matrix[0].environment };

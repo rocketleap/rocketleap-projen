@@ -119,6 +119,15 @@ describe('pr-production workflow', () => {
     expect(pr).toContain('prodeu');
     expect(pr).toContain('produs');
   });
+
+  test('pr-production.yml omits workload input when no entry has one', () => {
+    const project = newProject();
+    addPrProductionWorkflow(project, [{ environment: 'prodeu' }, { environment: 'produs' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-production.yml'];
+    expect(pr).not.toContain('matrix.workloads.name');
+    expect(pr).not.toContain('workload: ');
+    expect(pr).toContain('environment: ${{ matrix.workloads.environment }}');
+  });
 });
 
 describe('push-production workflow', () => {
