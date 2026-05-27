@@ -15,10 +15,18 @@ the same comment on each commit (no comment spam).
 
 Visible consequences for consumers:
 
-- **PRs will now fail when the diff contains destructive changes** (action
-  default `failOnDestructiveChanges: "true"`). Reviewers can no longer ignore
-  a yellow checkbox; the workflow goes red. To opt out, a follow-up will add
-  a `cdkDiff.failOnDestructiveChanges?: false` field on `PipelineOptions`.
+- **Destructive changes are surfaced in the PR comment but do not fail the
+  diff workflow by default.** rocketleap-projen passes
+  `failOnDestructiveChanges: "false"` to the action; reviewers see what
+  would be destroyed/replaced in the rich comment and decide. To opt into
+  the action's hard-fail behavior, set on `PipelineOptions`:
+
+  ```ts
+  pipeline: {
+    deployMain: [{ environment: 'iam' }],
+    cdkDiff: { failOnDestructiveChanges: true },
+  }
+  ```
 - **`pr-number` input on `action-diff.yml` is removed.** Only consumers that
   call the reusable workflow directly should notice.
 - **New `pr-production.yml` workflow** emitted when `pipeline.deployProduction`

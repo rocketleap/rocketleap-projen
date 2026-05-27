@@ -34,7 +34,7 @@ describe('reusable action workflows', () => {
     expect(snapshot['.github/workflows/action-deploy.yml']).toContain('yarn run deploy:ci');
   });
 
-  test('action-diff.yml synths then runs corymhall/cdk-diff-action', () => {
+  test('action-diff.yml synths then runs corymhall/cdk-diff-action with defaults', () => {
     const project = newProject();
     addActionDiffWorkflow(project);
     const snapshot = synthSnapshot(project);
@@ -42,10 +42,18 @@ describe('reusable action workflows', () => {
     expect(diff).toContain('yarn synth:ci');
     expect(diff).toContain('corymhall/cdk-diff-action@v2');
     expect(diff).toContain('title: ${{ inputs.job-name }}');
+    expect(diff).toContain('failOnDestructiveChanges: "false"');
     expect(diff).not.toContain('yarn diff:ci');
     expect(diff).not.toContain('gha-jobid-action');
     expect(diff).not.toContain('gh pr comment');
     expect(diff).not.toContain('pr-number');
+  });
+
+  test('action-diff.yml accepts failOnDestructiveChanges: true opt-in', () => {
+    const project = newProject();
+    addActionDiffWorkflow(project, { failOnDestructiveChanges: true });
+    const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
+    expect(diff).toContain('failOnDestructiveChanges: "true"');
   });
 
   test('action-promote-pr.yml is emitted', () => {
@@ -224,6 +232,16 @@ describe('addCdkPipelineWorkflows', () => {
     });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/pr-production.yml']).toContain('prodeu');
+  });
+
+  test('cdkDiff.failOnDestructiveChanges: true flows through addCdkPipelineWorkflows', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, {
+      deployMain: [{ environment: 'iam' }],
+      cdkDiff: { failOnDestructiveChanges: true },
+    });
+    const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
+    expect(diff).toContain('failOnDestructiveChanges: "true"');
   });
 
   test('empty deployProduction throws', () => {

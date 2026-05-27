@@ -79,6 +79,32 @@ export interface PipelineOptions {
    * @default - falls back to `deployProduction`
    */
   readonly diffProduction?: PipelineMatrixEntry[];
+  /**
+   * Customize the `corymhall/cdk-diff-action` step used in the PR diff
+   * workflows.
+   *
+   * @default - failOnDestructiveChanges: false
+   */
+  readonly cdkDiff?: CdkDiffOptions;
+}
+
+/**
+ * Configuration for the `corymhall/cdk-diff-action@v2` step run inside the
+ * generated PR diff workflows (`pr-main.yml` / `pr-production.yml`).
+ */
+export interface CdkDiffOptions {
+  /**
+   * Fail the diff workflow when destructive changes are detected.
+   *
+   * Default: `false` — destructive changes are surfaced in the rich PR
+   * comment for reviewer attention but don't block the workflow. The
+   * reviewer (and, for prod, the GitOps promotion PR) is the gate; CI
+   * just shows what would change. Set to `true` to make destructive
+   * changes a hard fail on PR CI.
+   *
+   * @default false
+   */
+  readonly failOnDestructiveChanges?: boolean;
 }
 
 const PERMISSIONS_DEFAULT = {
@@ -256,7 +282,8 @@ export function addActionDeployWorkflow(project: Project): void {
   });
 }
 
-export function addActionDiffWorkflow(project: Project): void {
+export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions): void {
+  const failOnDestructiveChanges = options?.failOnDestructiveChanges ?? false;
   new YamlFile(project, '.github/workflows/action-diff.yml', {
     obj: {
       name: 'Action: Diff environment',
@@ -307,6 +334,7 @@ export function addActionDiffWorkflow(project: Project): void {
               with: {
                 githubToken: '${{ secrets.GITHUB_TOKEN }}',
                 title: '${{ inputs.job-name }}',
+                failOnDestructiveChanges: String(failOnDestructiveChanges),
               },
             },
           ],
@@ -588,7 +616,7 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
 
   addActionBuildWorkflow(project);
   addActionDeployWorkflow(project);
-  addActionDiffWorkflow(project);
+  addActionDiffWorkflow(project, options.cdkDiff);
   addPrMainWorkflow(project, options.diffMain ?? options.deployMain);
   addPushMainWorkflow(project, options.deployMain, options.deployProduction !== undefined);
 
