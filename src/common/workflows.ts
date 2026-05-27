@@ -27,56 +27,58 @@ export interface PipelineMatrixEntry {
 }
 
 /**
- * Configuration for the GitOps-style production promotion flow.
- *
- * When set on `PipelineOptions`:
- *   - emits `.github/workflows/action-promote-pr.yml`
- *   - extends `push-main.yml` with a `promote` job that opens a PR from
- *     `main` → `production` (the GitOps promotion gate)
- *   - emits `.github/workflows/push-production.yml` that deploys
- *     `matrix` on commits to the `production` branch.
- *
- * The model: `main` is the desired-state branch for non-prod, `production`
- * is the desired-state branch for prod, and the auto-opened promotion PR is
- * the human approval point between them.
- */
-export interface ProductionPromotionFlowOptions {
-  /**
-   * Matrix of (environment, workload) pairs deployed by `push-production.yml`.
-   */
-  readonly matrix: PipelineMatrixEntry[];
-}
-
-/**
  * Pipeline workflow configuration for a Rocketleap CDK project.
+ *
+ * Field naming follows the lifecycle: diff on PR, deploy on merge.
+ * `Main` fields drive `pr-main.yml` / `push-main.yml`. `Production` fields,
+ * when present, enable the GitOps promotion flow and drive the diff on the
+ * auto-opened main → production PR plus the deploy on push to `production`.
  */
 export interface PipelineOptions {
   /**
    * Matrix of (environment, workload) pairs deployed by `push-main.yml`
    * on pushes to `main` / `dev`.
    *
-   * A single entry collapses to a non-matrix job; multiple entries fan out
-   * via a GitHub Actions `strategy.matrix` block.
+   * A single entry without a `workload` collapses to a non-matrix job;
+   * otherwise the workflow fans out via a `strategy.matrix` block.
    */
-  readonly deployMatrix: PipelineMatrixEntry[];
+  readonly deployMain: PipelineMatrixEntry[];
   /**
    * Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs
-   * to `main` / `dev`. Defaults to `deployMatrix` when omitted.
+   * to `main` / `dev`. Defaults to `deployMain` when omitted.
    *
    * Typically set to staging / production-like environments so a PR previews
-   * the change that will eventually reach prod (rather than the dev deploy
-   * the push-main job runs).
+   * the change that will eventually reach prod, rather than the dev deploy
+   * that `push-main` runs.
    *
-   * @default - falls back to `deployMatrix`
+   * @default - falls back to `deployMain`
    */
-  readonly diffMatrix?: PipelineMatrixEntry[];
+  readonly diffMain?: PipelineMatrixEntry[];
   /**
-   * Enable the GitOps-style production promotion flow. Omit to skip the
-   * production flow entirely (e.g. iam-cdk, root-cdk).
+   * Matrix of (environment, workload) pairs deployed by `push-production.yml`
+   * on pushes to `production`.
+   *
+   * Setting this enables the GitOps-style production promotion flow:
+   *   - emits `.github/workflows/action-promote-pr.yml`
+   *   - extends `push-main.yml` with a `promote` job that opens a PR from
+   *     `main` → `production`, and a `production-diff` job that comments
+   *     the prod diff on that promote PR
+   *   - emits `.github/workflows/push-production.yml` that deploys this
+   *     matrix on commits to the `production` branch
+   *
+   * Omit to skip the production flow entirely (e.g. iam-cdk, root-cdk).
    *
    * @default - production flow disabled
    */
-  readonly productionPromotionFlow?: ProductionPromotionFlowOptions;
+  readonly deployProduction?: PipelineMatrixEntry[];
+  /**
+   * Matrix of (environment, workload) pairs diffed on the auto-opened
+   * main → production promote PR. Defaults to `deployProduction` when
+   * omitted. Ignored if `deployProduction` is not set.
+   *
+   * @default - falls back to `deployProduction`
+   */
+  readonly diffProduction?: PipelineMatrixEntry[];
 }
 
 const PERMISSIONS_DEFAULT = {
@@ -504,15 +506,15 @@ export function addPrMainWorkflow(project: Project, matrix: PipelineMatrixEntry[
 
 export function addPushMainWorkflow(
   project: Project,
-  matrix: PipelineMatrixEntry[],
-  productionPromotionFlow?: ProductionPromotionFlowOptions,
+  deployMatrix: PipelineMatrixEntry[],
+  productionDiffMatrix?: PipelineMatrixEntry[],
 ): void {
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    deploy: deployJob('Deploy', matrix, ['build']),
+    deploy: deployJob('Deploy', deployMatrix, ['build']),
   };
 
-  if (productionPromotionFlow) {
+  if (productionDiffMatrix) {
     jobs.promote = {
       name: 'Create Promote PR',
       needs: ['deploy'],
@@ -522,7 +524,7 @@ export function addPushMainWorkflow(
         'source-branch': 'main',
       },
     };
-    jobs['production-diff'] = diffJob(productionPromotionFlow.matrix, ['promote'], {
+    jobs['production-diff'] = diffJob(productionDiffMatrix, ['promote'], {
       'pr-number': '${{ needs.promote.outputs.pr-number }}',
     });
   }
@@ -565,30 +567,39 @@ export function addPushProductionWorkflow(project: Project, matrix: PipelineMatr
  *   - `action-build.yml`, `action-deploy.yml`, `action-diff.yml` — reusable
  *     building blocks (always emitted, identical across projects)
  *   - `pr-main.yml` — runs build + diff on PRs against `main` / `dev`
- *   - `push-main.yml` — runs build + deploy on pushes to `main` / `dev`,
- *     plus the promote job when `productionPromotionFlow` is set
+ *     using `diffMain` (or `deployMain` as fallback)
+ *   - `push-main.yml` — runs build + deploy on pushes to `main` / `dev`
+ *     using `deployMain`, plus the promote + production-diff jobs when
+ *     `deployProduction` is set
  *   - `action-promote-pr.yml` + `push-production.yml` — only when
- *     `productionPromotionFlow` is set
+ *     `deployProduction` is set
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
-  if (!options.deployMatrix || options.deployMatrix.length === 0) {
-    throw new Error('pipeline.deployMatrix must contain at least one entry');
+  if (!options.deployMain || options.deployMain.length === 0) {
+    throw new Error('pipeline.deployMain must contain at least one entry');
   }
-  if (options.diffMatrix && options.diffMatrix.length === 0) {
-    throw new Error('pipeline.diffMatrix must contain at least one entry when provided');
+  if (options.diffMain && options.diffMain.length === 0) {
+    throw new Error('pipeline.diffMain must contain at least one entry when provided');
   }
-  if (options.productionPromotionFlow && options.productionPromotionFlow.matrix.length === 0) {
-    throw new Error('pipeline.productionPromotionFlow.matrix must contain at least one entry');
+  if (options.deployProduction && options.deployProduction.length === 0) {
+    throw new Error('pipeline.deployProduction must contain at least one entry when provided');
   }
+  if (options.diffProduction && options.diffProduction.length === 0) {
+    throw new Error('pipeline.diffProduction must contain at least one entry when provided');
+  }
+
+  const productionDiffMatrix = options.deployProduction
+    ? (options.diffProduction ?? options.deployProduction)
+    : undefined;
 
   addActionBuildWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project);
-  addPrMainWorkflow(project, options.diffMatrix ?? options.deployMatrix);
-  addPushMainWorkflow(project, options.deployMatrix, options.productionPromotionFlow);
+  addPrMainWorkflow(project, options.diffMain ?? options.deployMain);
+  addPushMainWorkflow(project, options.deployMain, productionDiffMatrix);
 
-  if (options.productionPromotionFlow) {
+  if (options.deployProduction) {
     addActionPromotePrWorkflow(project);
-    addPushProductionWorkflow(project, options.productionPromotionFlow.matrix);
+    addPushProductionWorkflow(project, options.deployProduction);
   }
 }

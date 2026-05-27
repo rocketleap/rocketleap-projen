@@ -4754,6 +4754,11 @@ Optional workload name for multi-app projects.
 
 Pipeline workflow configuration for a Rocketleap CDK project.
 
+Field naming follows the lifecycle: diff on PR, deploy on merge.
+`Main` fields drive `pr-main.yml` / `push-main.yml`. `Production` fields,
+when present, enable the GitOps promotion flow and drive the diff on the
+auto-opened main → production PR plus the deploy on push to `production`.
+
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
 
 ```typescript
@@ -4766,100 +4771,81 @@ const pipelineOptions: PipelineOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployMatrix">deployMatrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffMatrix">diffMatrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMatrix` when omitted. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.productionPromotionFlow">productionPromotionFlow</a></code> | <code><a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions">ProductionPromotionFlowOptions</a></code> | Enable the GitOps-style production promotion flow. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain">deployMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployProduction">deployProduction</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-production.yml` on pushes to `production`. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffMain">diffMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMain` when omitted. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffProduction">diffProduction</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed on the auto-opened main → production promote PR. |
 
 ---
 
-##### `deployMatrix`<sup>Required</sup> <a name="deployMatrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.deployMatrix"></a>
+##### `deployMain`<sup>Required</sup> <a name="deployMain" id="@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain"></a>
 
 ```typescript
-public readonly deployMatrix: PipelineMatrixEntry[];
+public readonly deployMain: PipelineMatrixEntry[];
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
 
 Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`.
 
-A single entry collapses to a non-matrix job; multiple entries fan out
-via a GitHub Actions `strategy.matrix` block.
+A single entry without a `workload` collapses to a non-matrix job;
+otherwise the workflow fans out via a `strategy.matrix` block.
 
 ---
 
-##### `diffMatrix`<sup>Optional</sup> <a name="diffMatrix" id="@rocketleap/rocketleap-projen.PipelineOptions.property.diffMatrix"></a>
+##### `deployProduction`<sup>Optional</sup> <a name="deployProduction" id="@rocketleap/rocketleap-projen.PipelineOptions.property.deployProduction"></a>
 
 ```typescript
-public readonly diffMatrix: PipelineMatrixEntry[];
+public readonly deployProduction: PipelineMatrixEntry[];
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
-- *Default:* falls back to `deployMatrix`
-
-Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMatrix` when omitted.
-
-Typically set to staging / production-like environments so a PR previews
-the change that will eventually reach prod (rather than the dev deploy
-the push-main job runs).
-
----
-
-##### `productionPromotionFlow`<sup>Optional</sup> <a name="productionPromotionFlow" id="@rocketleap/rocketleap-projen.PipelineOptions.property.productionPromotionFlow"></a>
-
-```typescript
-public readonly productionPromotionFlow: ProductionPromotionFlowOptions;
-```
-
-- *Type:* <a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions">ProductionPromotionFlowOptions</a>
 - *Default:* production flow disabled
 
-Enable the GitOps-style production promotion flow.
+Matrix of (environment, workload) pairs deployed by `push-production.yml` on pushes to `production`.
 
-Omit to skip the
-production flow entirely (e.g. iam-cdk, root-cdk).
-
----
-
-### ProductionPromotionFlowOptions <a name="ProductionPromotionFlowOptions" id="@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions"></a>
-
-Configuration for the GitOps-style production promotion flow.
-
-When set on `PipelineOptions`:
+Setting this enables the GitOps-style production promotion flow:
   - emits `.github/workflows/action-promote-pr.yml`
   - extends `push-main.yml` with a `promote` job that opens a PR from
-    `main` → `production` (the GitOps promotion gate)
-  - emits `.github/workflows/push-production.yml` that deploys
-    `matrix` on commits to the `production` branch.
+    `main` → `production`, and a `production-diff` job that comments
+    the prod diff on that promote PR
+  - emits `.github/workflows/push-production.yml` that deploys this
+    matrix on commits to the `production` branch
 
-The model: `main` is the desired-state branch for non-prod, `production`
-is the desired-state branch for prod, and the auto-opened promotion PR is
-the human approval point between them.
-
-#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions.Initializer"></a>
-
-```typescript
-import { ProductionPromotionFlowOptions } from '@rocketleap/rocketleap-projen'
-
-const productionPromotionFlowOptions: ProductionPromotionFlowOptions = { ... }
-```
-
-#### Properties <a name="Properties" id="Properties"></a>
-
-| **Name** | **Type** | **Description** |
-| --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions.property.matrix">matrix</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-production.yml`. |
+Omit to skip the production flow entirely (e.g. iam-cdk, root-cdk).
 
 ---
 
-##### `matrix`<sup>Required</sup> <a name="matrix" id="@rocketleap/rocketleap-projen.ProductionPromotionFlowOptions.property.matrix"></a>
+##### `diffMain`<sup>Optional</sup> <a name="diffMain" id="@rocketleap/rocketleap-projen.PipelineOptions.property.diffMain"></a>
 
 ```typescript
-public readonly matrix: PipelineMatrixEntry[];
+public readonly diffMain: PipelineMatrixEntry[];
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
+- *Default:* falls back to `deployMain`
 
-Matrix of (environment, workload) pairs deployed by `push-production.yml`.
+Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMain` when omitted.
+
+Typically set to staging / production-like environments so a PR previews
+the change that will eventually reach prod, rather than the dev deploy
+that `push-main` runs.
+
+---
+
+##### `diffProduction`<sup>Optional</sup> <a name="diffProduction" id="@rocketleap/rocketleap-projen.PipelineOptions.property.diffProduction"></a>
+
+```typescript
+public readonly diffProduction: PipelineMatrixEntry[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
+- *Default:* falls back to `deployProduction`
+
+Matrix of (environment, workload) pairs diffed on the auto-opened main → production promote PR.
+
+Defaults to `deployProduction` when
+omitted. Ignored if `deployProduction` is not set.
 
 ---
 

@@ -9,7 +9,6 @@ export * as actions from './common/actions';
 export {
   PipelineOptions,
   PipelineMatrixEntry,
-  ProductionPromotionFlowOptions,
   addCdkPipelineWorkflows,
   addActionBuildWorkflow,
   addActionDeployWorkflow,
