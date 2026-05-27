@@ -526,7 +526,7 @@ export function addPushMainWorkflow(
       uses: './.github/workflows/action-promote-pr.yml',
       with: {
         'target-branch': 'production',
-        'source-branch': 'main',
+        'source-branch': '${{ github.ref_name }}',
       },
     };
   }
