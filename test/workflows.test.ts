@@ -101,6 +101,7 @@ describe('pr-main and push-main workflows', () => {
     expect(push).toContain('promote:');
     expect(push).toContain('action-promote-pr.yml');
     expect(push).toContain('target-branch: production');
+    expect(push).toContain('source-branch: ${{ github.ref_name }}');
     expect(push).not.toContain('production-diff');
   });
 });
