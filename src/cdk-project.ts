@@ -16,6 +16,7 @@ import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { addCdkPipelineWorkflows } from './common/workflows';
 import { configureTaskPath, createYarnConfiguration } from './common/yarn';
+import { addDependabotConfig } from './dependabot';
 import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-options.generated';
 
 /**
@@ -28,7 +29,7 @@ import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-option
  * Use PlatformCdkProject for platform infrastructure (includes license).
  * Use WorkloadCdkProject for customer workloads (no license).
  */
-export abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
+abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
   protected readonly company: string;
   protected readonly projectName: string;
 
@@ -159,6 +160,21 @@ export class RocketleapPlatformCdkProject extends RocketleapBaseCdkProject {
         '9. The Licensee accepts that parts of the IaC Platform may contain open-source software and make use of it. The IaC platform does not contain open-source software with licenses that force other software to open source in case of usage.',
       ],
     });
+  }
+}
+
+/**
+ * Projen project for customer workload CDK projects.
+ *
+ * This is for customer-specific workload code that runs on the platform.
+ * Does NOT include the platform license.
+ */
+export class RocketleapWorkloadCdkProject extends RocketleapBaseCdkProject {
+  constructor(options: RocketleapCdkProjectOptions) {
+    super(options);
+
+    this.generateSampleProjenrc('WorkloadCdkProject');
+    addDependabotConfig(this);
   }
 }
 

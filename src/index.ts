@@ -1,5 +1,4 @@
 export * from './cdk-project';
-export * from './workload-cdk-project';
 export * from './cdk-project-options.generated';
 export * from './library-cdk-project-options.generated';
 export { addDependabotConfig } from './dependabot';
