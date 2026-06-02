@@ -16,6 +16,7 @@ import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { addCdkPipelineWorkflows } from './common/workflows';
 import { configureTaskPath, createYarnConfiguration } from './common/yarn';
+import { addDependabotConfig } from './dependabot';
 import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-options.generated';
 
 /**
@@ -173,6 +174,7 @@ export class RocketleapWorkloadCdkProject extends RocketleapBaseCdkProject {
     super(options);
 
     this.generateSampleProjenrc('WorkloadCdkProject');
+    addDependabotConfig(this);
   }
 }
 
