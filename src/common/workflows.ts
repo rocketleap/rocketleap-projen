@@ -136,7 +136,7 @@ function bootstrapSteps(): Array<Record<string, unknown>> {
       run: 'corepack enable',
     },
     {
-      uses: 'actions/setup-node@v4',
+      uses: 'actions/setup-node@v6',
       with: {
         'node-version': '18',
         'cache': 'yarn',
@@ -176,7 +176,7 @@ function configureAwsStep(): Record<string, unknown> {
 function checkoutStep(extraWith?: Record<string, unknown>): Record<string, unknown> {
   return {
     name: 'Checkout',
-    uses: 'actions/checkout@v5',
+    uses: 'actions/checkout@v6',
     with: {
       // Fall back to the workflow ref/repo on push / workflow_dispatch
       // events where `github.event.pull_request` is undefined.
@@ -213,7 +213,7 @@ export function addActionBuildWorkflow(project: Project): void {
           'steps': [
             {
               name: 'Checkout',
-              uses: 'actions/checkout@v5',
+              uses: 'actions/checkout@v6',
               with: {
                 ref: '${{ inputs.ref || github.event.pull_request.head.ref || github.ref }}',
                 repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
@@ -383,7 +383,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
           'runs-on': 'ubuntu-latest',
           'steps': [
             {
-              uses: 'actions/checkout@v5',
+              uses: 'actions/checkout@v6',
               with: { ref: '${{inputs.target-branch}}' },
             },
             {

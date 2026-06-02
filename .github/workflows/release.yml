@@ -106,7 +106,7 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: .repo
       - name: Install Dependencies
