@@ -22,7 +22,7 @@ export const ACTIONS_CONFIGURATION = {
     },
     {
       name: 'Checkout',
-      uses: 'actions/checkout@v5',
+      uses: 'actions/checkout@v6',
       with: {
         path: '.repo',
       },

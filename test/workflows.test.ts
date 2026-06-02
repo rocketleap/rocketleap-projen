@@ -24,6 +24,8 @@ describe('reusable action workflows', () => {
     expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-build.yml']).toContain('workflow_call:');
     expect(snapshot['.github/workflows/action-build.yml']).toContain('yarn test:ci');
+    expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/checkout@v6');
+    expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/setup-node@v6');
   });
 
   test('action-deploy.yml is emitted', () => {
