@@ -396,7 +396,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
             {
               name: 'Create Pull Request',
               id: 'cpr',
-              uses: 'peter-evans/create-pull-request@v5',
+              uses: 'peter-evans/create-pull-request@v8',
               with: {
                 'title': 'Production Promotion',
                 'branch': '${{inputs.target-branch}}-promotion',
