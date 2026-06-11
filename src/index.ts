@@ -1,6 +1,7 @@
 export * from './cdk-project';
 export * from './cdk-project-options.generated';
 export * from './library-cdk-project-options.generated';
+export * from './minimal-project';
 export { addDependabotConfig } from './dependabot';
 export * as format from './common/prettier';
 export * as lint from './common/eslint';
