@@ -3112,12 +3112,16 @@ Carries the bare minimum projen wires the release workflows expect:
  - A `main` default release branch.
  - Yarn 4 (Berry) configured against the rocketleap registry.
  - The rocketleap git defaults (line endings, attributes).
+ - The rocketleap prettier defaults.
+ - A `.projenrc.ts` (TypeScript projenrc) backed by a minimal
+   `tsconfig.projen.json` for compilation — does not promote the
+   whole project to TypeScript.
  - GitHub Mergify and the projen-default workflows disabled — the
    rocketleap workflows live in the internal subclass.
 
-Deliberately does NOT bring CDK config, ESLint, Prettier, SWC, jest, or
-TypeScript compilation. Repos that need those should use one of the
-CDK project types instead.
+Deliberately does NOT bring CDK config, ESLint, SWC, jest, project-wide
+TypeScript compilation, or sample `src/` / `test/` scaffolding. Repos
+that need those should use one of the CDK project types instead.
 
 #### Initializers <a name="Initializers" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.Initializer"></a>
 
@@ -3812,16 +3816,6 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.publisher">publisher</a></code> | <code>projen.release.Publisher</code> | Package publisher. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.release">release</a></code> | <code>projen.release.Release</code> | Release management. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.upgradeWorkflow">upgradeWorkflow</a></code> | <code>projen.javascript.UpgradeDependencies</code> | The upgrade workflow. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.libdir">libdir</a></code> | <code>string</code> | The directory in which compiled .js files reside. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.srcdir">srcdir</a></code> | <code>string</code> | The directory in which the .ts sources reside. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.testdir">testdir</a></code> | <code>string</code> | The directory in which tests reside. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfig</code> | A typescript configuration file which covers all files (sources, tests, projen). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.watchTask">watchTask</a></code> | <code>projen.Task</code> | The "watch" task. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.docgen">docgen</a></code> | <code>boolean</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.eslint">eslint</a></code> | <code>projen.javascript.Eslint</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.tsconfig">tsconfig</a></code> | <code>projen.javascript.TypescriptConfig</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.tsconfigEslint">tsconfigEslint</a></code> | <code>projen.javascript.TypescriptConfig</code> | *No description.* |
 
 ---
 
@@ -4475,122 +4469,11 @@ The upgrade workflow.
 
 ---
 
-##### `docsDirectory`<sup>Required</sup> <a name="docsDirectory" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.docsDirectory"></a>
-
-```typescript
-public readonly docsDirectory: string;
-```
-
-- *Type:* string
-
----
-
-##### `libdir`<sup>Required</sup> <a name="libdir" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.libdir"></a>
-
-```typescript
-public readonly libdir: string;
-```
-
-- *Type:* string
-
-The directory in which compiled .js files reside.
-
----
-
-##### `srcdir`<sup>Required</sup> <a name="srcdir" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.srcdir"></a>
-
-```typescript
-public readonly srcdir: string;
-```
-
-- *Type:* string
-
-The directory in which the .ts sources reside.
-
----
-
-##### `testdir`<sup>Required</sup> <a name="testdir" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.testdir"></a>
-
-```typescript
-public readonly testdir: string;
-```
-
-- *Type:* string
-
-The directory in which tests reside.
-
----
-
-##### `tsconfigDev`<sup>Required</sup> <a name="tsconfigDev" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.tsconfigDev"></a>
-
-```typescript
-public readonly tsconfigDev: TypescriptConfig;
-```
-
-- *Type:* projen.javascript.TypescriptConfig
-
-A typescript configuration file which covers all files (sources, tests, projen).
-
----
-
-##### `watchTask`<sup>Required</sup> <a name="watchTask" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.watchTask"></a>
-
-```typescript
-public readonly watchTask: Task;
-```
-
-- *Type:* projen.Task
-
-The "watch" task.
-
----
-
-##### `docgen`<sup>Optional</sup> <a name="docgen" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.docgen"></a>
-
-```typescript
-public readonly docgen: boolean;
-```
-
-- *Type:* boolean
-
----
-
-##### `eslint`<sup>Optional</sup> <a name="eslint" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.eslint"></a>
-
-```typescript
-public readonly eslint: Eslint;
-```
-
-- *Type:* projen.javascript.Eslint
-
----
-
-##### `tsconfig`<sup>Optional</sup> <a name="tsconfig" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.tsconfig"></a>
-
-```typescript
-public readonly tsconfig: TypescriptConfig;
-```
-
-- *Type:* projen.javascript.TypescriptConfig
-
----
-
-##### `tsconfigEslint`<sup>Optional</sup> <a name="tsconfigEslint" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.tsconfigEslint"></a>
-
-```typescript
-public readonly tsconfigEslint: TypescriptConfig;
-```
-
-- *Type:* projen.javascript.TypescriptConfig
-
----
-
 #### Constants <a name="Constants" id="Constants"></a>
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.DEFAULT_TASK">DEFAULT_TASK</a></code> | <code>string</code> | The name of the default task (the task executed when `projen` is run without arguments). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.DEFAULT_TS_JEST_TRANFORM_PATTERN">DEFAULT_TS_JEST_TRANFORM_PATTERN</a></code> | <code>string</code> | *No description.* |
 
 ---
 
@@ -4606,16 +4489,6 @@ The name of the default task (the task executed when `projen` is run without arg
 
 Normally
 this task should synthesize the project files.
-
----
-
-##### `DEFAULT_TS_JEST_TRANFORM_PATTERN`<sup>Required</sup> <a name="DEFAULT_TS_JEST_TRANFORM_PATTERN" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.DEFAULT_TS_JEST_TRANFORM_PATTERN"></a>
-
-```typescript
-public readonly DEFAULT_TS_JEST_TRANFORM_PATTERN: string;
-```
-
-- *Type:* string
 
 ---
 
@@ -11634,8 +11507,8 @@ Options for Yarn Berry.
 
 Options for {@link RocketleapPlatformMinimalProject}.
 
-Extends projen's `TypeScriptProjectOptions` with the rocketleap `company`
-and `project` slugs used to build the package name (`@<company>/<project>`).
+Extends projen's `NodeProjectOptions` with the rocketleap `company` and
+`project` slugs used to build the package name (`@<company>/<project>`).
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.Initializer"></a>
 
@@ -11786,24 +11659,6 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowGitIdentity">workflowGitIdentity</a></code> | <code>projen.github.GitIdentity</code> | The git identity to use in workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowNodeVersion">workflowNodeVersion</a></code> | <code>string</code> | The node version used in GitHub Actions workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowPackageCache">workflowPackageCache</a></code> | <code>boolean</code> | Enable Node.js package cache in GitHub workflows. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.disableTsconfig">disableTsconfig</a></code> | <code>boolean</code> | Do not generate a `tsconfig.json` file (used by jsii projects since tsconfig.json is generated by the jsii compiler). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.disableTsconfigDev">disableTsconfigDev</a></code> | <code>boolean</code> | Do not generate a `tsconfig.dev.json` file. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.docgen">docgen</a></code> | <code>boolean</code> | Docgen by Typedoc. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | Docs directory. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.entrypointTypes">entrypointTypes</a></code> | <code>string</code> | The .d.ts file that includes the type declarations for this module. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.eslint">eslint</a></code> | <code>boolean</code> | Setup eslint. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.eslintOptions">eslintOptions</a></code> | <code>projen.javascript.EslintOptions</code> | Eslint options. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.libdir">libdir</a></code> | <code>string</code> | Typescript  artifacts output directory. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenrcTs">projenrcTs</a></code> | <code>boolean</code> | Use TypeScript for your projenrc file (`.projenrc.ts`). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenrcTsOptions">projenrcTsOptions</a></code> | <code>projen.typescript.ProjenrcOptions</code> | Options for .projenrc.ts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.sampleCode">sampleCode</a></code> | <code>boolean</code> | Generate one-time sample in `src/` and `test/` if there are no files there. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.srcdir">srcdir</a></code> | <code>string</code> | Typescript sources directory. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.testdir">testdir</a></code> | <code>string</code> | Jest tests directory. Tests files should be named `xxx.test.ts`. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsconfig">tsconfig</a></code> | <code>projen.javascript.TypescriptConfigOptions</code> | Custom TSConfig. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfigOptions</code> | Custom tsconfig options for the development tsconfig.json file (used for testing). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsconfigDevFile">tsconfigDevFile</a></code> | <code>string</code> | The name of the development tsconfig.json file. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsJestOptions">tsJestOptions</a></code> | <code>projen.typescript.TsJestOptions</code> | Options for ts-jest. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.typescriptVersion">typescriptVersion</a></code> | <code>string</code> | TypeScript version to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.company">company</a></code> | <code>string</code> | The owning company slug — used as the npm scope (e.g. `rocketleap`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.project">project</a></code> | <code>string</code> | The project slug — used as the package name suffix (e.g. `aws-nuke-templates`). |
 
@@ -13802,246 +13657,6 @@ public readonly workflowPackageCache: boolean;
 - *Default:* false
 
 Enable Node.js package cache in GitHub workflows.
-
----
-
-##### `disableTsconfig`<sup>Optional</sup> <a name="disableTsconfig" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.disableTsconfig"></a>
-
-```typescript
-public readonly disableTsconfig: boolean;
-```
-
-- *Type:* boolean
-- *Default:* false
-
-Do not generate a `tsconfig.json` file (used by jsii projects since tsconfig.json is generated by the jsii compiler).
-
----
-
-##### `disableTsconfigDev`<sup>Optional</sup> <a name="disableTsconfigDev" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.disableTsconfigDev"></a>
-
-```typescript
-public readonly disableTsconfigDev: boolean;
-```
-
-- *Type:* boolean
-- *Default:* false
-
-Do not generate a `tsconfig.dev.json` file.
-
----
-
-##### `docgen`<sup>Optional</sup> <a name="docgen" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.docgen"></a>
-
-```typescript
-public readonly docgen: boolean;
-```
-
-- *Type:* boolean
-- *Default:* false
-
-Docgen by Typedoc.
-
----
-
-##### `docsDirectory`<sup>Optional</sup> <a name="docsDirectory" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.docsDirectory"></a>
-
-```typescript
-public readonly docsDirectory: string;
-```
-
-- *Type:* string
-- *Default:* "docs"
-
-Docs directory.
-
----
-
-##### `entrypointTypes`<sup>Optional</sup> <a name="entrypointTypes" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.entrypointTypes"></a>
-
-```typescript
-public readonly entrypointTypes: string;
-```
-
-- *Type:* string
-- *Default:* .d.ts file derived from the project's entrypoint (usually lib/index.d.ts)
-
-The .d.ts file that includes the type declarations for this module.
-
----
-
-##### `eslint`<sup>Optional</sup> <a name="eslint" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.eslint"></a>
-
-```typescript
-public readonly eslint: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true, unless biome is enabled
-
-Setup eslint.
-
----
-
-##### `eslintOptions`<sup>Optional</sup> <a name="eslintOptions" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.eslintOptions"></a>
-
-```typescript
-public readonly eslintOptions: EslintOptions;
-```
-
-- *Type:* projen.javascript.EslintOptions
-- *Default:* opinionated default options
-
-Eslint options.
-
----
-
-##### `libdir`<sup>Optional</sup> <a name="libdir" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.libdir"></a>
-
-```typescript
-public readonly libdir: string;
-```
-
-- *Type:* string
-- *Default:* "lib"
-
-Typescript  artifacts output directory.
-
----
-
-##### `projenrcTs`<sup>Optional</sup> <a name="projenrcTs" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenrcTs"></a>
-
-```typescript
-public readonly projenrcTs: boolean;
-```
-
-- *Type:* boolean
-- *Default:* false
-
-Use TypeScript for your projenrc file (`.projenrc.ts`).
-
----
-
-##### `projenrcTsOptions`<sup>Optional</sup> <a name="projenrcTsOptions" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenrcTsOptions"></a>
-
-```typescript
-public readonly projenrcTsOptions: ProjenrcOptions;
-```
-
-- *Type:* projen.typescript.ProjenrcOptions
-
-Options for .projenrc.ts.
-
----
-
-##### `sampleCode`<sup>Optional</sup> <a name="sampleCode" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.sampleCode"></a>
-
-```typescript
-public readonly sampleCode: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Generate one-time sample in `src/` and `test/` if there are no files there.
-
----
-
-##### `srcdir`<sup>Optional</sup> <a name="srcdir" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.srcdir"></a>
-
-```typescript
-public readonly srcdir: string;
-```
-
-- *Type:* string
-- *Default:* "src"
-
-Typescript sources directory.
-
----
-
-##### `testdir`<sup>Optional</sup> <a name="testdir" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.testdir"></a>
-
-```typescript
-public readonly testdir: string;
-```
-
-- *Type:* string
-- *Default:* "test"
-
-Jest tests directory. Tests files should be named `xxx.test.ts`.
-
-If this directory is under `srcdir` (e.g. `src/test`, `src/__tests__`),
-then tests are going to be compiled into `lib/` and executed as javascript.
-If the test directory is outside of `src`, then we configure jest to
-compile the code in-memory.
-
----
-
-##### `tsconfig`<sup>Optional</sup> <a name="tsconfig" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsconfig"></a>
-
-```typescript
-public readonly tsconfig: TypescriptConfigOptions;
-```
-
-- *Type:* projen.javascript.TypescriptConfigOptions
-- *Default:* default options
-
-Custom TSConfig.
-
----
-
-##### `tsconfigDev`<sup>Optional</sup> <a name="tsconfigDev" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsconfigDev"></a>
-
-```typescript
-public readonly tsconfigDev: TypescriptConfigOptions;
-```
-
-- *Type:* projen.javascript.TypescriptConfigOptions
-- *Default:* use the production tsconfig options
-
-Custom tsconfig options for the development tsconfig.json file (used for testing).
-
----
-
-##### `tsconfigDevFile`<sup>Optional</sup> <a name="tsconfigDevFile" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsconfigDevFile"></a>
-
-```typescript
-public readonly tsconfigDevFile: string;
-```
-
-- *Type:* string
-- *Default:* "tsconfig.dev.json"
-
-The name of the development tsconfig.json file.
-
----
-
-##### `tsJestOptions`<sup>Optional</sup> <a name="tsJestOptions" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.tsJestOptions"></a>
-
-```typescript
-public readonly tsJestOptions: TsJestOptions;
-```
-
-- *Type:* projen.typescript.TsJestOptions
-
-Options for ts-jest.
-
----
-
-##### `typescriptVersion`<sup>Optional</sup> <a name="typescriptVersion" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.typescriptVersion"></a>
-
-```typescript
-public readonly typescriptVersion: string;
-```
-
-- *Type:* string
-- *Default:* "latest"
-
-TypeScript version to use.
-
-NOTE: Typescript is not semantically versioned and should remain on the
-same minor, so we recommend using a `~` dependency (e.g. `~1.2.3`).
 
 ---
 
