@@ -1,4 +1,4 @@
-import { javascript } from 'projen';
+import { typescript } from 'projen';
 
 import { GIT_CONFIGURATION } from './common/git';
 import { createYarnConfiguration } from './common/yarn';
@@ -9,7 +9,7 @@ import { createYarnConfiguration } from './common/yarn';
  * Extends projen's `NodeProjectOptions` with the rocketleap `company` and
  * `project` slugs used to build the package name (`@<company>/<project>`).
  */
-export interface RocketleapMinimalProjectOptions extends javascript.NodeProjectOptions {
+export interface RocketleapMinimalProjectOptions extends typescript.TypeScriptProjectOptions {
   /**
    * The owning company slug — used as the npm scope (e.g. `rocketleap`).
    * @default no scope
@@ -44,7 +44,7 @@ export interface RocketleapMinimalProjectOptions extends javascript.NodeProjectO
  * TypeScript compilation. Repos that need those should use one of the
  * CDK project types instead.
  */
-export class RocketleapMinimalProject extends javascript.NodeProject {
+export class RocketleapMinimalProject extends typescript.TypeScriptProject {
   protected readonly company: string;
   protected readonly projectName: string;
 
