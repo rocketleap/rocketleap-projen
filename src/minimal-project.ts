@@ -1,15 +1,16 @@
-import { typescript } from 'projen';
+import { javascript, typescript } from 'projen';
 
 import { GIT_CONFIGURATION } from './common/git';
+import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
 
 /**
  * Options for {@link RocketleapPlatformMinimalProject}.
  *
- * Extends projen's `TypeScriptProjectOptions` with the rocketleap `company`
- * and `project` slugs used to build the package name (`@<company>/<project>`).
+ * Extends projen's `NodeProjectOptions` with the rocketleap `company` and
+ * `project` slugs used to build the package name (`@<company>/<project>`).
  */
-export interface RocketleapPlatformMinimalProjectOptions extends typescript.TypeScriptProjectOptions {
+export interface RocketleapPlatformMinimalProjectOptions extends javascript.NodeProjectOptions {
   /**
    * The owning company slug — used as the npm scope (e.g. `rocketleap`).
    * @default no scope
@@ -37,14 +38,18 @@ export interface RocketleapPlatformMinimalProjectOptions extends typescript.Type
  *  - A `main` default release branch.
  *  - Yarn 4 (Berry) configured against the rocketleap registry.
  *  - The rocketleap git defaults (line endings, attributes).
+ *  - The rocketleap prettier defaults.
+ *  - A `.projenrc.ts` (TypeScript projenrc) backed by a minimal
+ *    `tsconfig.projen.json` for compilation — does not promote the
+ *    whole project to TypeScript.
  *  - GitHub Mergify and the projen-default workflows disabled — the
  *    rocketleap workflows live in the internal subclass.
  *
- * Deliberately does NOT bring CDK config, ESLint, Prettier, SWC, jest, or
- * TypeScript compilation. Repos that need those should use one of the
- * CDK project types instead.
+ * Deliberately does NOT bring CDK config, ESLint, SWC, jest, project-wide
+ * TypeScript compilation, or sample `src/` / `test/` scaffolding. Repos
+ * that need those should use one of the CDK project types instead.
  */
-export class RocketleapPlatformMinimalProject extends typescript.TypeScriptProject {
+export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
   protected readonly company: string;
   protected readonly projectName: string;
 
@@ -68,10 +73,16 @@ export class RocketleapPlatformMinimalProject extends typescript.TypeScriptProje
       autoDetectBin: false,
 
       ...createYarnConfiguration(company),
+      ...PRETTIER_CONFIGURATION,
       ...GIT_CONFIGURATION,
     });
 
     this.company = company;
     this.projectName = project;
+
+    // Enable TypeScript projenrc without making the whole project a
+    // TypeScriptProject (which would drag in jest, eslint, sample src/test
+    // and a top-level tsconfig that consumers don't need).
+    new typescript.ProjenrcTs(this);
   }
 }
