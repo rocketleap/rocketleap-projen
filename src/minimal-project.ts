@@ -3,6 +3,7 @@ import { javascript, typescript } from 'projen';
 import { GIT_CONFIGURATION } from './common/git';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
+import { addRocketleapLicense } from './license';
 
 /**
  * Options for {@link RocketleapPlatformMinimalProject}.
@@ -84,5 +85,7 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // TypeScriptProject (which would drag in jest, eslint, sample src/test
     // and a top-level tsconfig that consumers don't need).
     new typescript.ProjenrcTs(this);
+
+    addRocketleapLicense(this);
   }
 }
