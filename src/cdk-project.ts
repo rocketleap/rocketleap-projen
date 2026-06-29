@@ -46,6 +46,8 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       name: `${project}`,
       packageName: `@${company}/${project}`,
 
+      sampleCode: false,
+
       cdkVersion: cdkVersion,
       constructsVersion: constructVersion,
       cdkVersionPinning: true,
