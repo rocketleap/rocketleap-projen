@@ -28,6 +28,23 @@ describe('reusable action workflows', () => {
     expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/setup-node@v6');
   });
 
+  test('action-build.yml verifies projen synth is a no-op before build', () => {
+    const project = newProject();
+    addActionBuildWorkflow(project);
+    const snapshot = synthSnapshot(project);
+    const build = snapshot['.github/workflows/action-build.yml'];
+    expect(build).toContain('Verify projen synth is up to date');
+    expect(build).toContain('npx projen');
+    expect(build).toContain('git diff --exit-code');
+    // Drift check must run after install and before build/test so it fails fast.
+    const verifyIdx = build.indexOf('Verify projen synth is up to date');
+    const yarnBuildIdx = build.indexOf('yarn build');
+    const yarnInstallIdx = build.indexOf('- run: yarn\n');
+    expect(yarnInstallIdx).toBeGreaterThan(-1);
+    expect(verifyIdx).toBeGreaterThan(yarnInstallIdx);
+    expect(verifyIdx).toBeLessThan(yarnBuildIdx);
+  });
+
   test('action-deploy.yml is emitted', () => {
     const project = newProject();
     addActionDeployWorkflow(project);
