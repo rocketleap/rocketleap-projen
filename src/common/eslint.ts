@@ -1,49 +1,42 @@
 import { javascript } from 'projen';
 import { EslintOptions } from 'projen/lib/javascript';
 
-const DEFAULT_IGNORE_PATTERNS: string[] = [
-  // Build artifacts and generated files
-  '*.js',
-  '*.d.ts',
-  'node_modules/',
-  'dist/',
-  'lib/',
-  'coverage/',
-  '*.generated.ts',
-  // Projen-generated files
-  'package.json',
-  'tsconfig.json',
-  'tsconfig.dev.json',
-  '.eslintrc.json',
-  'jest.config.json',
-  // CDK-specific files
-  'cdk.out/',
-  'cdk.json',
-  // Handler files
-  'src/**/*-handler/index.ts',
-];
-
-const DEFAULT_DIRS: string[] = ['src'];
+interface EsLintConfiguration {
+  eslint: boolean;
+  eslintOptions: EslintOptions;
+}
 
 /**
- * Rocketleap ESLint/Lint configuration, merged with any caller-supplied options.
- *
- * Merge rules:
- * - `dirs` and `ignorePatterns` are concatenated (caller entries first, deduped).
- * - Any other `EslintOptions` field the caller sets wins over the Rocketleap
- *   default (`prettier: true`).
+ * ESLint/Lint configuration for Rocketleap projects
  */
-export function eslintConfig(userOptions?: Partial<EslintOptions>): { eslint: true; eslintOptions: EslintOptions } {
-  return {
-    eslint: true,
-    eslintOptions: {
-      dirs: dedupe([...(userOptions?.dirs ?? []), ...DEFAULT_DIRS]),
-      ignorePatterns: dedupe([...(userOptions?.ignorePatterns ?? []), ...DEFAULT_IGNORE_PATTERNS]),
-      prettier: userOptions?.prettier ?? true,
-      ...omit(userOptions, ['dirs', 'ignorePatterns', 'prettier']),
-    },
-  };
-}
+export const ESLINT_CONFIGURATION: EsLintConfiguration = {
+  eslint: true,
+  eslintOptions: {
+    dirs: ['src'],
+    ignorePatterns: [
+      // Build artifacts and generated files
+      '*.js',
+      '*.d.ts',
+      'node_modules/',
+      'dist/',
+      'lib/',
+      'coverage/',
+      '*.generated.ts',
+      // Projen-generated files
+      'package.json',
+      'tsconfig.json',
+      'tsconfig.dev.json',
+      '.eslintrc.json',
+      'jest.config.json',
+      // CDK-specific files
+      'cdk.out/',
+      'cdk.json',
+      // Handler files
+      'src/**/*-handler/index.ts',
+    ],
+    prettier: true,
+  },
+};
 
 /**
  * Configures ESLint with Rocketleap's standard extends, plugins, and overrides
@@ -76,25 +69,4 @@ export function configureEsLint(eslint: javascript.Eslint): void {
       'jest/expect-expect': 'off',
     },
   });
-}
-
-function dedupe<T>(items: T[]): T[] {
-  const seen = new Set<T>();
-  const out: T[] = [];
-  for (const item of items) {
-    if (seen.has(item)) continue;
-    seen.add(item);
-    out.push(item);
-  }
-  return out;
-}
-
-function omit<T extends object, K extends keyof T>(obj: T | undefined, keys: K[]): Omit<T, K> {
-  if (!obj) return {} as Omit<T, K>;
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if ((keys as string[]).includes(k)) continue;
-    out[k] = v;
-  }
-  return out as Omit<T, K>;
 }

@@ -169,6 +169,12 @@ export interface RocketleapLibraryCdkProjectOptions {
    */
   readonly pullRequestTemplateContents?: Array<string>;
   /**
+   * Include a GitHub pull request template.
+   * @default true
+   * @stability experimental
+   */
+  readonly pullRequestTemplate?: boolean;
+  /**
    * Version of projen to install.
    * @default - Defaults to the latest version.
    * @stability experimental
@@ -652,6 +658,19 @@ export interface RocketleapLibraryCdkProjectOptions {
    */
   readonly peerDependencyOptions?: javascript.PeerDependencyOptions;
   /**
+   * The "name" in package.json.
+   * @default - defaults to project name
+   * @stability experimental
+   * @featured true
+   */
+  readonly packageName?: string;
+  /**
+   * The Node Package Manager used to execute scripts.
+   * @default NodePackageManager.YARN_CLASSIC
+   * @stability experimental
+   */
+  readonly packageManager?: javascript.NodePackageManager;
+  /**
    * Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work.
    * @default - false
    * @stability experimental
@@ -722,6 +741,12 @@ export interface RocketleapLibraryCdkProjectOptions {
    * @stability experimental
    */
   readonly maxNodeVersion?: string;
+  /**
+   * Indicates if a license should be added.
+   * @default true
+   * @stability experimental
+   */
+  readonly licensed?: boolean;
   /**
    * License's SPDX identifier.
    * See https://github.com/projen/projen/tree/main/license-text for a list of supported licenses.
@@ -831,6 +856,12 @@ export interface RocketleapLibraryCdkProjectOptions {
    * @stability experimental
    */
   readonly bin?: Record<string, string>;
+  /**
+   * Automatically add all executables under the `bin` directory to your `package.json` file under the `bin` section.
+   * @default true
+   * @stability experimental
+   */
+  readonly autoDetectBin?: boolean;
   /**
    * Author's URL / Website.
    * @stability experimental

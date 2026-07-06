@@ -102,34 +102,16 @@ The base class used by both project types. Can be used directly if you need cust
 | `constructVersion`      | No       | `'10.4.4'`  | The constructs library version                  |
 | `buildingBlocksVersion` | No       | `'0.104.1'` | The Rocketleap building blocks CDK version      |
 
-## Extending the template
+### Extending `.gitignore`
 
-The project options struct is generated from projen's `AwsCdkTypeScriptAppOptions` (or `TypeScriptProjectOptions` for the library variant) with a small set of load-bearing keys `Omit`ed so the type system prevents accidentally overriding them: `name`, `packageName`, `defaultReleaseBranch`, `licensed`, `autoDetectBin`, `pullRequestTemplate`, `cdkVersionPinning`, `packageManager`, and (for the CDK variant) `cdkVersion`, `sampleCode`.
-
-Everything else is passed straight through to projen. For the fields where Rocketleap ships opinionated defaults (`gitignore`, `eslintOptions`, `prettierOptions`, `tsconfig`, `tsconfigDev`, `jestOptions`, `yarnBerryOptions`, `context`, `featureFlags`), your input is merged into the Rocketleap defaults so both survive:
-
-- Arrays (`gitignore`, `ignorePatterns`, `include`, `exclude`, …) concatenate; your entries come first and duplicates are dropped.
-- Plain objects (`tsconfig.compilerOptions`, `prettierOptions.settings`, `context`, `yarnRcOptions.npmScopes`, …) merge recursively; on scalar collisions your value wins.
-
-**Common extensions**
+Pass `gitignore` to add patterns on top of the Rocketleap defaults (e.g. for a workload that bundles Python alongside the CDK):
 
 ```typescript
-const project = new WorkloadCdkProject({
+new WorkloadCdkProject({
   company: 'acme',
   project: 'my-app-cdk',
-
-  // Merged with the Rocketleap defaults
   gitignore: ['.venv/', 'pyproject.toml.bak'],
-  context: { 'my-team:feature-x': true },
-  eslintOptions: { ignorePatterns: ['python/'] },
-
-  // Runs before `cdk synth`
-  buildCommand: 'poetry build',
 });
-
-// Or attach arbitrary build steps after construction
-project.preCompileTask.exec('poetry build', { name: 'build-python' });
-project.preCompileTask.exec('./scripts/generate-schema.sh', { name: 'generate-schema' });
-
-project.synth();
 ```
+
+Your patterns are prepended to the Rocketleap defaults and duplicates are dropped.

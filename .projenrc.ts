@@ -2,11 +2,11 @@ import { PrimitiveType } from '@jsii/spec';
 import { ProjenStruct, Struct } from '@mrgrain/jsii-struct-builder';
 import { cdk, javascript, JsonPatch } from 'projen';
 import { ACTIONS_CONFIGURATION } from './src/common/actions';
-import { configureEsLint, eslintConfig } from './src/common/eslint';
+import { configureEsLint, ESLINT_CONFIGURATION } from './src/common/eslint';
 import { gitIgnore } from './src/common/git';
 import { configurePackageJson } from './src/common/package-json';
 import { createPreCommitConfig, JSII_PRE_COMMIT_HOOKS } from './src/common/pre-commit';
-import { prettierConfig } from './src/common/prettier';
+import { PRETTIER_CONFIGURATION } from './src/common/prettier';
 import { YARN_CONFIGURATION } from './src/common/yarn';
 
 const project = new cdk.JsiiProject({
@@ -30,8 +30,8 @@ const project = new cdk.JsiiProject({
   bundledDeps: [],
 
   ...YARN_CONFIGURATION,
-  ...eslintConfig(),
-  ...prettierConfig(),
+  ...ESLINT_CONFIGURATION,
+  ...PRETTIER_CONFIGURATION,
   gitignore: gitIgnore(),
 });
 configureEsLint(project.eslint!);
@@ -66,18 +66,9 @@ project.tryFindObjectFile('.github/workflows/release.yml')?.patch(
 
 new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/cdk-project-options.generated.ts' })
   .mixin(Struct.fromFqn('projen.awscdk.AwsCdkTypeScriptAppOptions'))
-  .omit(
-    'cdkVersion',
-    'name',
-    'packageName',
-    'defaultReleaseBranch',
-    'licensed',
-    'autoDetectBin',
-    'pullRequestTemplate',
-    'cdkVersionPinning',
-    'packageManager',
-    'sampleCode',
-  )
+  .omit('cdkVersion')
+  .omit('name')
+  .omit('defaultReleaseBranch')
   .add({
     name: 'company',
     type: { primitive: PrimitiveType.String },
@@ -136,15 +127,8 @@ new ProjenStruct(project, {
   filePath: 'src/library-cdk-project-options.generated.ts',
 })
   .mixin(Struct.fromFqn('projen.typescript.TypeScriptProjectOptions'))
-  .omit(
-    'name',
-    'packageName',
-    'defaultReleaseBranch',
-    'licensed',
-    'autoDetectBin',
-    'pullRequestTemplate',
-    'packageManager',
-  )
+  .omit('name')
+  .omit('defaultReleaseBranch')
   .add({
     name: 'company',
     type: { primitive: PrimitiveType.String },

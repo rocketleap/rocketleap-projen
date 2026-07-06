@@ -1,8 +1,8 @@
 import { javascript, typescript } from 'projen';
 
 import { gitIgnore } from './common/git';
-import { prettierConfig } from './common/prettier';
-import { yarnConfig } from './common/yarn';
+import { PRETTIER_CONFIGURATION } from './common/prettier';
+import { createYarnConfiguration } from './common/yarn';
 import { addRocketleapLicense } from './license';
 
 /**
@@ -73,9 +73,9 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
       licensed: false,
       autoDetectBin: false,
 
+      ...createYarnConfiguration(company),
+      ...PRETTIER_CONFIGURATION,
       gitignore: gitIgnore(options.gitignore),
-      ...yarnConfig(company, options.yarnBerryOptions),
-      ...prettierConfig(options.prettierOptions),
     });
 
     this.company = company;

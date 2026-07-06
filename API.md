@@ -6329,6 +6329,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.authorUrl">authorUrl</a></code> | <code>string</code> | Author's URL / Website. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.autoApproveOptions">autoApproveOptions</a></code> | <code>projen.github.AutoApproveOptions</code> | Enable and configure the 'auto approve' workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.autoApproveUpgrades">autoApproveUpgrades</a></code> | <code>boolean</code> | Automatically approve deps upgrade PRs, allowing them to be merged by mergify (if configured). |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.autoDetectBin">autoDetectBin</a></code> | <code>boolean</code> | Automatically add all executables under the `bin` directory to your `package.json` file under the `bin` section. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.autoMerge">autoMerge</a></code> | <code>boolean</code> | Enable automatic merging on GitHub. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.autoMergeOptions">autoMergeOptions</a></code> | <code>projen.github.AutoMergeOptions</code> | Configure options for automatic merging on GitHub. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.bin">bin</a></code> | <code>{[ key: string ]: string}</code> | Binary programs vended with your module. |
@@ -6353,6 +6354,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkout">cdkout</a></code> | <code>string</code> | cdk.out directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkTestDependencies">cdkTestDependencies</a></code> | <code>string[]</code> | AWS CDK modules required for testing. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkVersion">cdkVersion</a></code> | <code>string</code> | The AWS CDK version to use in the project. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkVersionPinning">cdkVersionPinning</a></code> | <code>boolean</code> | Use pinned version instead of caret version for CDK. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.checkLicenses">checkLicenses</a></code> | <code>projen.javascript.LicenseCheckerOptions</code> | Configure which licenses should be deemed acceptable for use by dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.clobber">clobber</a></code> | <code>boolean</code> | Add a `clobber` task which resets the repo to origin. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.codeArtifactOptions">codeArtifactOptions</a></code> | <code>projen.javascript.CodeArtifactOptions</code> | Options for npm packages using AWS CodeArtifact. |
@@ -6400,6 +6402,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.lambdaOptions">lambdaOptions</a></code> | <code>projen.awscdk.LambdaFunctionCommonOptions</code> | Common options for all AWS Lambda functions. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.libdir">libdir</a></code> | <code>string</code> | Typescript  artifacts output directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.license">license</a></code> | <code>string</code> | License's SPDX identifier. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.licensed">licensed</a></code> | <code>boolean</code> | Indicates if a license should be added. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.logging">logging</a></code> | <code>projen.LoggerOptions</code> | Configure logging options such as verbosity. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.majorVersion">majorVersion</a></code> | <code>number</code> | Major version to release from the default branch. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.maxNodeVersion">maxNodeVersion</a></code> | <code>string</code> | The maximum node version supported by this package. |
@@ -6421,6 +6424,8 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmTrustedPublishing">npmTrustedPublishing</a></code> | <code>boolean</code> | Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.outdir">outdir</a></code> | <code>string</code> | The root directory of the project. Relative to this directory, all files are synthesized. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.package">package</a></code> | <code>boolean</code> | Defines a `package` task that will produce an npm tarball under the artifacts directory (e.g. `dist`). |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.packageManager">packageManager</a></code> | <code>projen.javascript.NodePackageManager</code> | The Node Package Manager used to execute scripts. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.packageName">packageName</a></code> | <code>string</code> | The "name" in package.json. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.parent">parent</a></code> | <code>projen.Project</code> | The parent project, if this project is part of a bigger project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.peerDependencyOptions">peerDependencyOptions</a></code> | <code>projen.javascript.PeerDependencyOptions</code> | Options for `peerDeps`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.peerDeps">peerDeps</a></code> | <code>string[]</code> | Peer dependencies for this module. |
@@ -6443,6 +6448,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenVersion">projenVersion</a></code> | <code>string</code> | Version of projen to install. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.publishDryRun">publishDryRun</a></code> | <code>boolean</code> | Instead of actually publishing to package managers, just print the publishing command. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.publishTasks">publishTasks</a></code> | <code>boolean</code> | Define publishing tasks that can be executed manually as well as workflows. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pullRequestTemplate">pullRequestTemplate</a></code> | <code>boolean</code> | Include a GitHub pull request template. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pullRequestTemplateContents">pullRequestTemplateContents</a></code> | <code>string[]</code> | The contents of the pull request template. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.readme">readme</a></code> | <code>projen.SampleReadmeProps</code> | The README setup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releasableCommits">releasableCommits</a></code> | <code>projen.ReleasableCommits</code> | Find commits that should be considered releasable Used to decide if a release is required. |
@@ -6465,6 +6471,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.repository">repository</a></code> | <code>string</code> | The repository is the location where the actual code for your package lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.repositoryDirectory">repositoryDirectory</a></code> | <code>string</code> | If the package.json for your package is not in the root directory (for example if it is part of a monorepo), you can specify the directory in which it lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.requireApproval">requireApproval</a></code> | <code>projen.awscdk.ApprovalLevel</code> | To protect you against unintended changes that affect your security posture, the AWS CDK Toolkit prompts you to approve security-related changes before deploying them. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.sampleCode">sampleCode</a></code> | <code>boolean</code> | Generate one-time sample in `src/` and `test/` if there are no files there. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.scopedPackagesOptions">scopedPackagesOptions</a></code> | <code>projen.javascript.ScopedPackagesOptions[]</code> | Options for privately hosted scoped packages. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.scripts">scripts</a></code> | <code>{[ key: string ]: string}</code> | npm scripts to include. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.srcdir">srcdir</a></code> | <code>string</code> | Typescript sources directory. |
@@ -6687,6 +6694,19 @@ public readonly autoApproveUpgrades: boolean;
 Automatically approve deps upgrade PRs, allowing them to be merged by mergify (if configured).
 
 Throw if set to true but `autoApproveOptions` are not defined.
+
+---
+
+##### `autoDetectBin`<sup>Optional</sup> <a name="autoDetectBin" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.autoDetectBin"></a>
+
+```typescript
+public readonly autoDetectBin: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically add all executables under the `bin` directory to your `package.json` file under the `bin` section.
 
 ---
 
@@ -7045,6 +7065,21 @@ public readonly cdkVersion: string;
 - *Default:* 'LATEST'
 
 The AWS CDK version to use in the project.
+
+---
+
+##### `cdkVersionPinning`<sup>Optional</sup> <a name="cdkVersionPinning" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkVersionPinning"></a>
+
+```typescript
+public readonly cdkVersionPinning: boolean;
+```
+
+- *Type:* boolean
+
+Use pinned version instead of caret version for CDK.
+
+You can use this to prevent mixed versions for your CDK dependencies and to prevent auto-updates.
+If you use experimental features this will let you define the moment you include breaking changes.
 
 ---
 
@@ -7687,6 +7722,19 @@ Use the `licensed` option if you want to no license to be specified.
 
 ---
 
+##### `licensed`<sup>Optional</sup> <a name="licensed" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.licensed"></a>
+
+```typescript
+public readonly licensed: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Indicates if a license should be added.
+
+---
+
 ##### `logging`<sup>Optional</sup> <a name="logging" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.logging"></a>
 
 ```typescript
@@ -8035,6 +8083,32 @@ Defines a `package` task that will produce an npm tarball under the artifacts di
 
 ---
 
+##### `packageManager`<sup>Optional</sup> <a name="packageManager" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.packageManager"></a>
+
+```typescript
+public readonly packageManager: NodePackageManager;
+```
+
+- *Type:* projen.javascript.NodePackageManager
+- *Default:* NodePackageManager.YARN_CLASSIC
+
+The Node Package Manager used to execute scripts.
+
+---
+
+##### `packageName`<sup>Optional</sup> <a name="packageName" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.packageName"></a>
+
+```typescript
+public readonly packageName: string;
+```
+
+- *Type:* string
+- *Default:* defaults to project name
+
+The "name" in package.json.
+
+---
+
 ##### `parent`<sup>Optional</sup> <a name="parent" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.parent"></a>
 
 ```typescript
@@ -8341,6 +8415,19 @@ Define publishing tasks that can be executed manually as well as workflows.
 
 Normally, publishing only happens within automated workflows. Enable this
 in order to create a publishing task for each publishing activity.
+
+---
+
+##### `pullRequestTemplate`<sup>Optional</sup> <a name="pullRequestTemplate" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pullRequestTemplate"></a>
+
+```typescript
+public readonly pullRequestTemplate: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Include a GitHub pull request template.
 
 ---
 
@@ -8653,6 +8740,19 @@ public readonly requireApproval: ApprovalLevel;
 - *Default:* ApprovalLevel.BROADENING
 
 To protect you against unintended changes that affect your security posture, the AWS CDK Toolkit prompts you to approve security-related changes before deploying them.
+
+---
+
+##### `sampleCode`<sup>Optional</sup> <a name="sampleCode" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.sampleCode"></a>
+
+```typescript
+public readonly sampleCode: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Generate one-time sample in `src/` and `test/` if there are no files there.
 
 ---
 
@@ -9018,6 +9118,7 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.authorUrl">authorUrl</a></code> | <code>string</code> | Author's URL / Website. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.autoApproveOptions">autoApproveOptions</a></code> | <code>projen.github.AutoApproveOptions</code> | Enable and configure the 'auto approve' workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.autoApproveUpgrades">autoApproveUpgrades</a></code> | <code>boolean</code> | Automatically approve deps upgrade PRs, allowing them to be merged by mergify (if configured). |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.autoDetectBin">autoDetectBin</a></code> | <code>boolean</code> | Automatically add all executables under the `bin` directory to your `package.json` file under the `bin` section. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.autoMerge">autoMerge</a></code> | <code>boolean</code> | Enable automatic merging on GitHub. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.autoMergeOptions">autoMergeOptions</a></code> | <code>projen.github.AutoMergeOptions</code> | Configure options for automatic merging on GitHub. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.bin">bin</a></code> | <code>{[ key: string ]: string}</code> | Binary programs vended with your module. |
@@ -9071,6 +9172,7 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.keywords">keywords</a></code> | <code>string[]</code> | Keywords to include in `package.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.libdir">libdir</a></code> | <code>string</code> | Typescript  artifacts output directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.license">license</a></code> | <code>string</code> | License's SPDX identifier. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.licensed">licensed</a></code> | <code>boolean</code> | Indicates if a license should be added. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.logging">logging</a></code> | <code>projen.LoggerOptions</code> | Configure logging options such as verbosity. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.majorVersion">majorVersion</a></code> | <code>number</code> | Major version to release from the default branch. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.maxNodeVersion">maxNodeVersion</a></code> | <code>string</code> | The maximum node version supported by this package. |
@@ -9092,6 +9194,8 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmTrustedPublishing">npmTrustedPublishing</a></code> | <code>boolean</code> | Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.outdir">outdir</a></code> | <code>string</code> | The root directory of the project. Relative to this directory, all files are synthesized. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.package">package</a></code> | <code>boolean</code> | Defines a `package` task that will produce an npm tarball under the artifacts directory (e.g. `dist`). |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.packageManager">packageManager</a></code> | <code>projen.javascript.NodePackageManager</code> | The Node Package Manager used to execute scripts. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.packageName">packageName</a></code> | <code>string</code> | The "name" in package.json. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.parent">parent</a></code> | <code>projen.Project</code> | The parent project, if this project is part of a bigger project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.peerDependencyOptions">peerDependencyOptions</a></code> | <code>projen.javascript.PeerDependencyOptions</code> | Options for `peerDeps`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.peerDeps">peerDeps</a></code> | <code>string[]</code> | Peer dependencies for this module. |
@@ -9114,6 +9218,7 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenVersion">projenVersion</a></code> | <code>string</code> | Version of projen to install. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.publishDryRun">publishDryRun</a></code> | <code>boolean</code> | Instead of actually publishing to package managers, just print the publishing command. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.publishTasks">publishTasks</a></code> | <code>boolean</code> | Define publishing tasks that can be executed manually as well as workflows. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pullRequestTemplate">pullRequestTemplate</a></code> | <code>boolean</code> | Include a GitHub pull request template. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pullRequestTemplateContents">pullRequestTemplateContents</a></code> | <code>string[]</code> | The contents of the pull request template. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.readme">readme</a></code> | <code>projen.SampleReadmeProps</code> | The README setup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releasableCommits">releasableCommits</a></code> | <code>projen.ReleasableCommits</code> | Find commits that should be considered releasable Used to decide if a release is required. |
@@ -9317,6 +9422,19 @@ public readonly autoApproveUpgrades: boolean;
 Automatically approve deps upgrade PRs, allowing them to be merged by mergify (if configured).
 
 Throw if set to true but `autoApproveOptions` are not defined.
+
+---
+
+##### `autoDetectBin`<sup>Optional</sup> <a name="autoDetectBin" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.autoDetectBin"></a>
+
+```typescript
+public readonly autoDetectBin: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically add all executables under the `bin` directory to your `package.json` file under the `bin` section.
 
 ---
 
@@ -10056,6 +10174,19 @@ Use the `licensed` option if you want to no license to be specified.
 
 ---
 
+##### `licensed`<sup>Optional</sup> <a name="licensed" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.licensed"></a>
+
+```typescript
+public readonly licensed: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Indicates if a license should be added.
+
+---
+
 ##### `logging`<sup>Optional</sup> <a name="logging" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.logging"></a>
 
 ```typescript
@@ -10404,6 +10535,32 @@ Defines a `package` task that will produce an npm tarball under the artifacts di
 
 ---
 
+##### `packageManager`<sup>Optional</sup> <a name="packageManager" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.packageManager"></a>
+
+```typescript
+public readonly packageManager: NodePackageManager;
+```
+
+- *Type:* projen.javascript.NodePackageManager
+- *Default:* NodePackageManager.YARN_CLASSIC
+
+The Node Package Manager used to execute scripts.
+
+---
+
+##### `packageName`<sup>Optional</sup> <a name="packageName" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.packageName"></a>
+
+```typescript
+public readonly packageName: string;
+```
+
+- *Type:* string
+- *Default:* defaults to project name
+
+The "name" in package.json.
+
+---
+
 ##### `parent`<sup>Optional</sup> <a name="parent" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.parent"></a>
 
 ```typescript
@@ -10710,6 +10867,19 @@ Define publishing tasks that can be executed manually as well as workflows.
 
 Normally, publishing only happens within automated workflows. Enable this
 in order to create a publishing task for each publishing activity.
+
+---
+
+##### `pullRequestTemplate`<sup>Optional</sup> <a name="pullRequestTemplate" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pullRequestTemplate"></a>
+
+```typescript
+public readonly pullRequestTemplate: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Include a GitHub pull request template.
 
 ---
 

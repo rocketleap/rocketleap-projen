@@ -2,15 +2,20 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { awscdk, JsonPatch, SampleFile, typescript } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
-import { cdkConfig } from './common/cdk';
-import { compileConfig, configureSwc, libraryCompileConfig, swcConfig } from './common/compile';
-import { configureEsLint, eslintConfig } from './common/eslint';
+import { CDK_CONFIGURATION } from './common/cdk';
+import {
+  COMPILE_CONFIGURATION,
+  configureSwc,
+  LIBRARY_COMPILE_CONFIGURATION,
+  SWC_CONFIGURATION,
+} from './common/compile';
+import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { gitIgnore } from './common/git';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
-import { prettierConfig } from './common/prettier';
+import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { addCdkPipelineWorkflows } from './common/workflows';
-import { configureTaskPath, yarnConfig } from './common/yarn';
+import { configureTaskPath, createYarnConfiguration } from './common/yarn';
 import { addDependabotConfig } from './dependabot';
 import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-options.generated';
 import { addRocketleapLicense } from './license';
@@ -38,32 +43,32 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
 
     super({
       ...options,
-
-      // Locked identity / release settings — always Rocketleap-owned.
       name: `${project}`,
       packageName: `@${company}/${project}`,
-      defaultReleaseBranch: 'main',
-      licensed: false,
-      autoDetectBin: false,
-      pullRequestTemplate: false,
+
       sampleCode: false,
-      cdkVersion,
+
+      cdkVersion: cdkVersion,
       constructsVersion: constructVersion,
       cdkVersionPinning: true,
+
+      defaultReleaseBranch: 'main',
       githubOptions: {
-        ...(options.githubOptions ?? {}),
         mergify: false,
         workflows: false,
       },
+      pullRequestTemplate: false,
 
-      // Extensible defaults — merged with any caller-supplied input.
+      licensed: false,
+      autoDetectBin: false,
+
+      ...createYarnConfiguration(company),
+      ...COMPILE_CONFIGURATION,
+      ...ESLINT_CONFIGURATION,
+      ...PRETTIER_CONFIGURATION,
+      ...CDK_CONFIGURATION,
+      ...SWC_CONFIGURATION,
       gitignore: gitIgnore(options.gitignore),
-      ...yarnConfig(company, options.yarnBerryOptions),
-      ...compileConfig(options.tsconfig, options.tsconfigDev),
-      ...eslintConfig(options.eslintOptions),
-      ...prettierConfig(options.prettierOptions),
-      ...cdkConfig(options.featureFlags, options.context),
-      ...swcConfig(options.jestOptions),
     });
 
     this.company = company;
@@ -164,26 +169,24 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
 
     super({
       ...options,
-
-      // Locked identity / release settings — always Rocketleap-owned.
       name: `@${company}/${project}`,
+
       defaultReleaseBranch: 'main',
-      licensed: false,
-      autoDetectBin: false,
-      pullRequestTemplate: false,
       githubOptions: {
-        ...(options.githubOptions ?? {}),
         mergify: false,
         workflows: false,
       },
+      pullRequestTemplate: false,
 
-      // Extensible defaults — merged with any caller-supplied input.
+      licensed: false,
+      autoDetectBin: false,
+
+      ...createYarnConfiguration(company),
+      ...LIBRARY_COMPILE_CONFIGURATION,
+      ...ESLINT_CONFIGURATION,
+      ...PRETTIER_CONFIGURATION,
+      ...SWC_CONFIGURATION,
       gitignore: gitIgnore(options.gitignore),
-      ...yarnConfig(company, options.yarnBerryOptions),
-      ...libraryCompileConfig(options.tsconfig, options.tsconfigDev),
-      ...eslintConfig(options.eslintOptions),
-      ...prettierConfig(options.prettierOptions),
-      ...swcConfig(options.jestOptions),
     });
 
     configureTaskPath(this);
