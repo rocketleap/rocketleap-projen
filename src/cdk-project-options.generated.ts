@@ -61,13 +61,6 @@ export interface RocketleapCdkProjectOptions {
    */
   readonly constructsVersion?: string;
   /**
-   * Use pinned version instead of caret version for CDK.
-   * You can use this to prevent mixed versions for your CDK dependencies and to prevent auto-updates.
-   * If you use experimental features this will let you define the moment you include breaking changes.
-   * @stability experimental
-   */
-  readonly cdkVersionPinning?: boolean;
-  /**
    * AWS CDK modules required for testing.
    * @deprecated For CDK 2.x use 'devDeps' (in node.js projects) or 'testDeps' (in java projects) instead
    * @stability deprecated
@@ -215,12 +208,6 @@ export interface RocketleapCdkProjectOptions {
    */
   readonly srcdir?: string;
   /**
-   * Generate one-time sample in `src/` and `test/` if there are no files there.
-   * @default true
-   * @stability experimental
-   */
-  readonly sampleCode?: boolean;
-  /**
    * Options for .projenrc.ts.
    * @stability experimental
    */
@@ -330,12 +317,6 @@ export interface RocketleapCdkProjectOptions {
    * @stability experimental
    */
   readonly pullRequestTemplateContents?: Array<string>;
-  /**
-   * Include a GitHub pull request template.
-   * @default true
-   * @stability experimental
-   */
-  readonly pullRequestTemplate?: boolean;
   /**
    * Version of projen to install.
    * @default - Defaults to the latest version.
@@ -820,19 +801,6 @@ export interface RocketleapCdkProjectOptions {
    */
   readonly peerDependencyOptions?: javascript.PeerDependencyOptions;
   /**
-   * The "name" in package.json.
-   * @default - defaults to project name
-   * @stability experimental
-   * @featured true
-   */
-  readonly packageName?: string;
-  /**
-   * The Node Package Manager used to execute scripts.
-   * @default NodePackageManager.YARN_CLASSIC
-   * @stability experimental
-   */
-  readonly packageManager?: javascript.NodePackageManager;
-  /**
    * Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work.
    * @default - false
    * @stability experimental
@@ -903,12 +871,6 @@ export interface RocketleapCdkProjectOptions {
    * @stability experimental
    */
   readonly maxNodeVersion?: string;
-  /**
-   * Indicates if a license should be added.
-   * @default true
-   * @stability experimental
-   */
-  readonly licensed?: boolean;
   /**
    * License's SPDX identifier.
    * See https://github.com/projen/projen/tree/main/license-text for a list of supported licenses.
@@ -1018,12 +980,6 @@ export interface RocketleapCdkProjectOptions {
    * @stability experimental
    */
   readonly bin?: Record<string, string>;
-  /**
-   * Automatically add all executables under the `bin` directory to your `package.json` file under the `bin` section.
-   * @default true
-   * @stability experimental
-   */
-  readonly autoDetectBin?: boolean;
   /**
    * Author's URL / Website.
    * @stability experimental

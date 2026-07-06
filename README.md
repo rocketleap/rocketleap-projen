@@ -104,13 +104,12 @@ The base class used by both project types. Can be used directly if you need cust
 
 ## Extending the template
 
-The project options interface passes through the full projen `AwsCdkTypeScriptAppOptions` (or `TypeScriptProjectOptions` for the library variant). Anything you set is deep-merged with the Rocketleap defaults, so you don't have to fight the generated files.
+The project options struct is generated from projen's `AwsCdkTypeScriptAppOptions` (or `TypeScriptProjectOptions` for the library variant) with a small set of load-bearing keys `Omit`ed so the type system prevents accidentally overriding them: `name`, `packageName`, `defaultReleaseBranch`, `licensed`, `autoDetectBin`, `pullRequestTemplate`, `cdkVersionPinning`, `packageManager`, and (for the CDK variant) `cdkVersion`, `sampleCode`.
 
-**Merge rules**
+Everything else is passed straight through to projen. For the fields where Rocketleap ships opinionated defaults (`gitignore`, `eslintOptions`, `prettierOptions`, `tsconfig`, `tsconfigDev`, `jestOptions`, `yarnBerryOptions`, `context`, `featureFlags`), your input is merged into the Rocketleap defaults so both survive:
 
-- Arrays (e.g. `gitignore`, `eslintOptions.ignorePatterns`, `devDeps`) are concatenated and deduped — user entries first.
-- Plain objects (e.g. `tsconfig`, `prettierOptions`, `context`, `jestOptions.jestConfig`) are merged recursively; on scalar collisions the user wins.
-- A handful of keys are **locked** to the Rocketleap default and any user override is ignored: `name`, `packageName`, `defaultReleaseBranch`, `licensed`, `autoDetectBin`, `pullRequestTemplate`, `cdkVersionPinning`, `packageManager`, and `githubOptions.mergify` / `githubOptions.workflows`.
+- Arrays (`gitignore`, `ignorePatterns`, `include`, `exclude`, …) concatenate; your entries come first and duplicates are dropped.
+- Plain objects (`tsconfig.compilerOptions`, `prettierOptions.settings`, `context`, `yarnRcOptions.npmScopes`, …) merge recursively; on scalar collisions your value wins.
 
 **Common extensions**
 
@@ -119,17 +118,16 @@ const project = new WorkloadCdkProject({
   company: 'acme',
   project: 'my-app-cdk',
 
-  // Extra gitignore patterns (merged with the Rocketleap defaults)
+  // Merged with the Rocketleap defaults
   gitignore: ['.venv/', 'pyproject.toml.bak'],
-
-  // Extra CDK context (merged)
   context: { 'my-team:feature-x': true },
+  eslintOptions: { ignorePatterns: ['python/'] },
 
-  // Single build command that runs before `cdk synth`
+  // Runs before `cdk synth`
   buildCommand: 'poetry build',
 });
 
-// Arbitrary build steps that run as part of `yarn build` (and in CI)
+// Or attach arbitrary build steps after construction
 project.preCompileTask.exec('poetry build', { name: 'build-python' });
 project.preCompileTask.exec('./scripts/generate-schema.sh', { name: 'generate-schema' });
 

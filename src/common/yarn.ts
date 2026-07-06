@@ -2,7 +2,7 @@ import { javascript } from 'projen';
 import { NodeProject } from 'projen/lib/javascript/node-project';
 
 /**
- * Package manager configuration for Rocketleap projects
+ * Base Rocketleap Yarn Berry configuration used at the .projenrc level.
  */
 export const YARN_CONFIGURATION = {
   packageManager: javascript.NodePackageManager.YARN_BERRY,
@@ -17,9 +17,6 @@ export const YARN_CONFIGURATION = {
 };
 
 /**
- * Creates package manager configuration with company-specific npm scopes
- */
-/**
  * Overrides projen's default task PATH handling, which relies on package-manager
  * command resolution and can fail during `projen new` before the project has
  * been fully bootstrapped.
@@ -33,30 +30,46 @@ export function configureTaskPath(project: NodeProject): void {
 }
 
 /**
- * Creates package manager configuration with company-specific npm scopes
+ * Rocketleap Yarn configuration for a scoped company, merged with caller overrides.
+ *
+ * Caller-supplied `yarnBerryOptions.yarnRcOptions` merges with the Rocketleap
+ * default; `npmScopes` and `npmRegistries` are deep-merged so caller-defined
+ * private registries survive.
  */
-export function createYarnConfiguration(company: string) {
+export function yarnConfig(
+  company: string,
+  userYarnBerryOptions?: javascript.YarnBerryOptions,
+): { packageManager: javascript.NodePackageManager; yarnBerryOptions: javascript.YarnBerryOptions } {
+  const defaultYarnRc: javascript.YarnrcOptions = {
+    compressionLevel: 'mixed',
+    enableGlobalCache: true,
+    nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
+    npmRegistries: {
+      'https://npm.pkg.github.com/': {
+        npmAuthToken: '${GITHUB_TOKEN}',
+      },
+    },
+    npmScopes: {
+      [company]: {
+        npmRegistryServer: 'https://npm.pkg.github.com/',
+        npmPublishRegistry: 'https://npm.pkg.github.com/',
+        npmAlwaysAuth: true,
+      },
+    },
+  };
+  const userYarnRc = userYarnBerryOptions?.yarnRcOptions ?? {};
+
   return {
     packageManager: javascript.NodePackageManager.YARN_BERRY,
     yarnBerryOptions: {
-      version: '4.9.2',
+      version: userYarnBerryOptions?.version ?? '4.9.2',
+      ...userYarnBerryOptions,
       yarnRcOptions: {
-        compressionLevel: 'mixed',
-        enableGlobalCache: true,
-        nodeLinker: javascript.YarnNodeLinker.NODE_MODULES,
-        npmRegistries: {
-          'https://npm.pkg.github.com/': {
-            npmAuthToken: '${GITHUB_TOKEN}',
-          },
-        },
-        npmScopes: {
-          [company]: {
-            npmRegistryServer: 'https://npm.pkg.github.com/',
-            npmPublishRegistry: 'https://npm.pkg.github.com/',
-            npmAlwaysAuth: true,
-          },
-        },
-      } as javascript.YarnrcOptions,
+        ...defaultYarnRc,
+        ...userYarnRc,
+        npmRegistries: { ...(defaultYarnRc.npmRegistries ?? {}), ...(userYarnRc.npmRegistries ?? {}) },
+        npmScopes: { ...(defaultYarnRc.npmScopes ?? {}), ...(userYarnRc.npmScopes ?? {}) },
+      },
     },
   };
 }
