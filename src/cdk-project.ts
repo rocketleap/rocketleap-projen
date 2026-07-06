@@ -11,6 +11,7 @@ import {
 } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { GIT_CONFIGURATION } from './common/git';
+import { mergeProjectOptions } from './common/merge';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
@@ -41,35 +42,36 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     const constructVersion = options.constructVersion ?? '10.5.0';
     const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.106.0';
 
-    super({
-      ...options,
-      name: `${project}`,
-      packageName: `@${company}/${project}`,
+    super(
+      mergeProjectOptions<awscdk.AwsCdkTypeScriptAppOptions, RocketleapCdkProjectOptions>(options, {
+        name: `${project}`,
+        packageName: `@${company}/${project}`,
 
-      sampleCode: false,
+        sampleCode: false,
 
-      cdkVersion: cdkVersion,
-      constructsVersion: constructVersion,
-      cdkVersionPinning: true,
+        cdkVersion: cdkVersion,
+        constructsVersion: constructVersion,
+        cdkVersionPinning: true,
 
-      defaultReleaseBranch: 'main',
-      githubOptions: {
-        mergify: false,
-        workflows: false,
-      },
-      pullRequestTemplate: false,
+        defaultReleaseBranch: 'main',
+        githubOptions: {
+          mergify: false,
+          workflows: false,
+        },
+        pullRequestTemplate: false,
 
-      licensed: false,
-      autoDetectBin: false,
+        licensed: false,
+        autoDetectBin: false,
 
-      ...createYarnConfiguration(company),
-      ...COMPILE_CONFIGURATION,
-      ...ESLINT_CONFIGURATION,
-      ...PRETTIER_CONFIGURATION,
-      ...GIT_CONFIGURATION,
-      ...CDK_CONFIGURATION,
-      ...SWC_CONFIGURATION,
-    });
+        ...createYarnConfiguration(company),
+        ...COMPILE_CONFIGURATION,
+        ...ESLINT_CONFIGURATION,
+        ...PRETTIER_CONFIGURATION,
+        ...GIT_CONFIGURATION,
+        ...CDK_CONFIGURATION,
+        ...SWC_CONFIGURATION,
+      }),
+    );
 
     this.company = company;
     this.projectName = project;
@@ -167,27 +169,28 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
     const cdkVersion = options.cdkVersion ?? '2.248.0';
     const constructVersion = options.constructVersion ?? '10.5.0';
 
-    super({
-      ...options,
-      name: `@${company}/${project}`,
+    super(
+      mergeProjectOptions<typescript.TypeScriptProjectOptions, RocketleapLibraryCdkProjectOptions>(options, {
+        name: `@${company}/${project}`,
 
-      defaultReleaseBranch: 'main',
-      githubOptions: {
-        mergify: false,
-        workflows: false,
-      },
-      pullRequestTemplate: false,
+        defaultReleaseBranch: 'main',
+        githubOptions: {
+          mergify: false,
+          workflows: false,
+        },
+        pullRequestTemplate: false,
 
-      licensed: false,
-      autoDetectBin: false,
+        licensed: false,
+        autoDetectBin: false,
 
-      ...createYarnConfiguration(company),
-      ...LIBRARY_COMPILE_CONFIGURATION,
-      ...ESLINT_CONFIGURATION,
-      ...PRETTIER_CONFIGURATION,
-      ...GIT_CONFIGURATION,
-      ...SWC_CONFIGURATION,
-    });
+        ...createYarnConfiguration(company),
+        ...LIBRARY_COMPILE_CONFIGURATION,
+        ...ESLINT_CONFIGURATION,
+        ...PRETTIER_CONFIGURATION,
+        ...GIT_CONFIGURATION,
+        ...SWC_CONFIGURATION,
+      }),
+    );
 
     configureTaskPath(this);
     configureSwc(this);
