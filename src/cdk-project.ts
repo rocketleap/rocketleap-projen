@@ -10,7 +10,7 @@ import {
   SWC_CONFIGURATION,
 } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
-import { GIT_CONFIGURATION } from './common/git';
+import { gitIgnore } from './common/git';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
@@ -66,9 +66,9 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...COMPILE_CONFIGURATION,
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
-      ...GIT_CONFIGURATION,
       ...CDK_CONFIGURATION,
       ...SWC_CONFIGURATION,
+      gitignore: gitIgnore(options.gitignore),
     });
 
     this.company = company;
@@ -185,8 +185,8 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
       ...LIBRARY_COMPILE_CONFIGURATION,
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
-      ...GIT_CONFIGURATION,
       ...SWC_CONFIGURATION,
+      gitignore: gitIgnore(options.gitignore),
     });
 
     configureTaskPath(this);

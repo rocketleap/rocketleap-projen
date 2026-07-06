@@ -1,6 +1,6 @@
 import { javascript, typescript } from 'projen';
 
-import { GIT_CONFIGURATION } from './common/git';
+import { gitIgnore } from './common/git';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
 import { addRocketleapLicense } from './license';
@@ -75,7 +75,7 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
 
       ...createYarnConfiguration(company),
       ...PRETTIER_CONFIGURATION,
-      ...GIT_CONFIGURATION,
+      gitignore: gitIgnore(options.gitignore),
     });
 
     this.company = company;

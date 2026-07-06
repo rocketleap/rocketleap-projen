@@ -101,3 +101,17 @@ The base class used by both project types. Can be used directly if you need cust
 | `cdkVersion`            | No       | `'2.232.1'` | The AWS CDK version to use                      |
 | `constructVersion`      | No       | `'10.4.4'`  | The constructs library version                  |
 | `buildingBlocksVersion` | No       | `'0.104.1'` | The Rocketleap building blocks CDK version      |
+
+### Extending `.gitignore`
+
+Pass `gitignore` to add patterns on top of the Rocketleap defaults (e.g. for a workload that bundles Python alongside the CDK):
+
+```typescript
+new WorkloadCdkProject({
+  company: 'acme',
+  project: 'my-app-cdk',
+  gitignore: ['.venv/', 'pyproject.toml.bak'],
+});
+```
+
+Your patterns are prepended to the Rocketleap defaults and duplicates are dropped.
