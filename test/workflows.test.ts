@@ -33,11 +33,11 @@ describe('reusable action workflows', () => {
     addActionBuildWorkflow(project);
     const snapshot = synthSnapshot(project);
     const build = snapshot['.github/workflows/action-build.yml'];
-    expect(build).toContain('Verify projen synth is up to date');
+    expect(build).toContain('name: projen');
     expect(build).toContain('npx projen');
     expect(build).toContain('git diff --exit-code');
     // Drift check must run after install and before build/test so it fails fast.
-    const verifyIdx = build.indexOf('Verify projen synth is up to date');
+    const verifyIdx = build.indexOf('name: projen');
     const yarnBuildIdx = build.indexOf('yarn build');
     const yarnInstallIdx = build.indexOf('- run: yarn\n');
     expect(yarnInstallIdx).toBeGreaterThan(-1);

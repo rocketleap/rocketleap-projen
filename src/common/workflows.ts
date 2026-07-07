@@ -222,7 +222,7 @@ export function addActionBuildWorkflow(project: Project): void {
             ...bootstrapSteps(),
             { run: 'yarn' },
             {
-              name: 'Verify projen synth is up to date',
+              name: 'projen',
               run: [
                 'npx projen',
                 'git diff --exit-code || (echo "::error::.projenrc.ts and committed files are out of sync. Run \'npx projen\' locally and commit the result." && exit 1)',

@@ -32,6 +32,12 @@ export interface PreCommitHook {
 export const CDK_PRE_COMMIT_HOOKS: PreCommitHook[] = [
   { id: 'yarn-clean', name: 'Clean', entry: 'sh -c "CI=true yarn clean"' },
   { id: 'yarn-package', name: 'Packages', entry: 'sh -c "CI=true yarn"' },
+  {
+    id: 'projen',
+    name: 'projen',
+    entry: 'sh -c "npx projen && git diff --exit-code"',
+    passFilenames: false,
+  },
   { id: 'yarn-format', name: 'Format', entry: 'sh -c "CI=true yarn format:ci"' },
   { id: 'yarn-lint', name: 'Lint', entry: 'sh -c "CI=true yarn lint:ci"' },
   { id: 'yarn-build', name: 'Build', entry: 'sh -c "CI=true yarn build"' },
