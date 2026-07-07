@@ -26,6 +26,10 @@ describe('reusable action workflows', () => {
     expect(snapshot['.github/workflows/action-build.yml']).toContain('yarn test:ci');
     expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/checkout@v6');
     expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/setup-node@v6');
+    // Node 18 is EOL (April 2025); every workflow the projen library
+    // emits standardizes on Node 24 (current active LTS).
+    expect(snapshot['.github/workflows/action-build.yml']).toMatch(/node-version:\s*['"]?24['"]?/);
+    expect(snapshot['.github/workflows/action-build.yml']).not.toMatch(/node-version:\s*['"]?18['"]?/);
   });
 
   test('action-build.yml verifies projen synth is a no-op before build', () => {
