@@ -221,6 +221,13 @@ export function addActionBuildWorkflow(project: Project): void {
             },
             ...bootstrapSteps(),
             { run: 'yarn' },
+            {
+              name: 'projen',
+              run: [
+                'npx projen',
+                'git diff --exit-code || (echo "::error::.projenrc.ts and committed files are out of sync. Run \'npx projen\' locally and commit the result." && exit 1)',
+              ].join('\n'),
+            },
             { run: 'yarn format:ci' },
             { run: 'yarn lint:ci' },
             { run: 'yarn build' },
