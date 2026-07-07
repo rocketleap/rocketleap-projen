@@ -138,7 +138,7 @@ function bootstrapSteps(): Array<Record<string, unknown>> {
     {
       uses: 'actions/setup-node@v6',
       with: {
-        'node-version': '18',
+        'node-version': '24',
         'cache': 'yarn',
       },
     },
