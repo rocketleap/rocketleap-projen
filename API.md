@@ -6124,12 +6124,13 @@ CI just shows what would change.
 Pipeline workflow configuration for a Rocketleap CDK project.
 
 The generated pipeline is a single `main` → production chain:
-  - PR to `main` runs build + per-stage synth (fanned out in parallel) +
-    per-stage diff
-  - Push to `main` runs build + per-stage synth (fanned out in parallel) +
-    sequential deploy chain in the order listed; every deploy sets its
-    GitHub Environment so stages whose Environment has required reviewers
-    wait on approval before running.
+  - PR to `main` runs the reusable `action-build.yml` (which internally
+    compiles once and synths every stage in parallel via a matrix) then
+    a per-stage diff job.
+  - Push to `main` runs the same `action-build.yml` then a sequential
+    deploy chain in the order listed. Every deploy sets its GitHub
+    Environment so stages whose Environment has required reviewers wait
+    on approval before running.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
 

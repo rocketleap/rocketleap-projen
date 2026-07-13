@@ -74,17 +74,24 @@ carries `environment: <environment>` unconditionally.
 
 ### Behaviour changes
 
-#### Parallel per-stage synth inside `action-build.yml`
+#### Build once, synth many, diff/deploy many
 
-`action-build.yml` is a reusable workflow with two internal jobs:
+The entry workflows (`pr-main.yml` / `push-main.yml`) now show the
+pipeline shape as three explicit stages:
 
-1. `build` — install, projen drift check, format/lint/tsc build/test,
-   then upload the workspace (minus `.git` and `cdk.out`) as a
-   `build-workspace` artifact.
-2. `synth` — matrix over the configured stages, `needs: build`. Each
-   matrix entry downloads the `build-workspace` artifact (so it skips
-   the reinstall + rebuild), runs `yarn synth <env>[/<workload>]`, and
-   uploads its cloud assembly as `cdk-out-<env>[-<workload>]`.
+1. `build` — reusable `action-build.yml` runs install + projen drift +
+   format/lint/tsc/test once, then uploads the workspace (minus
+   `.git` and `cdk.out`) as a `build-workspace` artifact.
+2. `synth` — an inline matrix job in the entry workflow, `needs: build`.
+   One matrix entry per configured stage. Each downloads
+   `build-workspace` (skipping reinstall + rebuild), runs
+   `yarn synth <env>[/<workload>]`, and uploads its cloud assembly as
+   `cdk-out-<env>[-<workload>]`.
+3. `diff` / `deploy` — reusable per-stage jobs, all downstream of
+   `synth`. In `pr-main.yml` every diff fans out from synth in parallel.
+   In `push-main.yml` the first deploy waits on synth and each
+   subsequent deploy waits on the previous deploy (so GH-Environment
+   gating serialises the promotion).
 
 Deploy and diff jobs download only their own stage's
 `cdk-out-<env>[-<workload>]` artifact and run
