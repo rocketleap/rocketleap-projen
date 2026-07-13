@@ -57,8 +57,8 @@ Migration steps for each consumer repo:
    Order stages from earliest to latest.
 2. Run `npx projen`. `.github/workflows/push-production.yml`,
    `pr-production.yml`, and `action-promote-pr.yml` will be removed;
-   `pr-main.yml`, `push-main.yml`, and the new `action-synth.yml` will
-   be emitted / regenerated.
+   `action-build.yml`, `action-deploy.yml`, `action-diff.yml`,
+   `pr-main.yml`, and `push-main.yml` will be regenerated.
 3. In GitHub repo settings → Environments, create an Environment for
    every stage name (`dev`, `staging`, `prodeu`, …). For the ones you
    want to gate, configure required reviewers; leave the pre-prod ones
@@ -74,16 +74,22 @@ carries `environment: <environment>` unconditionally.
 
 ### Behaviour changes
 
-#### Parallel per-stage synth + build-once artifact reuse
+#### Parallel per-stage synth inside `action-build.yml`
 
-`action-build.yml` now only runs install + projen drift + format + lint +
-tsc build + test. Each stage gets its own `action-synth.yml` job that
-fans out from `build` in parallel, runs `yarn synth <env>[/<workload>]`,
-and uploads its cloud assembly under a per-stage artifact name
-`cdk-out-<environment>[-<workload>]`. Deploy and diff jobs download only
-their own stage's artifact and run `yarn run deploy:ci "<cdk_out_dir>"`
-/ `cdk-diff-action` with `noSynth: true` — no re-synth in the downstream
-jobs.
+`action-build.yml` is a reusable workflow with two internal jobs:
+
+1. `build` — install, projen drift check, format/lint/tsc build/test,
+   then upload the workspace (minus `.git` and `cdk.out`) as a
+   `build-workspace` artifact.
+2. `synth` — matrix over the configured stages, `needs: build`. Each
+   matrix entry downloads the `build-workspace` artifact (so it skips
+   the reinstall + rebuild), runs `yarn synth <env>[/<workload>]`, and
+   uploads its cloud assembly as `cdk-out-<env>[-<workload>]`.
+
+Deploy and diff jobs download only their own stage's
+`cdk-out-<env>[-<workload>]` artifact and run
+`yarn run deploy:ci "<cdk_out_dir>"` / `cdk-diff-action` with
+`noSynth: true` — no re-synth in the downstream jobs.
 
 The `deploy:ci` npm script in `CDK_SCRIPTS` now takes a pre-synthed
 `cdk.out/<env>[/<workload>]` path instead of a `bin/<env>.ts` app file;
