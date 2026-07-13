@@ -15,6 +15,7 @@ export {
   CdkDiffOptions,
   addCdkPipelineWorkflows,
   addActionBuildWorkflow,
+  addActionSynthWorkflow,
   addActionDeployWorkflow,
   addActionDiffWorkflow,
   addPrMainWorkflow,

@@ -9,17 +9,19 @@
 The GitOps promote-PR flow (separate `main` and `production` branches, an
 auto-opened promote PR, `push-production.yml`, `pr-production.yml`,
 `action-promote-pr.yml`) is retired in favour of a single `main` → prod
-pipeline where prod-tier deploys are gated by GitHub Environment
-protection rules. Along with that, the pipeline now builds and synths
-once and downstream deploy/diff jobs reuse the resulting `cdk.out`
-artifact instead of re-installing and re-synthesising per stage.
+pipeline where every deploy job sets its GitHub Environment; prod-tier
+stages are gated purely by configuring required reviewers on those
+Environments in the repo settings. Along with that, the pipeline now
+synths each stage in parallel and downstream deploy/diff jobs reuse the
+per-stage `cdk.out` artifact instead of re-installing and re-synthesising
+in every job.
 
 `PipelineOptions` reshapes from four arrays (`deployMain`, `diffMain`,
 `deployProduction`, `diffProduction`) into a single ordered `stages`
-list. Prod-tier stages carry `gated: true` — those deploy jobs will set
-`environment: <name>` in the workflow, so GitHub Actions honours the
-required-reviewer rules configured on that environment in the repo
-settings.
+list. Every stage's deploy job carries `environment: <environment>` in
+the emitted workflow. Whether a stage pauses for approval depends
+entirely on the GitHub Environment protection rules configured on that
+name — no separate `gated` flag on the stage.
 
 Before:
 
@@ -42,9 +44,9 @@ pipeline: {
   stages: [
     { environment: 'dev' },
     { environment: 'staging' },
-    { environment: 'platform', gated: true },
-    { environment: 'prodeu', gated: true },
-    { environment: 'produs', gated: true },
+    { environment: 'platform' },
+    { environment: 'prodeu' },
+    { environment: 'produs' },
   ],
 }
 ```
@@ -52,32 +54,40 @@ pipeline: {
 Migration steps for each consumer repo:
 
 1. Rewrite the `pipeline:` block in `.projenrc.ts` per the shape above.
-   Order stages from earliest to latest; mark prod-tier stages with
-   `gated: true`.
+   Order stages from earliest to latest.
 2. Run `npx projen`. `.github/workflows/push-production.yml`,
    `pr-production.yml`, and `action-promote-pr.yml` will be removed;
-   `pr-main.yml` and `push-main.yml` will be regenerated.
-3. In GitHub repo settings → Environments, create an environment for
-   each gated stage name (e.g. `prodeu`, `produs`) and configure
-   required reviewers on it.
+   `pr-main.yml`, `push-main.yml`, and the new `action-synth.yml` will
+   be emitted / regenerated.
+3. In GitHub repo settings → Environments, create an Environment for
+   every stage name (`dev`, `staging`, `prodeu`, …). For the ones you
+   want to gate, configure required reviewers; leave the pre-prod ones
+   without reviewers so they run freely.
 4. Retire the `production` branch and any branch protection rule bound
    to it. `main` is now the single deploy branch.
 
 The exported names `PipelineMatrixEntry`, `addActionPromotePrWorkflow`,
 `addPrProductionWorkflow`, and `addPushProductionWorkflow` are removed.
-Use `PipelineStage` in place of `PipelineMatrixEntry`.
+Use `PipelineStage` in place of `PipelineMatrixEntry`. The
+`PipelineStage.gated` field is also removed — every deploy job now
+carries `environment: <environment>` unconditionally.
 
 ### Behaviour changes
 
-#### Build once and reuse `cdk.out` across deploy and diff
+#### Parallel per-stage synth + build-once artifact reuse
 
-`action-build.yml` now synths every configured stage into
-`cdk.out/<environment>[/<workload>]` and uploads the whole `cdk.out/`
-tree as a workflow artifact. `action-deploy.yml` and `action-diff.yml`
-download that artifact and run `cdk deploy --app cdk.out/<...>` /
-`cdk-diff-action` with `noSynth: true` — no re-install, no re-build, no
-re-synth in the downstream jobs. Deploys promote the same bits through
-every stage.
+`action-build.yml` now only runs install + projen drift + format + lint +
+tsc build + test. Each stage gets its own `action-synth.yml` job that
+fans out from `build` in parallel, runs `yarn synth <env>[/<workload>]`,
+and uploads its cloud assembly under a per-stage artifact name
+`cdk-out-<environment>[-<workload>]`. Deploy and diff jobs download only
+their own stage's artifact and run `yarn run deploy:ci "<cdk_out_dir>"`
+/ `cdk-diff-action` with `noSynth: true` — no re-synth in the downstream
+jobs.
+
+The `deploy:ci` npm script in `CDK_SCRIPTS` now takes a pre-synthed
+`cdk.out/<env>[/<workload>]` path instead of a `bin/<env>.ts` app file;
+`cdk deploy --app "$0"` operates on the pre-synthed cloud assembly.
 
 #### Rich CDK diff comments via `corymhall/cdk-diff-action`
 
@@ -138,8 +148,9 @@ const project = new PlatformCdkProject({
 });
 ```
 
-After (multi-workload project with a gated production tier — e.g.
-`platform-cdk`):
+After (multi-workload project — e.g. `platform-cdk` — with prod-tier
+gating handled via required reviewers on the `platform` / `prodeu` /
+`produs` GitHub Environments):
 
 ```ts
 const project = new PlatformCdkProject({
@@ -150,9 +161,9 @@ const project = new PlatformCdkProject({
       { environment: 'dev', workload: 'example-ecs' },
       { environment: 'dev', workload: 'example-lambda' },
       { environment: 'staging', workload: 'example-ecs' },
-      { environment: 'platform', workload: 'management', gated: true },
-      { environment: 'prodeu', workload: 'example-ecs', gated: true },
-      { environment: 'produs', workload: 'example-ecs', gated: true },
+      { environment: 'platform', workload: 'management' },
+      { environment: 'prodeu', workload: 'example-ecs' },
+      { environment: 'produs', workload: 'example-ecs' },
     ],
   },
 });

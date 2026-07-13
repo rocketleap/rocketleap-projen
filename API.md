@@ -6124,10 +6124,12 @@ CI just shows what would change.
 Pipeline workflow configuration for a Rocketleap CDK project.
 
 The generated pipeline is a single `main` → production chain:
-  - PR to `main` runs build + diff on every stage
-  - Push to `main` builds once, then deploys stages sequentially in the
-    order listed; stages with `gated: true` wait on a GitHub Environment
-    approval before running.
+  - PR to `main` runs build + per-stage synth (fanned out in parallel) +
+    per-stage diff
+  - Push to `main` runs build + per-stage synth (fanned out in parallel) +
+    sequential deploy chain in the order listed; every deploy sets its
+    GitHub Environment so stages whose Environment has required reviewers
+    wait on approval before running.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
 
@@ -6141,7 +6143,7 @@ const pipelineOptions: PipelineOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the pipeline promotes through, from earliest (e.g. `dev`) to latest (e.g. `produs`). Prod-tier stages should carry `gated: true` so their deploy waits on a GitHub Environment approval. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the pipeline promotes through, from earliest (e.g. `dev`) to latest (e.g. `produs`). Every stage's deploy job sets `environment: <environment>` — configure GitHub Environment protection rules in the repo settings on the prod-tier stages to gate them. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow. |
 
 ---
@@ -6154,7 +6156,7 @@ public readonly stages: PipelineStage[];
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]
 
-Ordered list of stages the pipeline promotes through, from earliest (e.g. `dev`) to latest (e.g. `produs`). Prod-tier stages should carry `gated: true` so their deploy waits on a GitHub Environment approval.
+Ordered list of stages the pipeline promotes through, from earliest (e.g. `dev`) to latest (e.g. `produs`). Every stage's deploy job sets `environment: <environment>` — configure GitHub Environment protection rules in the repo settings on the prod-tier stages to gate them.
 
 ---
 
@@ -6175,15 +6177,19 @@ Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow.
 
 A stage in the single main → production pipeline.
 
-`environment` maps to the CDK app file segment used by `yarn synth`
-(which looks at `bin/<environment>.ts` or
-`bin/<environment>/<workload>.ts`).
+`environment` is used both as
+  - the CDK app file segment for `yarn synth` (looks at
+    `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`), and
+  - the GitHub Environment name applied to the deploy job.
+
+Every deploy job carries `environment: <environment>` — whether that
+pauses the pipeline for approval depends purely on the GitHub
+Environment protection rules configured in the repo settings for that
+name. Empty required-reviewers → the deploy runs freely and just gets
+recorded in the Environments tab. Required reviewers → the deploy
+waits on approval.
 
 `workload` is only used by multi-app projects (e.g. platform-cdk).
-
-`gated: true` puts the deploy job behind a GitHub Environment protection
-rule of the same name as `environment`. Reviewers configured on that
-Environment in the repo settings must approve before the job runs.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineStage.Initializer"></a>
 
@@ -6197,8 +6203,7 @@ const pipelineStage: PipelineStage = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment / GitHub Environment name. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.gated">gated</a></code> | <code>boolean</code> | When `true`, the deploy job for this stage sets `environment: <environment>` so GitHub Environment protection rules (required reviewers) gate the deploy. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment AND the GitHub Environment name. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
 
 ---
@@ -6211,7 +6216,7 @@ public readonly environment: string;
 
 - *Type:* string
 
-The CDK app file segment / GitHub Environment name.
+The CDK app file segment AND the GitHub Environment name.
 
 ---
 
@@ -6221,19 +6226,6 @@ The CDK app file segment / GitHub Environment name.
 'prodeu'
 ```
 
-
-##### `gated`<sup>Optional</sup> <a name="gated" id="@rocketleap/rocketleap-projen.PipelineStage.property.gated"></a>
-
-```typescript
-public readonly gated: boolean;
-```
-
-- *Type:* boolean
-- *Default:* false
-
-When `true`, the deploy job for this stage sets `environment: <environment>` so GitHub Environment protection rules (required reviewers) gate the deploy.
-
----
 
 ##### `workload`<sup>Optional</sup> <a name="workload" id="@rocketleap/rocketleap-projen.PipelineStage.property.workload"></a>
 

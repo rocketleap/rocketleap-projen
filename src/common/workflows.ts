@@ -3,19 +3,23 @@ import { Project, YamlFile } from 'projen';
 /**
  * A stage in the single main → production pipeline.
  *
- * `environment` maps to the CDK app file segment used by `yarn synth`
- * (which looks at `bin/<environment>.ts` or
- * `bin/<environment>/<workload>.ts`).
+ * `environment` is used both as
+ *   - the CDK app file segment for `yarn synth` (looks at
+ *     `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`), and
+ *   - the GitHub Environment name applied to the deploy job.
+ *
+ * Every deploy job carries `environment: <environment>` — whether that
+ * pauses the pipeline for approval depends purely on the GitHub
+ * Environment protection rules configured in the repo settings for that
+ * name. Empty required-reviewers → the deploy runs freely and just gets
+ * recorded in the Environments tab. Required reviewers → the deploy
+ * waits on approval.
  *
  * `workload` is only used by multi-app projects (e.g. platform-cdk).
- *
- * `gated: true` puts the deploy job behind a GitHub Environment protection
- * rule of the same name as `environment`. Reviewers configured on that
- * Environment in the repo settings must approve before the job runs.
  */
 export interface PipelineStage {
   /**
-   * The CDK app file segment / GitHub Environment name.
+   * The CDK app file segment AND the GitHub Environment name.
    *
    * @example 'iam'
    * @example 'dev'
@@ -28,29 +32,25 @@ export interface PipelineStage {
    * @example 'example-ecs'
    */
   readonly workload?: string;
-  /**
-   * When `true`, the deploy job for this stage sets `environment: <environment>`
-   * so GitHub Environment protection rules (required reviewers) gate the deploy.
-   *
-   * @default false
-   */
-  readonly gated?: boolean;
 }
 
 /**
  * Pipeline workflow configuration for a Rocketleap CDK project.
  *
  * The generated pipeline is a single `main` → production chain:
- *   - PR to `main` runs build + diff on every stage
- *   - Push to `main` builds once, then deploys stages sequentially in the
- *     order listed; stages with `gated: true` wait on a GitHub Environment
- *     approval before running.
+ *   - PR to `main` runs build + per-stage synth (fanned out in parallel) +
+ *     per-stage diff
+ *   - Push to `main` runs build + per-stage synth (fanned out in parallel) +
+ *     sequential deploy chain in the order listed; every deploy sets its
+ *     GitHub Environment so stages whose Environment has required reviewers
+ *     wait on approval before running.
  */
 export interface PipelineOptions {
   /**
    * Ordered list of stages the pipeline promotes through, from earliest
-   * (e.g. `dev`) to latest (e.g. `produs`). Prod-tier stages should carry
-   * `gated: true` so their deploy waits on a GitHub Environment approval.
+   * (e.g. `dev`) to latest (e.g. `produs`). Every stage's deploy job sets
+   * `environment: <environment>` — configure GitHub Environment protection
+   * rules in the repo settings on the prod-tier stages to gate them.
    */
   readonly stages: PipelineStage[];
   /**
@@ -79,8 +79,6 @@ export interface CdkDiffOptions {
    */
   readonly failOnDestructiveChanges?: boolean;
 }
-
-const CDK_OUT_ARTIFACT = 'cdk-out';
 
 const PERMISSIONS_DEFAULT = {
   actions: 'write',
@@ -120,19 +118,23 @@ function bootstrapSteps(): Array<Record<string, unknown>> {
   ];
 }
 
-function cdkOutDirScript(): string {
+function pathsScript(): string {
+  // Shared by synth (upload) + deploy/diff (download): sets `cdk_out_dir`
+  // and `artifact_name` from `environment` / `workload` inputs so
+  // upload and download agree on the artifact name without touching
+  // GH Actions expression tricks.
   return [
     'if [ "${{inputs.workload}}" == "" ]; then',
     '  echo \'cdk_out_dir=cdk.out/${{inputs.environment}}\' >> "$GITHUB_ENV"',
+    '  echo \'artifact_name=cdk-out-${{inputs.environment}}\' >> "$GITHUB_ENV"',
     'else',
     '  echo \'cdk_out_dir=cdk.out/${{inputs.environment}}/${{inputs.workload}}\' >> "$GITHUB_ENV"',
+    '  echo \'artifact_name=cdk-out-${{inputs.environment}}-${{inputs.workload}}\' >> "$GITHUB_ENV"',
     'fi',
   ].join('\n');
 }
 
 function accountAndRegionFromManifestScript(): string {
-  // Reads the first stack's AWS environment URI (aws://ACCOUNT/REGION)
-  // from the pre-synthed cloud assembly's manifest.json.
   return [
     'env_uri=$(jq -r \'.artifacts | to_entries | map(select(.value.type == "aws:cloudformation:stack")) | .[0].value.environment\' "${{env.cdk_out_dir}}/manifest.json")',
     'echo "account_id=$(echo "$env_uri" | awk -F\'/\' \'{print $3}\')" >> "$GITHUB_ENV"',
@@ -151,27 +153,18 @@ function configureAwsStep(): Record<string, unknown> {
   };
 }
 
-function synthAllStagesStep(stages: PipelineStage[]): Record<string, unknown> {
-  const args = stages.map((stage) => (stage.workload ? `${stage.environment}/${stage.workload}` : stage.environment));
-  const lines = [
-    'set +e',
-    'pids=()',
-    ...args.map((arg) => `yarn synth ${arg} & pids+=($!)`),
-    'fail=0',
-    'for pid in "${pids[@]}"; do wait "$pid" || fail=1; done',
-    'exit "$fail"',
-  ];
+function checkoutStep(): Record<string, unknown> {
   return {
-    name: 'Synth all stages in parallel',
-    shell: 'bash',
-    run: lines.join('\n'),
+    name: 'Checkout',
+    uses: 'actions/checkout@v6',
+    with: {
+      ref: '${{ github.event.pull_request.head.ref || github.ref }}',
+      repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
+    },
   };
 }
 
-export function addActionBuildWorkflow(project: Project, stages: PipelineStage[]): void {
-  if (!stages || stages.length === 0) {
-    throw new Error('addActionBuildWorkflow: stages must contain at least one entry');
-  }
+export function addActionBuildWorkflow(project: Project): void {
   new YamlFile(project, '.github/workflows/action-build.yml', {
     obj: {
       name: 'Action: Build',
@@ -216,13 +209,55 @@ export function addActionBuildWorkflow(project: Project, stages: PipelineStage[]
             { run: 'yarn lint:ci' },
             { run: 'yarn build' },
             { run: 'yarn test:ci' },
-            synthAllStagesStep(stages),
+          ],
+        },
+      },
+    },
+  });
+}
+
+export function addActionSynthWorkflow(project: Project): void {
+  new YamlFile(project, '.github/workflows/action-synth.yml', {
+    obj: {
+      name: 'Action: Synth Environment',
+      on: {
+        workflow_call: {
+          inputs: {
+            environment: { type: 'string', required: true },
+            workload: { type: 'string', required: false },
+          },
+        },
+      },
+      env: {
+        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+      },
+      permissions: PERMISSIONS_DEFAULT,
+      jobs: {
+        synth: {
+          'runs-on': 'ubuntu-latest',
+          'steps': [
+            checkoutStep(),
+            ...bootstrapSteps(),
+            { run: 'yarn' },
+            { run: 'yarn build' },
+            {
+              name: 'Set paths',
+              shell: 'bash',
+              run: pathsScript(),
+            },
+            {
+              name: 'Synth',
+              // `yarn synth` takes the environment segment (and optional
+              // workload subsegment) — same shape as `bin/<env>[/<workload>].ts`
+              // — and writes into `cdk.out/<env>[/<workload>]/`.
+              run: 'yarn synth "${{ inputs.workload && format(\'{0}/{1}\', inputs.environment, inputs.workload) || inputs.environment }}"',
+            },
             {
               name: 'Upload cdk.out',
               uses: 'actions/upload-artifact@v4',
               with: {
-                'name': CDK_OUT_ARTIFACT,
-                'path': 'cdk.out/',
+                'name': '${{ env.artifact_name }}',
+                'path': '${{ env.cdk_out_dir }}',
                 'retention-days': 7,
                 'if-no-files-found': 'error',
               },
@@ -241,14 +276,8 @@ export function addActionDeployWorkflow(project: Project): void {
       on: {
         workflow_call: {
           inputs: {
-            'environment': { type: 'string', required: true },
-            'workload': { type: 'string', required: false },
-            'gh-environment': {
-              type: 'string',
-              required: false,
-              default: '',
-              description: 'GitHub Environment name for approval gating; leave empty to deploy without a gate.',
-            },
+            environment: { type: 'string', required: true },
+            workload: { type: 'string', required: false },
           },
         },
       },
@@ -263,17 +292,23 @@ export function addActionDeployWorkflow(project: Project): void {
       jobs: {
         deploy: {
           'runs-on': 'ubuntu-latest',
-          'environment': '${{ inputs.gh-environment }}',
+          'environment': '${{ inputs.environment }}',
           'steps': [
+            checkoutStep(),
+            ...bootstrapSteps(),
+            { run: 'yarn' },
+            {
+              name: 'Set paths',
+              shell: 'bash',
+              run: pathsScript(),
+            },
             {
               name: 'Download cdk.out',
               uses: 'actions/download-artifact@v4',
-              with: { name: CDK_OUT_ARTIFACT, path: 'cdk.out/' },
-            },
-            {
-              name: 'Set cdk.out directory',
-              shell: 'bash',
-              run: cdkOutDirScript(),
+              with: {
+                name: '${{ env.artifact_name }}',
+                path: '${{ env.cdk_out_dir }}',
+              },
             },
             {
               name: 'Set AWS AccountId and Region',
@@ -282,16 +317,8 @@ export function addActionDeployWorkflow(project: Project): void {
             },
             configureAwsStep(),
             {
-              name: 'Enable Corepack',
-              run: 'corepack enable',
-            },
-            {
-              uses: 'actions/setup-node@v6',
-              with: { 'node-version': '24' },
-            },
-            {
               name: 'Deploy',
-              run: 'npx cdk deploy --concurrency 10 --ci --all --require-approval never --app "${{env.cdk_out_dir}}"',
+              run: 'yarn run deploy:ci "${{env.cdk_out_dir}}"',
             },
           ],
         },
@@ -312,7 +339,7 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
               type: 'string',
               required: true,
               description:
-                'Display name for this matrix entry; passed to cdk-diff-action as `title` so each matrix entry gets its own PR comment.',
+                'Display name for this diff entry; passed to cdk-diff-action as `title` so each stage gets its own PR comment.',
             },
             'environment': { type: 'string', required: true },
             'workload': { type: 'string', required: false },
@@ -328,14 +355,17 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
           'runs-on': 'ubuntu-latest',
           'steps': [
             {
-              name: 'Download cdk.out',
-              uses: 'actions/download-artifact@v4',
-              with: { name: CDK_OUT_ARTIFACT, path: 'cdk.out/' },
+              name: 'Set paths',
+              shell: 'bash',
+              run: pathsScript(),
             },
             {
-              name: 'Set cdk.out directory',
-              shell: 'bash',
-              run: cdkOutDirScript(),
+              name: 'Download cdk.out',
+              uses: 'actions/download-artifact@v4',
+              with: {
+                name: '${{ env.artifact_name }}',
+                path: '${{ env.cdk_out_dir }}',
+              },
             },
             {
               name: 'Set AWS AccountId and Region',
@@ -361,52 +391,34 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
   });
 }
 
-function matrixBlock(entries: PipelineStage[]): Record<string, unknown> {
-  return {
-    'fail-fast': false,
-    'matrix': {
-      workloads: entries.map((e) =>
-        e.workload ? { environment: e.environment, name: e.workload } : { environment: e.environment },
-      ),
-    },
-  };
+function stageSlug(stage: PipelineStage): string {
+  const base = stage.workload ? `${stage.environment}-${stage.workload}` : stage.environment;
+  return base.replace(/[^a-zA-Z0-9_-]/g, '-');
 }
 
-const MATRIX_DIFF_JOB_NAME_WITH_WORKLOAD = 'Diff (${{ matrix.workloads.environment }}, ${{ matrix.workloads.name }})';
-const MATRIX_DIFF_JOB_NAME_ENV_ONLY = 'Diff (${{ matrix.workloads.environment }})';
+function synthJobId(stage: PipelineStage, index: number): string {
+  return `synth-${stageSlug(stage)}-${index}`;
+}
 
-function diffJob(stages: PipelineStage[], needs?: string[]): Record<string, unknown> {
-  const isMatrix = stages.length > 1 || (stages[0] && stages[0].workload !== undefined);
-  const hasWorkload = stages.some((e) => e.workload !== undefined);
-  const matrixJobName = hasWorkload ? MATRIX_DIFF_JOB_NAME_WITH_WORKLOAD : MATRIX_DIFF_JOB_NAME_ENV_ONLY;
-  const job: Record<string, unknown> = {
-    name: isMatrix ? matrixJobName : 'Diff',
-    ...(needs ? { needs } : {}),
-    uses: './.github/workflows/action-diff.yml',
-  };
-  if (isMatrix) {
-    job.strategy = matrixBlock(stages);
-    job.with = {
-      'job-name': matrixJobName,
-      'environment': '${{ matrix.workloads.environment }}',
-      ...(hasWorkload ? { workload: '${{ matrix.workloads.name }}' } : {}),
-    };
-  } else {
-    job.with = {
-      'job-name': 'Diff',
-      'environment': stages[0].environment,
-    };
+function deployJobId(stage: PipelineStage, index: number): string {
+  return `deploy-${stageSlug(stage)}-${index}`;
+}
+
+function diffJobId(stage: PipelineStage, index: number): string {
+  return `diff-${stageSlug(stage)}-${index}`;
+}
+
+function synthJobFor(stage: PipelineStage): Record<string, unknown> {
+  const withInputs: Record<string, unknown> = { environment: stage.environment };
+  if (stage.workload) {
+    withInputs.workload = stage.workload;
   }
-  return job;
-}
-
-function stageJobId(stage: PipelineStage, index: number): string {
-  const base = stage.workload ? `deploy-${stage.environment}-${stage.workload}` : `deploy-${stage.environment}`;
-  return `${base}-${index}`.replace(/[^a-zA-Z0-9_-]/g, '-');
-}
-
-function stageJobName(stage: PipelineStage): string {
-  return stage.workload ? `Deploy ${stage.environment} (${stage.workload})` : `Deploy ${stage.environment}`;
+  return {
+    name: stage.workload ? `Synth ${stage.environment} (${stage.workload})` : `Synth ${stage.environment}`,
+    needs: ['build'],
+    uses: './.github/workflows/action-synth.yml',
+    with: withInputs,
+  };
 }
 
 function deployJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
@@ -414,13 +426,27 @@ function deployJobFor(stage: PipelineStage, needs: string[]): Record<string, unk
   if (stage.workload) {
     withInputs.workload = stage.workload;
   }
-  if (stage.gated) {
-    withInputs['gh-environment'] = stage.environment;
-  }
   return {
-    name: stageJobName(stage),
+    name: stage.workload ? `Deploy ${stage.environment} (${stage.workload})` : `Deploy ${stage.environment}`,
     needs,
     uses: './.github/workflows/action-deploy.yml',
+    with: withInputs,
+  };
+}
+
+function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
+  const jobName = stage.workload ? `Diff ${stage.environment} (${stage.workload})` : `Diff ${stage.environment}`;
+  const withInputs: Record<string, unknown> = {
+    'job-name': jobName,
+    'environment': stage.environment,
+  };
+  if (stage.workload) {
+    withInputs.workload = stage.workload;
+  }
+  return {
+    name: jobName,
+    needs,
+    uses: './.github/workflows/action-diff.yml',
     with: withInputs,
   };
 }
@@ -429,6 +455,16 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
   if (!stages || stages.length === 0) {
     throw new Error('addPrMainWorkflow: stages must contain at least one entry');
   }
+  const jobs: Record<string, unknown> = {
+    build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
+  };
+  stages.forEach((stage, index) => {
+    const synthId = synthJobId(stage, index);
+    const diffId = diffJobId(stage, index);
+    jobs[synthId] = synthJobFor(stage);
+    jobs[diffId] = diffJobFor(stage, [synthId]);
+  });
+
   new YamlFile(project, '.github/workflows/pr-main.yml', {
     obj: {
       name: 'PR: Main Branch',
@@ -436,10 +472,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
         pull_request: { branches: ['main', 'dev'] },
       },
       permissions: PERMISSIONS_PR,
-      jobs: {
-        build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-        diff: diffJob(stages, ['build']),
-      },
+      jobs,
     },
   });
 }
@@ -451,11 +484,20 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
   };
-  let previous = 'build';
+  // Fan-out: every synth job only needs the build. They all run in parallel.
   stages.forEach((stage, index) => {
-    const jobId = stageJobId(stage, index);
-    jobs[jobId] = deployJobFor(stage, [previous]);
-    previous = jobId;
+    jobs[synthJobId(stage, index)] = synthJobFor(stage);
+  });
+  // Sequential deploy chain. Each deploy needs its own stage's synth AND the
+  // previous stage's deploy — the previous-deploy dependency serialises the
+  // chain and honours the gate on gated stages.
+  let previousDeploy: string | null = null;
+  stages.forEach((stage, index) => {
+    const synthId = synthJobId(stage, index);
+    const deployId = deployJobId(stage, index);
+    const needs = previousDeploy ? [previousDeploy, synthId] : [synthId];
+    jobs[deployId] = deployJobFor(stage, needs);
+    previousDeploy = deployId;
   });
 
   new YamlFile(project, '.github/workflows/push-main.yml', {
@@ -473,31 +515,36 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
 }
 
 /**
- * Adds the standard Rocketleap CDK pipeline GitHub Actions workflows to the
- * project. Emits exactly five files:
+ * Adds the standard Rocketleap CDK pipeline GitHub Actions workflows.
  *
- *   - `action-build.yml` — reusable build workflow: install, projen drift
- *     check, format/lint/build/test, synth every stage into
- *     `cdk.out/<environment>[/<workload>]`, upload as artifact
- *   - `action-deploy.yml` — reusable deploy workflow: download `cdk.out`,
- *     assume `CdkDeployRole`, `cdk deploy --app cdk.out/<...>` (no re-install,
- *     no re-build). Sets `environment: ${{ inputs.gh-environment }}` so
- *     gated stages honour GitHub Environment protection rules.
- *   - `action-diff.yml` — reusable diff workflow: download `cdk.out`, run
- *     `corymhall/cdk-diff-action@v2` with `noSynth: true` against the
- *     pre-synthed cloud assembly
- *   - `pr-main.yml` — build + diff on PRs against `main` / `dev`
- *   - `push-main.yml` — build once on push to `main` / `dev`, then deploy
- *     stages sequentially in the configured order; stages with `gated: true`
- *     carry `gh-environment: <environment>` so their deploy waits on the
- *     GitHub Environment approval configured in the repo settings.
+ * Emits six reusable workflows and two entry workflows:
+ *
+ *   - `action-build.yml` — install, projen drift check, format/lint/build/test.
+ *     Runs once per pipeline invocation.
+ *   - `action-synth.yml` — reusable per-stage synth: install, tsc build,
+ *     `yarn synth <env>[/<workload>]`, upload `cdk.out/<env>[/<workload>]`
+ *     as `cdk-out-<env>[-<workload>]`.
+ *   - `action-deploy.yml` — reusable deploy: install, download the stage's
+ *     synth artifact, `yarn run deploy:ci <cdk_out_dir>`. Sets
+ *     `environment: ${{ inputs.environment }}` at the job level so GitHub
+ *     Environment protection rules configured on that name gate the deploy.
+ *   - `action-diff.yml` — reusable diff: download the stage's synth artifact,
+ *     run `corymhall/cdk-diff-action@v2` with `noSynth: true` against the
+ *     pre-synthed cloud assembly.
+ *   - `pr-main.yml` — build → per-stage synth (parallel) → per-stage diff
+ *     (each diff needs its stage's synth). All stages fan out.
+ *   - `push-main.yml` — build → per-stage synth (parallel) → sequential
+ *     deploy chain. Each deploy needs its stage's synth and the previous
+ *     stage's deploy, so stages whose GitHub Environment has required
+ *     reviewers pause the chain until approved.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {
     throw new Error('pipeline.stages must contain at least one entry');
   }
 
-  addActionBuildWorkflow(project, options.stages);
+  addActionBuildWorkflow(project);
+  addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
   addPrMainWorkflow(project, options.stages);
