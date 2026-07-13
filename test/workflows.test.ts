@@ -92,48 +92,43 @@ describe('action-diff.yml', () => {
 });
 
 describe('action-synth.yml', () => {
-  test('reusable matrix workflow: fans out over stages, downloads build-workspace, uploads per-env cdk-out', () => {
+  test('single-stage reusable: takes env/workload inputs, downloads build-workspace, uploads per-env cdk-out', () => {
     const project = newProject();
-    addActionSynthWorkflow(project, [
-      { environment: 'dev' },
-      { environment: 'prodeu' },
-      { environment: 'platform', workload: 'management' },
-    ]);
+    addActionSynthWorkflow(project);
     const synth = synthSnapshot(project)['.github/workflows/action-synth.yml'];
     expect(synth).toBeDefined();
     expect(synth).toContain('workflow_call:');
-    expect(synth).toContain('matrix:');
-    expect(synth).toContain('- environment: dev');
-    expect(synth).toContain('- environment: prodeu');
-    expect(synth).toContain('environment: platform');
-    expect(synth).toContain('workload: management');
+    // Same input shape as action-diff.yml — no matrix.
+    expect(synth).toMatch(/environment:\s*\n\s*type: string\s*\n\s*required: true/);
+    expect(synth).toMatch(/workload:\s*\n\s*type: string\s*\n\s*required: false/);
+    expect(synth).not.toContain('matrix:');
     expect(synth).toContain('name: build-workspace');
-    expect(synth).toContain('yarn synth "${{ env.synth_arg }}"');
-    expect(synth).toContain('artifact_name=cdk-out-$MATRIX_ENVIRONMENT');
-    expect(synth).toContain('artifact_name=cdk-out-$MATRIX_ENVIRONMENT-$MATRIX_WORKLOAD');
-  });
-
-  test('empty stages throws', () => {
-    const project = newProject();
-    expect(() => addActionSynthWorkflow(project, [])).toThrow('at least one entry');
+    // Same pathsScript() as deploy/diff — inputs drive cdk_out_dir + artifact_name.
+    expect(synth).toContain('cdk_out_dir=cdk.out/${{inputs.environment}}');
+    expect(synth).toContain('artifact_name=cdk-out-${{inputs.environment}}');
+    expect(synth).toContain('name: ${{ env.artifact_name }}');
+    expect(synth).toContain('path: ${{ env.cdk_out_dir }}');
   });
 });
 
 describe('pr-main.yml', () => {
-  test('build → synth (uses action-synth.yml, needs build) → per-stage diff (each needs synth)', () => {
+  test('build → per-stage synth (parallel from build) → per-stage diff (each needs its own synth)', () => {
     const project = newProject();
     addPrMainWorkflow(project, [{ environment: 'dev' }, { environment: 'prodeu' }]);
     const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
     expect(pr).toContain('build:');
-    expect(pr).toContain('synth:');
-    expect(pr).toMatch(/synth:[\s\S]*?needs: build/);
-    expect(pr).toMatch(/synth:[\s\S]*?uses: \.\/\.github\/workflows\/action-synth\.yml/);
-    // synth's matrix is inside action-synth.yml, not inline in pr-main.
-    expect(pr).not.toMatch(/synth:[\s\S]*?matrix:/);
+    // One synth job per stage — no aggregate `synth:` and no matrix.
+    expect(pr).not.toMatch(/^\s*synth:\s*$/m);
+    expect(pr).toContain('synth-dev-0:');
+    expect(pr).toContain('synth-prodeu-1:');
+    expect(pr).toMatch(/synth-dev-0:[\s\S]*?needs:\s*\n\s*- build/);
+    expect(pr).toMatch(/synth-prodeu-1:[\s\S]*?needs:\s*\n\s*- build/);
+    expect(pr).toMatch(/synth-dev-0:[\s\S]*?uses: \.\/\.github\/workflows\/action-synth\.yml/);
+    // Each diff needs its OWN synth.
     expect(pr).toContain('diff-dev-0:');
     expect(pr).toContain('diff-prodeu-1:');
-    expect(pr).toMatch(/diff-dev-0:[\s\S]*?needs:\s*\n\s*- synth/);
-    expect(pr).toMatch(/diff-prodeu-1:[\s\S]*?needs:\s*\n\s*- synth/);
+    expect(pr).toMatch(/diff-dev-0:[\s\S]*?needs:\s*\n\s*- synth-dev-0/);
+    expect(pr).toMatch(/diff-prodeu-1:[\s\S]*?needs:\s*\n\s*- synth-prodeu-1/);
   });
 
   test('empty stages throws', () => {
@@ -153,13 +148,16 @@ describe('push-main.yml', () => {
     ]);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
     expect(push).toContain('build:');
-    expect(push).toContain('synth:');
-    expect(push).toMatch(/synth:[\s\S]*?needs: build/);
-    // Each single-stage group depends on the previous single-stage group.
-    expect(push).toMatch(/deploy-dev-0:[\s\S]*?needs:\s*\n\s*- synth/);
-    expect(push).toMatch(/deploy-staging-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-0/);
-    expect(push).toMatch(/deploy-prodeu-2:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
-    expect(push).toMatch(/deploy-produs-3:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-2/);
+    // Per-stage synth jobs (no aggregate `synth:`).
+    expect(push).not.toMatch(/^\s*synth:\s*$/m);
+    expect(push).toMatch(/synth-dev-0:[\s\S]*?needs:\s*\n\s*- build/);
+    expect(push).toMatch(/synth-produs-3:[\s\S]*?needs:\s*\n\s*- build/);
+    // First deploy needs only its own synth (no previous group).
+    expect(push).toMatch(/deploy-dev-0:[\s\S]*?needs:\s*\n\s*- synth-dev-0\s*\n\s*uses:/);
+    // Subsequent deploys need their own synth + previous deploy id.
+    expect(push).toMatch(/deploy-staging-1:[\s\S]*?needs:\s*\n\s*- synth-staging-1\s*\n\s*- deploy-dev-0/);
+    expect(push).toMatch(/deploy-prodeu-2:[\s\S]*?needs:\s*\n\s*- synth-prodeu-2\s*\n\s*- deploy-staging-1/);
+    expect(push).toMatch(/deploy-produs-3:[\s\S]*?needs:\s*\n\s*- synth-produs-3\s*\n\s*- deploy-prodeu-2/);
   });
 
   test('consecutive same-environment stages deploy in parallel under one gate', () => {
@@ -177,26 +175,31 @@ describe('push-main.yml', () => {
     ]);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
 
-    // dev is the first group → needs synth.
-    expect(push).toMatch(/deploy-dev-example-ecs-0:[\s\S]*?needs:\s*\n\s*- synth/);
+    // dev is the first group → deploy needs only its own synth.
+    expect(push).toMatch(/deploy-dev-example-ecs-0:[\s\S]*?needs:\s*\n\s*- synth-dev-example-ecs-0\s*\n\s*uses:/);
 
-    // Every platform-* deploy has the SAME needs — the whole dev group
-    // (which is just `deploy-dev-example-ecs-0`). No chaining between
-    // the 5 platform deploys, so they run in parallel.
-    const platformNeedsPattern = /deploy-platform-management-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/;
-    expect(push).toMatch(platformNeedsPattern);
-    expect(push).toMatch(/deploy-platform-security-2:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-    expect(push).toMatch(/deploy-platform-backup-3:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-    expect(push).toMatch(/deploy-platform-observability-4:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-    expect(push).toMatch(/deploy-platform-log-archive-5:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-
-    // prodeu is the next group after platform → needs EVERY platform deploy.
+    // Every platform-* deploy needs its own synth PLUS the dev group id.
+    // No `deploy-platform-*` id appears in another `deploy-platform-*`'s needs
+    // → they run in parallel.
     expect(push).toMatch(
-      /deploy-prodeu-example-ecs-6:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-1\s*\n\s*- deploy-platform-security-2\s*\n\s*- deploy-platform-backup-3\s*\n\s*- deploy-platform-observability-4\s*\n\s*- deploy-platform-log-archive-5/,
+      /deploy-platform-management-1:[\s\S]*?needs:\s*\n\s*- synth-platform-management-1\s*\n\s*- deploy-dev-example-ecs-0/,
+    );
+    expect(push).toMatch(
+      /deploy-platform-security-2:[\s\S]*?needs:\s*\n\s*- synth-platform-security-2\s*\n\s*- deploy-dev-example-ecs-0/,
+    );
+    expect(push).toMatch(
+      /deploy-platform-log-archive-5:[\s\S]*?needs:\s*\n\s*- synth-platform-log-archive-5\s*\n\s*- deploy-dev-example-ecs-0/,
     );
 
-    // produs is its own group after prodeu.
-    expect(push).toMatch(/deploy-produs-example-ecs-7:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-example-ecs-6/);
+    // prodeu needs its own synth AND every platform deploy id.
+    expect(push).toMatch(
+      /deploy-prodeu-example-ecs-6:[\s\S]*?needs:\s*\n\s*- synth-prodeu-example-ecs-6\s*\n\s*- deploy-platform-management-1\s*\n\s*- deploy-platform-security-2\s*\n\s*- deploy-platform-backup-3\s*\n\s*- deploy-platform-observability-4\s*\n\s*- deploy-platform-log-archive-5/,
+    );
+
+    // produs is a group of one after prodeu.
+    expect(push).toMatch(
+      /deploy-produs-example-ecs-7:[\s\S]*?needs:\s*\n\s*- synth-produs-example-ecs-7\s*\n\s*- deploy-prodeu-example-ecs-6/,
+    );
   });
 
   test('workload stages thread the workload input through', () => {

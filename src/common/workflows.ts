@@ -165,16 +165,6 @@ function checkoutStep(): Record<string, unknown> {
   };
 }
 
-function matrixStageEntries(stages: PipelineStage[]): Array<Record<string, string>> {
-  return stages.map((stage) => {
-    const entry: Record<string, string> = { environment: stage.environment };
-    if (stage.workload) {
-      entry.workload = stage.workload;
-    }
-    return entry;
-  });
-}
-
 /**
  * `action-build.yml` — reusable workflow with a single `build` job:
  * install, projen drift check, format/lint/tsc/test, then upload the
@@ -247,25 +237,27 @@ export function addActionBuildWorkflow(project: Project): void {
 }
 
 /**
- * `action-synth.yml` — reusable workflow with a single matrix job. Fans
- * out over the configured stages, downloads the `build-workspace`
- * artifact produced by `action-build.yml`, runs
- * `yarn synth <env>[/<workload>]`, and uploads each stage's cloud
- * assembly as `cdk-out-<env>[-<workload>]` for downstream diff/deploy
- * jobs to consume.
+ * `action-synth.yml` — reusable workflow with a single `synth` job. Takes
+ * an `environment` (and optional `workload`) input, downloads the
+ * `build-workspace` artifact produced by `action-build.yml`, runs
+ * `yarn synth <env>[/<workload>]`, and uploads the cloud assembly as
+ * `cdk-out-<env>[-<workload>]`.
  *
- * Stages are baked in at projen-generation time (no `workflow_call`
- * inputs) so the caller just references `uses: ./.github/workflows/action-synth.yml`.
+ * Same shape as `action-diff.yml` — the caller emits one job per stage
+ * and each job calls this workflow with its stage's inputs. Fan-out is
+ * the caller's responsibility, not this workflow's.
  */
-export function addActionSynthWorkflow(project: Project, stages: PipelineStage[]): void {
-  if (!stages || stages.length === 0) {
-    throw new Error('addActionSynthWorkflow: stages must contain at least one entry');
-  }
+export function addActionSynthWorkflow(project: Project): void {
   new YamlFile(project, '.github/workflows/action-synth.yml', {
     obj: {
-      name: 'Action: Synth',
+      name: 'Action: Synth Environment',
       on: {
-        workflow_call: {},
+        workflow_call: {
+          inputs: {
+            environment: { type: 'string', required: true },
+            workload: { type: 'string', required: false },
+          },
+        },
       },
       env: {
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
@@ -273,15 +265,7 @@ export function addActionSynthWorkflow(project: Project, stages: PipelineStage[]
       permissions: PERMISSIONS_DEFAULT,
       jobs: {
         synth: {
-          'name':
-            "Synth ${{ matrix.stage.environment }}${{ matrix.stage.workload && format(' ({0})', matrix.stage.workload) || '' }}",
           'runs-on': 'ubuntu-latest',
-          'strategy': {
-            'fail-fast': false,
-            'matrix': {
-              stage: matrixStageEntries(stages),
-            },
-          },
           'steps': [
             {
               name: 'Download build workspace',
@@ -292,25 +276,13 @@ export function addActionSynthWorkflow(project: Project, stages: PipelineStage[]
             {
               name: 'Set paths',
               shell: 'bash',
-              env: {
-                MATRIX_ENVIRONMENT: '${{ matrix.stage.environment }}',
-                MATRIX_WORKLOAD: '${{ matrix.stage.workload }}',
-              },
-              run: [
-                'if [ -z "$MATRIX_WORKLOAD" ]; then',
-                '  echo "cdk_out_dir=cdk.out/$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
-                '  echo "artifact_name=cdk-out-$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
-                '  echo "synth_arg=$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
-                'else',
-                '  echo "cdk_out_dir=cdk.out/$MATRIX_ENVIRONMENT/$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
-                '  echo "artifact_name=cdk-out-$MATRIX_ENVIRONMENT-$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
-                '  echo "synth_arg=$MATRIX_ENVIRONMENT/$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
-                'fi',
-              ].join('\n'),
+              run: pathsScript(),
             },
             {
               name: 'Synth',
-              run: 'yarn synth "${{ env.synth_arg }}"',
+              // `pathsScript()` sets `cdk_out_dir` from the same inputs, so
+              // synthing to that path keeps upload/download names in sync.
+              run: 'yarn synth "${{ inputs.workload && format(\'{0}/{1}\', inputs.environment, inputs.workload) || inputs.environment }}"',
             },
             {
               name: 'Upload cdk.out',
@@ -456,12 +428,29 @@ function stageSlug(stage: PipelineStage): string {
   return base.replace(/[^a-zA-Z0-9_-]/g, '-');
 }
 
+function synthJobId(stage: PipelineStage, index: number): string {
+  return `synth-${stageSlug(stage)}-${index}`;
+}
+
 function deployJobId(stage: PipelineStage, index: number): string {
   return `deploy-${stageSlug(stage)}-${index}`;
 }
 
 function diffJobId(stage: PipelineStage, index: number): string {
   return `diff-${stageSlug(stage)}-${index}`;
+}
+
+function synthJobFor(stage: PipelineStage): Record<string, unknown> {
+  const withInputs: Record<string, unknown> = { environment: stage.environment };
+  if (stage.workload) {
+    withInputs.workload = stage.workload;
+  }
+  return {
+    name: stage.workload ? `Synth ${stage.environment} (${stage.workload})` : `Synth ${stage.environment}`,
+    needs: ['build'],
+    uses: './.github/workflows/action-synth.yml',
+    with: withInputs,
+  };
 }
 
 function deployJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
@@ -499,12 +488,16 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
     throw new Error('addPrMainWorkflow: stages must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
-    // build once → synth many → diff many.
+    // build once → per-stage synth (parallel from build) → per-stage diff
+    // (each waits on its own synth). Same shape as push-main below, minus
+    // the deploy chain.
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: { name: 'Synth', needs: 'build', uses: './.github/workflows/action-synth.yml' },
   };
   stages.forEach((stage, index) => {
-    jobs[diffJobId(stage, index)] = diffJobFor(stage, ['synth']);
+    jobs[synthJobId(stage, index)] = synthJobFor(stage);
+  });
+  stages.forEach((stage, index) => {
+    jobs[diffJobId(stage, index)] = diffJobFor(stage, [synthJobId(stage, index)]);
   });
 
   new YamlFile(project, '.github/workflows/pr-main.yml', {
@@ -524,22 +517,25 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
     throw new Error('addPushMainWorkflow: stages must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
-    // build once → synth many → deploy chain grouped by environment.
+    // build once → per-stage synth (all fan out from build) → deploy chain
+    // grouped by environment.
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: { name: 'Synth', needs: 'build', uses: './.github/workflows/action-synth.yml' },
   };
+  stages.forEach((stage, index) => {
+    jobs[synthJobId(stage, index)] = synthJobFor(stage);
+  });
 
   // Group consecutive stages that share the same `environment`. Every
-  // stage inside a group has the SAME `needs:` — the ids of every stage
-  // in the previous group. This gives us:
+  // stage inside a group has the SAME `needs:` — its own synth job plus
+  // every deploy id from the previous group. This gives us:
   //
   //   - deploys within one env run in parallel under the same GH-Environment
   //     gate (approve once → the whole group unlocks)
   //   - deploys wait for the previous env's whole group to finish before
   //     any of them start, so promotion between envs stays sequential
   //
-  // First group needs `synth` (all cdk.out artifacts uploaded).
-  let previousGroup: string[] = ['synth'];
+  // First group only needs its own synth job.
+  let previousGroup: string[] = [];
   let currentGroup: string[] = [];
   let currentEnv: string | null = null;
   stages.forEach((stage, index) => {
@@ -549,7 +545,8 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
     }
     currentEnv = stage.environment;
     const deployId = deployJobId(stage, index);
-    jobs[deployId] = deployJobFor(stage, previousGroup);
+    const needs = [synthJobId(stage, index), ...previousGroup];
+    jobs[deployId] = deployJobFor(stage, needs);
     currentGroup.push(deployId);
   });
 
@@ -574,9 +571,11 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
  *
  *   - `action-build.yml` — reusable single-job workflow: install + drift +
  *     format/lint/tsc/test + upload `build-workspace` artifact.
- *   - `action-synth.yml` — reusable matrix workflow: fans out over the
- *     configured stages, downloads `build-workspace`, runs
- *     `yarn synth <env>[/<workload>]`, uploads `cdk-out-<env>[-<workload>]`.
+ *   - `action-synth.yml` — single-stage reusable workflow: takes
+ *     `environment` + optional `workload` inputs, downloads
+ *     `build-workspace`, runs `yarn synth <env>[/<workload>]`, uploads
+ *     `cdk-out-<env>[-<workload>]`. Same shape as `action-diff.yml` —
+ *     the caller emits one job per stage.
  *   - `action-deploy.yml` — reusable deploy: install, download the stage's
  *     `cdk-out-<env>[-<workload>]` artifact, `yarn run deploy:ci "<cdk_out_dir>"`.
  *     Sets `environment: ${{ inputs.environment }}` at the job level so
@@ -585,14 +584,14 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
  *   - `action-diff.yml` — reusable diff: download the stage's cdk.out
  *     artifact, run `corymhall/cdk-diff-action@v2` with `noSynth: true`
  *     against the pre-synthed cloud assembly.
- *   - `pr-main.yml` — `build` → `synth` (uses action-synth.yml) →
- *     per-stage `diff` (each needs synth). Build once, synth many, diff many.
- *   - `push-main.yml` — `build` → `synth` (uses action-synth.yml) →
- *     deploy chain grouped by `environment`. Consecutive stages with the
- *     same `environment` deploy in parallel under the same GH-Environment
- *     gate (approve once → the whole group unlocks). Promotion between
- *     env groups stays sequential — the next group waits for every deploy
- *     in the previous group.
+ *   - `pr-main.yml` — `build` → per-stage `synth-<slug>-<i>` (all fan out
+ *     from build) → per-stage `diff-<slug>-<i>` (each needs its stage's
+ *     synth). Build once, synth many, diff many.
+ *   - `push-main.yml` — `build` → per-stage `synth-<slug>-<i>` (all fan
+ *     out from build) → deploy chain grouped by `environment`. Each
+ *     deploy needs its own synth PLUS every deploy id from the previous
+ *     env group. Consecutive same-env stages deploy in parallel under one
+ *     GH-Environment gate; promotion between env groups stays sequential.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {
@@ -600,7 +599,7 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
   }
 
   addActionBuildWorkflow(project);
-  addActionSynthWorkflow(project, options.stages);
+  addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
   addPrMainWorkflow(project, options.stages);
