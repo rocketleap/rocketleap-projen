@@ -151,12 +151,20 @@ function configureAwsStep(): Record<string, unknown> {
   };
 }
 
-function synthStepFor(stage: PipelineStage): Record<string, unknown> {
-  const label = stage.workload ? `${stage.environment}/${stage.workload}` : stage.environment;
-  const arg = stage.workload ? `${stage.environment}/${stage.workload}` : stage.environment;
+function synthAllStagesStep(stages: PipelineStage[]): Record<string, unknown> {
+  const args = stages.map((stage) => (stage.workload ? `${stage.environment}/${stage.workload}` : stage.environment));
+  const lines = [
+    'set +e',
+    'pids=()',
+    ...args.map((arg) => `yarn synth ${arg} & pids+=($!)`),
+    'fail=0',
+    'for pid in "${pids[@]}"; do wait "$pid" || fail=1; done',
+    'exit "$fail"',
+  ];
   return {
-    name: `Synth ${label}`,
-    run: `yarn synth ${arg}`,
+    name: 'Synth all stages in parallel',
+    shell: 'bash',
+    run: lines.join('\n'),
   };
 }
 
@@ -208,7 +216,7 @@ export function addActionBuildWorkflow(project: Project, stages: PipelineStage[]
             { run: 'yarn lint:ci' },
             { run: 'yarn build' },
             { run: 'yarn test:ci' },
-            ...stages.map(synthStepFor),
+            synthAllStagesStep(stages),
             {
               name: 'Upload cdk.out',
               uses: 'actions/upload-artifact@v4',

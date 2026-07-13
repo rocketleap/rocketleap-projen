@@ -43,7 +43,7 @@ describe('action-build.yml', () => {
     expect(verifyIdx).toBeLessThan(yarnBuildIdx);
   });
 
-  test('synths every stage and uploads cdk.out as an artifact', () => {
+  test('synths every stage in parallel and uploads cdk.out as an artifact', () => {
     const project = newProject();
     addActionBuildWorkflow(project, [
       { environment: 'dev' },
@@ -51,15 +51,18 @@ describe('action-build.yml', () => {
       { environment: 'produs', gated: true },
     ]);
     const build = synthSnapshot(project)['.github/workflows/action-build.yml'];
-    expect(build).toContain('yarn synth dev');
-    expect(build).toContain('yarn synth prodeu');
-    expect(build).toContain('yarn synth produs');
+    expect(build).toContain('yarn synth dev & pids+=($!)');
+    expect(build).toContain('yarn synth prodeu & pids+=($!)');
+    expect(build).toContain('yarn synth produs & pids+=($!)');
+    // Failure propagation — a failing background synth must fail the step.
+    expect(build).toContain('wait "$pid" || fail=1');
+    expect(build).toContain('exit "$fail"');
     expect(build).toContain('actions/upload-artifact@v4');
     expect(build).toContain('name: cdk-out');
     expect(build).toContain('path: cdk.out/');
     // Synth must happen after build/test so a failing test blocks synth+upload.
     const testIdx = build.indexOf('yarn test:ci');
-    const synthIdx = build.indexOf('yarn synth dev');
+    const synthIdx = build.indexOf('Synth all stages in parallel');
     const uploadIdx = build.indexOf('Upload cdk.out');
     expect(testIdx).toBeGreaterThan(-1);
     expect(synthIdx).toBeGreaterThan(testIdx);
@@ -70,7 +73,7 @@ describe('action-build.yml', () => {
     const project = newProject();
     addActionBuildWorkflow(project, [{ environment: 'dev', workload: 'example-ecs' }]);
     const build = synthSnapshot(project)['.github/workflows/action-build.yml'];
-    expect(build).toContain('yarn synth dev/example-ecs');
+    expect(build).toContain('yarn synth dev/example-ecs & pids+=($!)');
   });
 
   test('empty stages throws', () => {
