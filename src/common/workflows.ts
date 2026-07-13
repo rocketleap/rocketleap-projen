@@ -524,18 +524,33 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
     throw new Error('addPushMainWorkflow: stages must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
-    // build once → synth many → deploy chain.
+    // build once → synth many → deploy chain grouped by environment.
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
     synth: { name: 'Synth', needs: 'build', uses: './.github/workflows/action-synth.yml' },
   };
-  // First deploy waits on synth (all matrix entries done → every artifact
-  // exists). Each subsequent deploy waits on the previous deploy, so stages
-  // whose GitHub Environment has required reviewers pause the chain.
-  let previous = 'synth';
+
+  // Group consecutive stages that share the same `environment`. Every
+  // stage inside a group has the SAME `needs:` — the ids of every stage
+  // in the previous group. This gives us:
+  //
+  //   - deploys within one env run in parallel under the same GH-Environment
+  //     gate (approve once → the whole group unlocks)
+  //   - deploys wait for the previous env's whole group to finish before
+  //     any of them start, so promotion between envs stays sequential
+  //
+  // First group needs `synth` (all cdk.out artifacts uploaded).
+  let previousGroup: string[] = ['synth'];
+  let currentGroup: string[] = [];
+  let currentEnv: string | null = null;
   stages.forEach((stage, index) => {
+    if (currentEnv !== null && stage.environment !== currentEnv) {
+      previousGroup = currentGroup;
+      currentGroup = [];
+    }
+    currentEnv = stage.environment;
     const deployId = deployJobId(stage, index);
-    jobs[deployId] = deployJobFor(stage, [previous]);
-    previous = deployId;
+    jobs[deployId] = deployJobFor(stage, previousGroup);
+    currentGroup.push(deployId);
   });
 
   new YamlFile(project, '.github/workflows/push-main.yml', {
@@ -573,9 +588,11 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
  *   - `pr-main.yml` — `build` → `synth` (uses action-synth.yml) →
  *     per-stage `diff` (each needs synth). Build once, synth many, diff many.
  *   - `push-main.yml` — `build` → `synth` (uses action-synth.yml) →
- *     sequential deploy chain (first deploy needs synth, subsequent
- *     deploys need previous deploy). Build once, synth many, deploy
- *     sequentially with GH-Environment gating on the required stages.
+ *     deploy chain grouped by `environment`. Consecutive stages with the
+ *     same `environment` deploy in parallel under the same GH-Environment
+ *     gate (approve once → the whole group unlocks). Promotion between
+ *     env groups stays sequential — the next group waits for every deploy
+ *     in the previous group.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {

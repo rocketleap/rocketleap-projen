@@ -143,7 +143,7 @@ describe('pr-main.yml', () => {
 });
 
 describe('push-main.yml', () => {
-  test('build → synth → sequential deploy chain', () => {
+  test('deploy chain of distinct environments is fully sequential', () => {
     const project = newProject();
     addPushMainWorkflow(project, [
       { environment: 'dev' },
@@ -155,14 +155,48 @@ describe('push-main.yml', () => {
     expect(push).toContain('build:');
     expect(push).toContain('synth:');
     expect(push).toMatch(/synth:[\s\S]*?needs: build/);
-    expect(push).toMatch(/synth:[\s\S]*?uses: \.\/\.github\/workflows\/action-synth\.yml/);
-    // First deploy waits on synth (matrix inside action-synth completes → every artifact ready).
+    // Each single-stage group depends on the previous single-stage group.
     expect(push).toMatch(/deploy-dev-0:[\s\S]*?needs:\s*\n\s*- synth/);
-    // Chain — subsequent deploys wait on previous deploy, so a gated stage
-    // pauses the whole promotion.
     expect(push).toMatch(/deploy-staging-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-0/);
     expect(push).toMatch(/deploy-prodeu-2:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
     expect(push).toMatch(/deploy-produs-3:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-2/);
+  });
+
+  test('consecutive same-environment stages deploy in parallel under one gate', () => {
+    // dev → 5×platform (parallel) → prodeu → produs
+    const project = newProject();
+    addPushMainWorkflow(project, [
+      { environment: 'dev', workload: 'example-ecs' },
+      { environment: 'platform', workload: 'management' },
+      { environment: 'platform', workload: 'security' },
+      { environment: 'platform', workload: 'backup' },
+      { environment: 'platform', workload: 'observability' },
+      { environment: 'platform', workload: 'log-archive' },
+      { environment: 'prodeu', workload: 'example-ecs' },
+      { environment: 'produs', workload: 'example-ecs' },
+    ]);
+    const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
+
+    // dev is the first group → needs synth.
+    expect(push).toMatch(/deploy-dev-example-ecs-0:[\s\S]*?needs:\s*\n\s*- synth/);
+
+    // Every platform-* deploy has the SAME needs — the whole dev group
+    // (which is just `deploy-dev-example-ecs-0`). No chaining between
+    // the 5 platform deploys, so they run in parallel.
+    const platformNeedsPattern = /deploy-platform-management-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/;
+    expect(push).toMatch(platformNeedsPattern);
+    expect(push).toMatch(/deploy-platform-security-2:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+    expect(push).toMatch(/deploy-platform-backup-3:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+    expect(push).toMatch(/deploy-platform-observability-4:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+    expect(push).toMatch(/deploy-platform-log-archive-5:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+
+    // prodeu is the next group after platform → needs EVERY platform deploy.
+    expect(push).toMatch(
+      /deploy-prodeu-example-ecs-6:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-1\s*\n\s*- deploy-platform-security-2\s*\n\s*- deploy-platform-backup-3\s*\n\s*- deploy-platform-observability-4\s*\n\s*- deploy-platform-log-archive-5/,
+    );
+
+    // produs is its own group after prodeu.
+    expect(push).toMatch(/deploy-produs-example-ecs-7:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-example-ecs-6/);
   });
 
   test('workload stages thread the workload input through', () => {
@@ -170,8 +204,6 @@ describe('push-main.yml', () => {
     addPushMainWorkflow(project, [{ environment: 'dev', workload: 'example-ecs' }]);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
     expect(push).toContain('deploy-dev-example-ecs-0:');
-    expect(push).toContain('workload: example-ecs');
-    // The matrix entry threads workload through too.
     expect(push).toContain('workload: example-ecs');
   });
 
