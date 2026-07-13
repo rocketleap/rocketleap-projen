@@ -247,67 +247,86 @@ export function addActionBuildWorkflow(project: Project): void {
 }
 
 /**
- * The inline `synth` matrix job used by both `pr-main.yml` and
- * `push-main.yml`. Fans out over the configured stages, downloads the
- * `build-workspace` artifact produced by `action-build.yml`, runs
+ * `action-synth.yml` — reusable workflow with a single matrix job. Fans
+ * out over the configured stages, downloads the `build-workspace`
+ * artifact produced by `action-build.yml`, runs
  * `yarn synth <env>[/<workload>]`, and uploads each stage's cloud
  * assembly as `cdk-out-<env>[-<workload>]` for downstream diff/deploy
  * jobs to consume.
+ *
+ * Stages are baked in at projen-generation time (no `workflow_call`
+ * inputs) so the caller just references `uses: ./.github/workflows/action-synth.yml`.
  */
-function synthMatrixJob(stages: PipelineStage[]): Record<string, unknown> {
-  return {
-    'name':
-      "Synth ${{ matrix.stage.environment }}${{ matrix.stage.workload && format(' ({0})', matrix.stage.workload) || '' }}",
-    'needs': 'build',
-    'runs-on': 'ubuntu-latest',
-    'strategy': {
-      'fail-fast': false,
-      'matrix': {
-        stage: matrixStageEntries(stages),
+export function addActionSynthWorkflow(project: Project, stages: PipelineStage[]): void {
+  if (!stages || stages.length === 0) {
+    throw new Error('addActionSynthWorkflow: stages must contain at least one entry');
+  }
+  new YamlFile(project, '.github/workflows/action-synth.yml', {
+    obj: {
+      name: 'Action: Synth',
+      on: {
+        workflow_call: {},
+      },
+      env: {
+        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+      },
+      permissions: PERMISSIONS_DEFAULT,
+      jobs: {
+        synth: {
+          'name':
+            "Synth ${{ matrix.stage.environment }}${{ matrix.stage.workload && format(' ({0})', matrix.stage.workload) || '' }}",
+          'runs-on': 'ubuntu-latest',
+          'strategy': {
+            'fail-fast': false,
+            'matrix': {
+              stage: matrixStageEntries(stages),
+            },
+          },
+          'steps': [
+            {
+              name: 'Download build workspace',
+              uses: 'actions/download-artifact@v4',
+              with: { name: 'build-workspace', path: '.' },
+            },
+            ...bootstrapSteps(),
+            {
+              name: 'Set paths',
+              shell: 'bash',
+              env: {
+                MATRIX_ENVIRONMENT: '${{ matrix.stage.environment }}',
+                MATRIX_WORKLOAD: '${{ matrix.stage.workload }}',
+              },
+              run: [
+                'if [ -z "$MATRIX_WORKLOAD" ]; then',
+                '  echo "cdk_out_dir=cdk.out/$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
+                '  echo "artifact_name=cdk-out-$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
+                '  echo "synth_arg=$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
+                'else',
+                '  echo "cdk_out_dir=cdk.out/$MATRIX_ENVIRONMENT/$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
+                '  echo "artifact_name=cdk-out-$MATRIX_ENVIRONMENT-$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
+                '  echo "synth_arg=$MATRIX_ENVIRONMENT/$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
+                'fi',
+              ].join('\n'),
+            },
+            {
+              name: 'Synth',
+              run: 'yarn synth "${{ env.synth_arg }}"',
+            },
+            {
+              name: 'Upload cdk.out',
+              uses: 'actions/upload-artifact@v4',
+              with: {
+                'name': '${{ env.artifact_name }}',
+                'path': '${{ env.cdk_out_dir }}',
+                'retention-days': 7,
+                'if-no-files-found': 'error',
+              },
+            },
+          ],
+        },
       },
     },
-    'steps': [
-      {
-        name: 'Download build workspace',
-        uses: 'actions/download-artifact@v4',
-        with: { name: 'build-workspace', path: '.' },
-      },
-      ...bootstrapSteps(),
-      {
-        name: 'Set paths',
-        shell: 'bash',
-        env: {
-          MATRIX_ENVIRONMENT: '${{ matrix.stage.environment }}',
-          MATRIX_WORKLOAD: '${{ matrix.stage.workload }}',
-        },
-        run: [
-          'if [ -z "$MATRIX_WORKLOAD" ]; then',
-          '  echo "cdk_out_dir=cdk.out/$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
-          '  echo "artifact_name=cdk-out-$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
-          '  echo "synth_arg=$MATRIX_ENVIRONMENT" >> "$GITHUB_ENV"',
-          'else',
-          '  echo "cdk_out_dir=cdk.out/$MATRIX_ENVIRONMENT/$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
-          '  echo "artifact_name=cdk-out-$MATRIX_ENVIRONMENT-$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
-          '  echo "synth_arg=$MATRIX_ENVIRONMENT/$MATRIX_WORKLOAD" >> "$GITHUB_ENV"',
-          'fi',
-        ].join('\n'),
-      },
-      {
-        name: 'Synth',
-        run: 'yarn synth "${{ env.synth_arg }}"',
-      },
-      {
-        name: 'Upload cdk.out',
-        uses: 'actions/upload-artifact@v4',
-        with: {
-          'name': '${{ env.artifact_name }}',
-          'path': '${{ env.cdk_out_dir }}',
-          'retention-days': 7,
-          'if-no-files-found': 'error',
-        },
-      },
-    ],
-  };
+  });
 }
 
 export function addActionDeployWorkflow(project: Project): void {
@@ -482,7 +501,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
   const jobs: Record<string, unknown> = {
     // build once → synth many → diff many.
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages),
+    synth: { name: 'Synth', needs: 'build', uses: './.github/workflows/action-synth.yml' },
   };
   stages.forEach((stage, index) => {
     jobs[diffJobId(stage, index)] = diffJobFor(stage, ['synth']);
@@ -507,7 +526,7 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
   const jobs: Record<string, unknown> = {
     // build once → synth many → deploy chain.
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages),
+    synth: { name: 'Synth', needs: 'build', uses: './.github/workflows/action-synth.yml' },
   };
   // First deploy waits on synth (all matrix entries done → every artifact
   // exists). Each subsequent deploy waits on the previous deploy, so stages
@@ -536,10 +555,13 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
 /**
  * Adds the standard Rocketleap CDK pipeline GitHub Actions workflows.
  *
- * Emits five workflows:
+ * Emits six workflows:
  *
  *   - `action-build.yml` — reusable single-job workflow: install + drift +
  *     format/lint/tsc/test + upload `build-workspace` artifact.
+ *   - `action-synth.yml` — reusable matrix workflow: fans out over the
+ *     configured stages, downloads `build-workspace`, runs
+ *     `yarn synth <env>[/<workload>]`, uploads `cdk-out-<env>[-<workload>]`.
  *   - `action-deploy.yml` — reusable deploy: install, download the stage's
  *     `cdk-out-<env>[-<workload>]` artifact, `yarn run deploy:ci "<cdk_out_dir>"`.
  *     Sets `environment: ${{ inputs.environment }}` at the job level so
@@ -548,9 +570,9 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
  *   - `action-diff.yml` — reusable diff: download the stage's cdk.out
  *     artifact, run `corymhall/cdk-diff-action@v2` with `noSynth: true`
  *     against the pre-synthed cloud assembly.
- *   - `pr-main.yml` — `build` → `synth` (matrix, needs build) → per-stage
- *     `diff` (each needs synth). Build once, synth many, diff many.
- *   - `push-main.yml` — `build` → `synth` (matrix, needs build) →
+ *   - `pr-main.yml` — `build` → `synth` (uses action-synth.yml) →
+ *     per-stage `diff` (each needs synth). Build once, synth many, diff many.
+ *   - `push-main.yml` — `build` → `synth` (uses action-synth.yml) →
  *     sequential deploy chain (first deploy needs synth, subsequent
  *     deploys need previous deploy). Build once, synth many, deploy
  *     sequentially with GH-Environment gating on the required stages.
@@ -561,6 +583,7 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
   }
 
   addActionBuildWorkflow(project);
+  addActionSynthWorkflow(project, options.stages);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
   addPrMainWorkflow(project, options.stages);
