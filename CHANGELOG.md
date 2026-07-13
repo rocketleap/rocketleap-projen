@@ -2,7 +2,82 @@
 
 ## Unreleased
 
+### Breaking changes
+
+#### `PipelineOptions` collapses to a single ordered `stages` list
+
+The GitOps promote-PR flow (separate `main` and `production` branches, an
+auto-opened promote PR, `push-production.yml`, `pr-production.yml`,
+`action-promote-pr.yml`) is retired in favour of a single `main` → prod
+pipeline where prod-tier deploys are gated by GitHub Environment
+protection rules. Along with that, the pipeline now builds and synths
+once and downstream deploy/diff jobs reuse the resulting `cdk.out`
+artifact instead of re-installing and re-synthesising per stage.
+
+`PipelineOptions` reshapes from four arrays (`deployMain`, `diffMain`,
+`deployProduction`, `diffProduction`) into a single ordered `stages`
+list. Prod-tier stages carry `gated: true` — those deploy jobs will set
+`environment: <name>` in the workflow, so GitHub Actions honours the
+required-reviewer rules configured on that environment in the repo
+settings.
+
+Before:
+
+```ts
+pipeline: {
+  deployMain: [{ environment: 'dev' }, { environment: 'staging' }],
+  diffMain: [{ environment: 'staging' }, { environment: 'platform' }],
+  deployProduction: [
+    { environment: 'platform' },
+    { environment: 'prodeu' },
+    { environment: 'produs' },
+  ],
+}
+```
+
+After:
+
+```ts
+pipeline: {
+  stages: [
+    { environment: 'dev' },
+    { environment: 'staging' },
+    { environment: 'platform', gated: true },
+    { environment: 'prodeu', gated: true },
+    { environment: 'produs', gated: true },
+  ],
+}
+```
+
+Migration steps for each consumer repo:
+
+1. Rewrite the `pipeline:` block in `.projenrc.ts` per the shape above.
+   Order stages from earliest to latest; mark prod-tier stages with
+   `gated: true`.
+2. Run `npx projen`. `.github/workflows/push-production.yml`,
+   `pr-production.yml`, and `action-promote-pr.yml` will be removed;
+   `pr-main.yml` and `push-main.yml` will be regenerated.
+3. In GitHub repo settings → Environments, create an environment for
+   each gated stage name (e.g. `prodeu`, `produs`) and configure
+   required reviewers on it.
+4. Retire the `production` branch and any branch protection rule bound
+   to it. `main` is now the single deploy branch.
+
+The exported names `PipelineMatrixEntry`, `addActionPromotePrWorkflow`,
+`addPrProductionWorkflow`, and `addPushProductionWorkflow` are removed.
+Use `PipelineStage` in place of `PipelineMatrixEntry`.
+
 ### Behaviour changes
+
+#### Build once and reuse `cdk.out` across deploy and diff
+
+`action-build.yml` now synths every configured stage into
+`cdk.out/<environment>[/<workload>]` and uploads the whole `cdk.out/`
+tree as a workflow artifact. `action-deploy.yml` and `action-diff.yml`
+download that artifact and run `cdk deploy --app cdk.out/<...>` /
+`cdk-diff-action` with `noSynth: true` — no re-install, no re-build, no
+re-synth in the downstream jobs. Deploys promote the same bits through
+every stage.
 
 #### Rich CDK diff comments via `corymhall/cdk-diff-action`
 
@@ -23,24 +98,14 @@ Visible consequences for consumers:
 
   ```ts
   pipeline: {
-    deployMain: [{ environment: 'iam' }],
+    stages: [{ environment: 'iam' }],
     cdkDiff: { failOnDestructiveChanges: true },
   }
   ```
 - **`pr-number` input on `action-diff.yml` is removed.** Only consumers that
   call the reusable workflow directly should notice.
-- **New `pr-production.yml` workflow** emitted when `pipeline.deployProduction`
-  is set. It triggers on PRs to `production` (i.e. the auto-opened promote
-  PR) and runs the same `build` + `diff` shape as `pr-main.yml`, using the
-  `diffProduction` matrix (or `deployProduction` as fallback). Previously the
-  prod diff was a `production-diff` job inside `push-main.yml` that posted
-  via the bash flow.
-- **`production-diff` job removed from `push-main.yml`.** The promote-PR
-  diff comment is now posted by `pr-production.yml` instead.
 - **New `synth:ci` script** added to `CDK_SCRIPTS`. Mirrors `diff:ci`; takes
   a positional bin file path and synthesizes into `cdk.out`.
-
-No `PipelineOptions` API changes — same field names and shapes as 1.3.0.
 
 ### Breaking changes
 
@@ -48,10 +113,9 @@ No `PipelineOptions` API changes — same field names and shapes as 1.3.0.
 
 `rocketleap-projen` now generates the standard CDK pipeline GitHub Actions
 workflows (`action-build.yml`, `action-deploy.yml`, `action-diff.yml`,
-`pr-main.yml`, `push-main.yml`, and — when GitOps production promotion is
-enabled — `action-promote-pr.yml` + `push-production.yml`). To do that it
-needs to know which environments and workloads the pipeline targets, so the
-new `pipeline` field on `RocketleapCdkProjectOptions` is **required**.
+`pr-main.yml`, `push-main.yml`). To do that it needs to know which
+environments and workloads the pipeline promotes through, so the new
+`pipeline` field on `RocketleapCdkProjectOptions` is **required**.
 
 Before:
 
@@ -69,45 +133,32 @@ const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'iam-cdk',
   pipeline: {
-    deployMain: [{ environment: 'iam' }],
+    stages: [{ environment: 'iam' }],
   },
 });
 ```
 
-After (multi-workload project with separate PR diff target and GitOps
-production promotion — e.g. `platform-cdk`):
+After (multi-workload project with a gated production tier — e.g.
+`platform-cdk`):
 
 ```ts
 const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'platform-cdk',
   pipeline: {
-    // Deployed by push-main.yml on main / dev.
-    deployMain: [
+    stages: [
       { environment: 'dev', workload: 'example-ecs' },
       { environment: 'dev', workload: 'example-lambda' },
-    ],
-    // Diffed by pr-main.yml. Optional — defaults to deployMain.
-    diffMain: [
       { environment: 'staging', workload: 'example-ecs' },
-      { environment: 'platform', workload: 'management' },
+      { environment: 'platform', workload: 'management', gated: true },
+      { environment: 'prodeu', workload: 'example-ecs', gated: true },
+      { environment: 'produs', workload: 'example-ecs', gated: true },
     ],
-    // Presence enables the GitOps production flow:
-    //   - emits action-promote-pr.yml + push-production.yml
-    //   - injects promote + production-diff jobs into push-main.yml
-    deployProduction: [
-      { environment: 'prodeu', workload: 'example-ecs' },
-      { environment: 'produs', workload: 'example-ecs' },
-    ],
-    // Diffed on the auto-opened main→production promote PR.
-    // Optional — defaults to deployProduction.
-    // diffProduction: [ ... ],
   },
 });
 ```
 
 After running `yarn projen` the hand-maintained workflow files under
-`.github/workflows/` are overwritten by projen-generated equivalents. Delete
-the now-redundant copies (`action-*.yml`, `pr-main.yml`, `push-main.yml`,
-and the production variants when applicable) so projen owns them going
-forward.
+`.github/workflows/` are overwritten by projen-generated equivalents.
+Delete the now-redundant copies (`action-*.yml`, `pr-main.yml`,
+`push-main.yml`) so projen owns them going forward.
