@@ -1,25 +1,17 @@
 import { Project, YamlFile } from 'projen';
 
 /**
- * A stage in the single main → production pipeline.
+ * A (environment, workload) pair the pipeline iterates over.
  *
- * `environment` is used both as
- *   - the CDK app file segment for `yarn synth` (looks at
- *     `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`), and
- *   - the GitHub Environment name applied to the deploy job.
- *
- * Every deploy job carries `environment: <environment>` — whether that
- * pauses the pipeline for approval depends purely on the GitHub
- * Environment protection rules configured in the repo settings for that
- * name. Empty required-reviewers → the deploy runs freely and just gets
- * recorded in the Environments tab. Required reviewers → the deploy
- * waits on approval.
+ * `environment` maps to the CDK app file segment used by `yarn diff:ci` /
+ * `yarn deploy:ci` (which look at `bin/<environment>.ts` or
+ * `bin/<environment>/<workload>.ts`).
  *
  * `workload` is only used by multi-app projects (e.g. platform-cdk).
  */
-export interface PipelineStage {
+export interface PipelineMatrixEntry {
   /**
-   * The CDK app file segment AND the GitHub Environment name.
+   * The GitHub Actions environment / CDK app file segment.
    *
    * @example 'iam'
    * @example 'dev'
@@ -37,26 +29,59 @@ export interface PipelineStage {
 /**
  * Pipeline workflow configuration for a Rocketleap CDK project.
  *
- * The generated pipeline is a single `main` → production chain:
- *   - PR to `main` runs the reusable `action-build.yml` (which internally
- *     compiles once and synths every stage in parallel via a matrix) then
- *     a per-stage diff job.
- *   - Push to `main` runs the same `action-build.yml` then a sequential
- *     deploy chain in the order listed. Every deploy sets its GitHub
- *     Environment so stages whose Environment has required reviewers wait
- *     on approval before running.
+ * Field naming follows the lifecycle: diff on PR, deploy on merge.
+ * `Main` fields drive `pr-main.yml` / `push-main.yml`. `Production` fields,
+ * when present, enable the GitOps promotion flow and drive the diff on the
+ * auto-opened main → production PR plus the deploy on push to `production`.
  */
 export interface PipelineOptions {
   /**
-   * Ordered list of stages the pipeline promotes through, from earliest
-   * (e.g. `dev`) to latest (e.g. `produs`). Every stage's deploy job sets
-   * `environment: <environment>` — configure GitHub Environment protection
-   * rules in the repo settings on the prod-tier stages to gate them.
+   * Matrix of (environment, workload) pairs deployed by `push-main.yml`
+   * on pushes to `main` / `dev`.
+   *
+   * A single entry without a `workload` collapses to a non-matrix job;
+   * otherwise the workflow fans out via a `strategy.matrix` block.
    */
-  readonly stages: PipelineStage[];
+  readonly deployMain: PipelineMatrixEntry[];
+  /**
+   * Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs
+   * to `main` / `dev`. Defaults to `deployMain` when omitted.
+   *
+   * Typically set to staging / production-like environments so a PR previews
+   * the change that will eventually reach prod, rather than the dev deploy
+   * that `push-main` runs.
+   *
+   * @default - falls back to `deployMain`
+   */
+  readonly diffMain?: PipelineMatrixEntry[];
+  /**
+   * Matrix of (environment, workload) pairs deployed by `push-production.yml`
+   * on pushes to `production`.
+   *
+   * Setting this enables the GitOps-style production promotion flow:
+   *   - emits `.github/workflows/action-promote-pr.yml`
+   *   - extends `push-main.yml` with a `promote` job that opens a PR from
+   *     `main` → `production`, and a `production-diff` job that comments
+   *     the prod diff on that promote PR
+   *   - emits `.github/workflows/push-production.yml` that deploys this
+   *     matrix on commits to the `production` branch
+   *
+   * Omit to skip the production flow entirely (e.g. iam-cdk, root-cdk).
+   *
+   * @default - production flow disabled
+   */
+  readonly deployProduction?: PipelineMatrixEntry[];
+  /**
+   * Matrix of (environment, workload) pairs diffed on the auto-opened
+   * main → production promote PR. Defaults to `deployProduction` when
+   * omitted. Ignored if `deployProduction` is not set.
+   *
+   * @default - falls back to `deployProduction`
+   */
+  readonly diffProduction?: PipelineMatrixEntry[];
   /**
    * Customize the `corymhall/cdk-diff-action` step used in the PR diff
-   * workflow.
+   * workflows.
    *
    * @default - failOnDestructiveChanges: false
    */
@@ -65,7 +90,7 @@ export interface PipelineOptions {
 
 /**
  * Configuration for the `corymhall/cdk-diff-action@v2` step run inside the
- * generated PR diff workflow (`pr-main.yml`).
+ * generated PR diff workflows (`pr-main.yml` / `pr-production.yml`).
  */
 export interface CdkDiffOptions {
   /**
@@ -73,8 +98,9 @@ export interface CdkDiffOptions {
    *
    * Default: `false` — destructive changes are surfaced in the rich PR
    * comment for reviewer attention but don't block the workflow. The
-   * GitHub Environment approval on prod-tier deploy jobs is the gate;
-   * CI just shows what would change.
+   * reviewer (and, for prod, the GitOps promotion PR) is the gate; CI
+   * just shows what would change. Set to `true` to make destructive
+   * changes a hard fail on PR CI.
    *
    * @default false
    */
@@ -119,27 +145,20 @@ function bootstrapSteps(): Array<Record<string, unknown>> {
   ];
 }
 
-function pathsScript(): string {
-  // Shared by synth (upload) + deploy/diff (download): sets `cdk_out_dir`
-  // and `artifact_name` from `environment` / `workload` inputs so
-  // upload and download agree on the artifact name without touching
-  // GH Actions expression tricks.
+function cdkAppFileScript(): string {
   return [
     'if [ "${{inputs.workload}}" == "" ]; then',
-    '  echo \'cdk_out_dir=cdk.out/${{inputs.environment}}\' >> "$GITHUB_ENV"',
-    '  echo \'artifact_name=cdk-out-${{inputs.environment}}\' >> "$GITHUB_ENV"',
+    '  echo \'cdk_app_file=bin/${{inputs.environment}}.ts\' >> "$GITHUB_ENV"',
     'else',
-    '  echo \'cdk_out_dir=cdk.out/${{inputs.environment}}/${{inputs.workload}}\' >> "$GITHUB_ENV"',
-    '  echo \'artifact_name=cdk-out-${{inputs.environment}}-${{inputs.workload}}\' >> "$GITHUB_ENV"',
+    '  echo \'cdk_app_file=bin/${{inputs.environment}}/${{inputs.workload}}.ts\' >> "$GITHUB_ENV"',
     'fi',
   ].join('\n');
 }
 
-function accountAndRegionFromManifestScript(): string {
+function accountAndRegionScript(): string {
   return [
-    'env_uri=$(jq -r \'.artifacts | to_entries | map(select(.value.type == "aws:cloudformation:stack")) | .[0].value.environment\' "${{env.cdk_out_dir}}/manifest.json")',
-    'echo "account_id=$(echo "$env_uri" | awk -F\'/\' \'{print $3}\')" >> "$GITHUB_ENV"',
-    'echo "region=$(echo "$env_uri" | awk -F\'/\' \'{print $4}\')" >> "$GITHUB_ENV"',
+    'echo "account_id=$(sed -n \'/stackProps: {/,/},/p\'  ${{env.cdk_app_file}}  | grep -o "account: \'[0-9]*\'" | awk -F"\'" \'{print $2}\')" >> "$GITHUB_ENV"',
+    'echo "region=$(sed -n \'/stackProps: {/,/},/p\'  ${{env.cdk_app_file}}  | grep -o "region: \'[a-z0-9-]*\'" | awk -F"\'" \'{print $2}\')" >> "$GITHUB_ENV"',
   ].join('\n');
 }
 
@@ -154,25 +173,20 @@ function configureAwsStep(): Record<string, unknown> {
   };
 }
 
-function checkoutStep(): Record<string, unknown> {
+function checkoutStep(extraWith?: Record<string, unknown>): Record<string, unknown> {
   return {
     name: 'Checkout',
     uses: 'actions/checkout@v6',
     with: {
+      // Fall back to the workflow ref/repo on push / workflow_dispatch
+      // events where `github.event.pull_request` is undefined.
       ref: '${{ github.event.pull_request.head.ref || github.ref }}',
       repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
+      ...extraWith,
     },
   };
 }
 
-/**
- * `action-build.yml` — reusable workflow with a single `build` job:
- * install, projen drift check, format/lint/tsc/test, then upload the
- * compiled workspace (minus `.git` and `cdk.out`) as a `build-workspace`
- * artifact. This artifact is what downstream `synth` jobs in
- * `pr-main.yml` / `push-main.yml` consume so they skip the reinstall +
- * rebuild.
- */
 export function addActionBuildWorkflow(project: Project): void {
   new YamlFile(project, '.github/workflows/action-build.yml', {
     obj: {
@@ -218,82 +232,6 @@ export function addActionBuildWorkflow(project: Project): void {
             { run: 'yarn lint:ci' },
             { run: 'yarn build' },
             { run: 'yarn test:ci' },
-            {
-              name: 'Upload build workspace',
-              uses: 'actions/upload-artifact@v4',
-              with: {
-                'name': 'build-workspace',
-                'path': ['.', '!.git', '!cdk.out'].join('\n'),
-                'include-hidden-files': 'true',
-                'retention-days': 1,
-                'if-no-files-found': 'error',
-              },
-            },
-          ],
-        },
-      },
-    },
-  });
-}
-
-/**
- * `action-synth.yml` — reusable workflow with a single `synth` job. Takes
- * an `environment` (and optional `workload`) input, downloads the
- * `build-workspace` artifact produced by `action-build.yml`, runs
- * `yarn synth <env>[/<workload>]`, and uploads the cloud assembly as
- * `cdk-out-<env>[-<workload>]`.
- *
- * Same shape as `action-diff.yml` — the caller emits one job per stage
- * and each job calls this workflow with its stage's inputs. Fan-out is
- * the caller's responsibility, not this workflow's.
- */
-export function addActionSynthWorkflow(project: Project): void {
-  new YamlFile(project, '.github/workflows/action-synth.yml', {
-    obj: {
-      name: 'Action: Synth Environment',
-      on: {
-        workflow_call: {
-          inputs: {
-            environment: { type: 'string', required: true },
-            workload: { type: 'string', required: false },
-          },
-        },
-      },
-      env: {
-        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
-      },
-      permissions: PERMISSIONS_DEFAULT,
-      jobs: {
-        synth: {
-          'runs-on': 'ubuntu-latest',
-          'steps': [
-            {
-              name: 'Download build workspace',
-              uses: 'actions/download-artifact@v4',
-              with: { name: 'build-workspace', path: '.' },
-            },
-            ...bootstrapSteps(),
-            {
-              name: 'Set paths',
-              shell: 'bash',
-              run: pathsScript(),
-            },
-            {
-              name: 'Synth',
-              // `pathsScript()` sets `cdk_out_dir` from the same inputs, so
-              // synthing to that path keeps upload/download names in sync.
-              run: 'yarn synth "${{ inputs.workload && format(\'{0}/{1}\', inputs.environment, inputs.workload) || inputs.environment }}"',
-            },
-            {
-              name: 'Upload cdk.out',
-              uses: 'actions/upload-artifact@v4',
-              with: {
-                'name': '${{ env.artifact_name }}',
-                'path': '${{ env.cdk_out_dir }}',
-                'retention-days': 7,
-                'if-no-files-found': 'error',
-              },
-            },
           ],
         },
       },
@@ -324,33 +262,25 @@ export function addActionDeployWorkflow(project: Project): void {
       jobs: {
         deploy: {
           'runs-on': 'ubuntu-latest',
-          'environment': '${{ inputs.environment }}',
           'steps': [
             checkoutStep(),
             ...bootstrapSteps(),
-            { run: 'yarn' },
             {
-              name: 'Set paths',
+              name: 'Set CDK App File',
               shell: 'bash',
-              run: pathsScript(),
-            },
-            {
-              name: 'Download cdk.out',
-              uses: 'actions/download-artifact@v4',
-              with: {
-                name: '${{ env.artifact_name }}',
-                path: '${{ env.cdk_out_dir }}',
-              },
+              run: cdkAppFileScript(),
             },
             {
               name: 'Set AWS AccountId and Region',
               shell: 'bash',
-              run: accountAndRegionFromManifestScript(),
+              run: accountAndRegionScript(),
             },
             configureAwsStep(),
+            { run: 'yarn install' },
+            { run: 'yarn build' },
             {
               name: 'Deploy',
-              run: 'yarn run deploy:ci "${{env.cdk_out_dir}}"',
+              run: 'yarn run deploy:ci ${{env.cdk_app_file}}',
             },
           ],
         },
@@ -371,7 +301,7 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
               type: 'string',
               required: true,
               description:
-                'Display name for this diff entry; passed to cdk-diff-action as `title` so each stage gets its own PR comment.',
+                'Display name for this matrix entry; passed to cdk-diff-action as `title` so each matrix entry gets its own PR comment.',
             },
             'environment': { type: 'string', required: true },
             'workload': { type: 'string', required: false },
@@ -386,25 +316,25 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
         diff: {
           'runs-on': 'ubuntu-latest',
           'steps': [
+            checkoutStep(),
+            ...bootstrapSteps(),
             {
-              name: 'Set paths',
+              name: 'Set CDK App File',
               shell: 'bash',
-              run: pathsScript(),
-            },
-            {
-              name: 'Download cdk.out',
-              uses: 'actions/download-artifact@v4',
-              with: {
-                name: '${{ env.artifact_name }}',
-                path: '${{ env.cdk_out_dir }}',
-              },
+              run: cdkAppFileScript(),
             },
             {
               name: 'Set AWS AccountId and Region',
               shell: 'bash',
-              run: accountAndRegionFromManifestScript(),
+              run: accountAndRegionScript(),
             },
             configureAwsStep(),
+            { run: 'yarn install' },
+            { run: 'yarn build' },
+            {
+              name: 'Synth',
+              run: 'yarn synth:ci ${{env.cdk_app_file}}',
+            },
             {
               name: 'Diff',
               uses: 'corymhall/cdk-diff-action@v2',
@@ -412,8 +342,6 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
                 githubToken: '${{ secrets.GITHUB_TOKEN }}',
                 title: '${{ inputs.job-name }}',
                 failOnDestructiveChanges: String(failOnDestructiveChanges),
-                cdkOutDir: '${{ env.cdk_out_dir }}',
-                noSynth: 'true',
               },
             },
           ],
@@ -423,92 +351,150 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
   });
 }
 
-function stageSlug(stage: PipelineStage): string {
-  const base = stage.workload ? `${stage.environment}-${stage.workload}` : stage.environment;
-  return base.replace(/[^a-zA-Z0-9_-]/g, '-');
-}
-
-function deployJobId(stage: PipelineStage, index: number): string {
-  return `deploy-${stageSlug(stage)}-${index}`;
-}
-
-function diffJobId(stage: PipelineStage, index: number): string {
-  return `diff-${stageSlug(stage)}-${index}`;
-}
-
-function synthMatrixJob(stages: PipelineStage[]): Record<string, unknown> {
-  const stageEntries = stages.map((stage) => {
-    const entry: Record<string, string> = { environment: stage.environment };
-    if (stage.workload) {
-      entry.workload = stage.workload;
-    }
-    return entry;
-  });
-  return {
-    name: "Synth ${{ matrix.stage.environment }}${{ matrix.stage.workload && format(' ({0})', matrix.stage.workload) || '' }}",
-    needs: 'build',
-    strategy: {
-      'fail-fast': false,
-      'matrix': {
-        stage: stageEntries,
+export function addActionPromotePrWorkflow(project: Project): void {
+  new YamlFile(project, '.github/workflows/action-promote-pr.yml', {
+    obj: {
+      name: 'Action: Create Promote PR',
+      on: {
+        workflow_call: {
+          inputs: {
+            'target-branch': {
+              description: 'The target branch that should receive the new version.',
+              required: true,
+              type: 'string',
+            },
+            'source-branch': {
+              description: 'The source branch that should be promoted.',
+              required: true,
+              type: 'string',
+            },
+          },
+          outputs: {
+            'pr-number': {
+              description: 'The output of the Pull Request number created.',
+              value: '${{jobs.pr.outputs.pr-number}}',
+            },
+          },
+        },
+      },
+      env: {
+        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+      },
+      permissions: {
+        'pull-requests': 'write',
+        'contents': 'write',
+      },
+      jobs: {
+        pr: {
+          'outputs': { 'pr-number': '${{steps.cpr.outputs.pull-request-number}}' },
+          'runs-on': 'ubuntu-latest',
+          'steps': [
+            {
+              uses: 'actions/checkout@v6',
+              with: { ref: '${{inputs.target-branch}}' },
+            },
+            {
+              name: 'Reset promotion branch',
+              run: [
+                'git fetch origin ${{inputs.source-branch}}:${{inputs.source-branch}}',
+                'git reset --hard ${{inputs.source-branch}}',
+              ].join('\n'),
+            },
+            {
+              name: 'Create Pull Request',
+              id: 'cpr',
+              uses: 'peter-evans/create-pull-request@v8',
+              with: {
+                'title': 'Production Promotion',
+                'branch': '${{inputs.target-branch}}-promotion',
+                'branch-suffix': 'timestamp',
+                'body': 'This PR is auto-generated to deploy to Production.',
+                'labels': 'prod-promote-pr',
+              },
+            },
+          ],
+        },
       },
     },
-    uses: './.github/workflows/action-synth.yml',
-    // `workload` is optional on the reusable; when a matrix entry omits it,
-    // the expression resolves to the empty string, which action-synth's
-    // pathsScript treats as "no workload".
-    with: {
-      environment: '${{ matrix.stage.environment }}',
-      workload: '${{ matrix.stage.workload }}',
+  });
+}
+
+function matrixBlock(entries: PipelineMatrixEntry[]): Record<string, unknown> {
+  return {
+    'fail-fast': false,
+    'matrix': {
+      workloads: entries.map((e) =>
+        e.workload ? { environment: e.environment, name: e.workload } : { environment: e.environment },
+      ),
     },
   };
 }
 
-function deployJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
-  const withInputs: Record<string, unknown> = { environment: stage.environment };
-  if (stage.workload) {
-    withInputs.workload = stage.workload;
-  }
-  return {
-    name: stage.workload ? `Deploy ${stage.environment} (${stage.workload})` : `Deploy ${stage.environment}`,
-    needs,
-    uses: './.github/workflows/action-deploy.yml',
-    with: withInputs,
-  };
-}
+const MATRIX_DIFF_JOB_NAME_WITH_WORKLOAD = 'Diff (${{ matrix.workloads.environment }}, ${{ matrix.workloads.name }})';
+const MATRIX_DIFF_JOB_NAME_ENV_ONLY = 'Diff (${{ matrix.workloads.environment }})';
 
-function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
-  const jobName = stage.workload ? `Diff ${stage.environment} (${stage.workload})` : `Diff ${stage.environment}`;
-  const withInputs: Record<string, unknown> = {
-    'job-name': jobName,
-    'environment': stage.environment,
-  };
-  if (stage.workload) {
-    withInputs.workload = stage.workload;
-  }
-  return {
-    name: jobName,
-    needs,
+function diffJob(
+  matrix: PipelineMatrixEntry[],
+  needs?: string[],
+  extraWith?: Record<string, unknown>,
+): Record<string, unknown> {
+  const isMatrix = matrix.length > 1 || (matrix[0] && matrix[0].workload !== undefined);
+  const hasWorkload = matrix.some((e) => e.workload !== undefined);
+  const matrixJobName = hasWorkload ? MATRIX_DIFF_JOB_NAME_WITH_WORKLOAD : MATRIX_DIFF_JOB_NAME_ENV_ONLY;
+  const job: Record<string, unknown> = {
+    name: isMatrix ? matrixJobName : 'Diff',
+    ...(needs ? { needs } : {}),
     uses: './.github/workflows/action-diff.yml',
-    with: withInputs,
   };
+  if (isMatrix) {
+    job.strategy = matrixBlock(matrix);
+    job.with = {
+      'job-name': matrixJobName,
+      'environment': '${{ matrix.workloads.environment }}',
+      ...(hasWorkload ? { workload: '${{ matrix.workloads.name }}' } : {}),
+      ...(extraWith ?? {}),
+    };
+  } else {
+    job.with = {
+      'job-name': 'Diff',
+      'environment': matrix[0].environment,
+      ...(extraWith ?? {}),
+    };
+  }
+  return job;
 }
 
-export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): void {
-  if (!stages || stages.length === 0) {
-    throw new Error('addPrMainWorkflow: stages must contain at least one entry');
-  }
-  const jobs: Record<string, unknown> = {
-    // build once → one `synth` job with a matrix over every stage
-    // (parallel invocations of action-synth.yml) → per-stage diff, each
-    // waits on the whole synth matrix.
-    build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages),
+function deployJob(name: string, matrix: PipelineMatrixEntry[], needs?: string[]): Record<string, unknown> {
+  const isMatrix = matrix.length > 1 || (matrix[0] && matrix[0].workload !== undefined);
+  const hasWorkload = matrix.some((e) => e.workload !== undefined);
+  const job: Record<string, unknown> = {
+    name,
+    ...(needs ? { needs } : {}),
+    uses: './.github/workflows/action-deploy.yml',
   };
-  stages.forEach((stage, index) => {
-    jobs[diffJobId(stage, index)] = diffJobFor(stage, ['synth']);
-  });
+  if (isMatrix) {
+    job.strategy = {
+      'fail-fast': false,
+      'matrix': {
+        workloads: matrix.map((e) =>
+          e.workload ? { environment: e.environment, name: e.workload } : { environment: e.environment },
+        ),
+      },
+    };
+    job.with = {
+      environment: '${{ matrix.workloads.environment }}',
+      ...(hasWorkload ? { workload: '${{ matrix.workloads.name }}' } : {}),
+    };
+  } else {
+    job.with = { environment: matrix[0].environment };
+  }
+  return job;
+}
 
+export function addPrMainWorkflow(project: Project, matrix: PipelineMatrixEntry[]): void {
+  if (!matrix || matrix.length === 0) {
+    throw new Error('addPrMainWorkflow: matrix must contain at least one entry');
+  }
   new YamlFile(project, '.github/workflows/pr-main.yml', {
     obj: {
       name: 'PR: Main Branch',
@@ -516,42 +502,38 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
         pull_request: { branches: ['main', 'dev'] },
       },
       permissions: PERMISSIONS_PR,
-      jobs,
+      jobs: {
+        build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
+        diff: diffJob(matrix, ['build']),
+      },
     },
   });
 }
 
-export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): void {
-  if (!stages || stages.length === 0) {
-    throw new Error('addPushMainWorkflow: stages must contain at least one entry');
+export function addPushMainWorkflow(
+  project: Project,
+  deployMatrix: PipelineMatrixEntry[],
+  includePromote: boolean = false,
+): void {
+  if (!deployMatrix || deployMatrix.length === 0) {
+    throw new Error('addPushMainWorkflow: deployMatrix must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
-    // build once → one `synth` job with a matrix over every stage
-    // (parallel invocations of action-synth.yml) → deploy chain grouped
-    // by environment.
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages),
+    deploy: deployJob('Deploy', deployMatrix, ['build']),
   };
 
-  // Group consecutive stages that share the same `environment`. First
-  // group's deploys need `synth` (whole matrix done → every artifact
-  // ready). Later groups transitively wait for synth via the chain, so
-  // they just need every deploy id from the previous group. Same-env
-  // stages within a group share `needs:` and run in parallel under one
-  // GH-Environment gate.
-  let previousGroup: string[] = ['synth'];
-  let currentGroup: string[] = [];
-  let currentEnv: string | null = null;
-  stages.forEach((stage, index) => {
-    if (currentEnv !== null && stage.environment !== currentEnv) {
-      previousGroup = currentGroup;
-      currentGroup = [];
-    }
-    currentEnv = stage.environment;
-    const deployId = deployJobId(stage, index);
-    jobs[deployId] = deployJobFor(stage, previousGroup);
-    currentGroup.push(deployId);
-  });
+  if (includePromote) {
+    jobs.promote = {
+      name: 'Create Promote PR',
+      needs: ['deploy'],
+      uses: './.github/workflows/action-promote-pr.yml',
+      with: {
+        'target-branch': 'production',
+        'source-branch': '${{ github.ref_name }}',
+      },
+    };
+  }
 
   new YamlFile(project, '.github/workflows/push-main.yml', {
     obj: {
@@ -567,44 +549,84 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
   });
 }
 
+export function addPrProductionWorkflow(project: Project, matrix: PipelineMatrixEntry[]): void {
+  if (!matrix || matrix.length === 0) {
+    throw new Error('addPrProductionWorkflow: matrix must contain at least one entry');
+  }
+  new YamlFile(project, '.github/workflows/pr-production.yml', {
+    obj: {
+      name: 'PR: Production Branch',
+      on: {
+        pull_request: { branches: ['production'] },
+      },
+      permissions: PERMISSIONS_PR,
+      jobs: {
+        build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
+        diff: diffJob(matrix, ['build']),
+      },
+    },
+  });
+}
+
+export function addPushProductionWorkflow(project: Project, matrix: PipelineMatrixEntry[]): void {
+  if (!matrix || matrix.length === 0) {
+    throw new Error('addPushProductionWorkflow: matrix must contain at least one entry');
+  }
+  new YamlFile(project, '.github/workflows/push-production.yml', {
+    obj: {
+      name: 'Push: Production Branch',
+      on: {
+        push: { branches: ['production'] },
+        workflow_dispatch: {},
+      },
+      permissions: PERMISSIONS_PUSH,
+      concurrency: 'production',
+      jobs: {
+        deploy: deployJob('Deploy', matrix),
+      },
+    },
+  });
+}
+
 /**
- * Adds the standard Rocketleap CDK pipeline GitHub Actions workflows.
+ * Adds the standard Rocketleap CDK pipeline GitHub Actions workflows to the
+ * project:
  *
- * Emits six workflows:
- *
- *   - `action-build.yml` — reusable single-job workflow: install + drift +
- *     format/lint/tsc/test + upload `build-workspace` artifact.
- *   - `action-synth.yml` — single-stage reusable workflow: takes
- *     `environment` + optional `workload` inputs, downloads
- *     `build-workspace`, runs `yarn synth <env>[/<workload>]`, uploads
- *     `cdk-out-<env>[-<workload>]`. Same shape as `action-diff.yml` —
- *     the caller emits one job per stage.
- *   - `action-deploy.yml` — reusable deploy: install, download the stage's
- *     `cdk-out-<env>[-<workload>]` artifact, `yarn run deploy:ci "<cdk_out_dir>"`.
- *     Sets `environment: ${{ inputs.environment }}` at the job level so
- *     GitHub Environment protection rules configured on that name gate the
- *     deploy.
- *   - `action-diff.yml` — reusable diff: download the stage's cdk.out
- *     artifact, run `corymhall/cdk-diff-action@v2` with `noSynth: true`
- *     against the pre-synthed cloud assembly.
- *   - `pr-main.yml` — `build` → one `synth` job with a matrix strategy
- *     over every stage (parallel calls into action-synth.yml) →
- *     per-stage `diff-<slug>-<i>` (each needs `synth`).
- *   - `push-main.yml` — `build` → one `synth` matrix job → deploy chain
- *     grouped by `environment`. First group's deploys need `synth` (all
- *     matrix entries done). Consecutive same-env stages share a group
- *     and deploy in parallel under one GH-Environment gate; promotion
- *     between env groups stays sequential.
+ *   - `action-build.yml`, `action-deploy.yml`, `action-diff.yml` — reusable
+ *     building blocks (always emitted, identical across projects)
+ *   - `pr-main.yml` — runs build + diff on PRs against `main` / `dev`
+ *     using `diffMain` (or `deployMain` as fallback)
+ *   - `push-main.yml` — runs build + deploy on pushes to `main` / `dev`
+ *     using `deployMain`, plus the `promote` job when `deployProduction`
+ *     is set
+ *   - `action-promote-pr.yml`, `push-production.yml`, `pr-production.yml` —
+ *     only when `deployProduction` is set. `pr-production.yml` runs build +
+ *     diff against the auto-opened promote PR so cdk-diff-action can post
+ *     rich diff comments on it.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
-  if (!options.stages || options.stages.length === 0) {
-    throw new Error('pipeline.stages must contain at least one entry');
+  if (!options.deployMain || options.deployMain.length === 0) {
+    throw new Error('pipeline.deployMain must contain at least one entry');
+  }
+  if (options.diffMain && options.diffMain.length === 0) {
+    throw new Error('pipeline.diffMain must contain at least one entry when provided');
+  }
+  if (options.deployProduction && options.deployProduction.length === 0) {
+    throw new Error('pipeline.deployProduction must contain at least one entry when provided');
+  }
+  if (options.diffProduction && options.diffProduction.length === 0) {
+    throw new Error('pipeline.diffProduction must contain at least one entry when provided');
   }
 
   addActionBuildWorkflow(project);
-  addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
-  addPrMainWorkflow(project, options.stages);
-  addPushMainWorkflow(project, options.stages);
+  addPrMainWorkflow(project, options.diffMain ?? options.deployMain);
+  addPushMainWorkflow(project, options.deployMain, options.deployProduction !== undefined);
+
+  if (options.deployProduction) {
+    addActionPromotePrWorkflow(project);
+    addPushProductionWorkflow(project, options.deployProduction);
+    addPrProductionWorkflow(project, options.diffProduction ?? options.deployProduction);
+  }
 }
