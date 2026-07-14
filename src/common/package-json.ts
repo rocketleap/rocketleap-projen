@@ -31,6 +31,9 @@ export const CDK_SCRIPTS = {
     'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'deploy:ci':
     'cdk deploy --concurrency 10 --ci --all --require-approval never --app "yarn ts-node --swc --prefer-ts-exts $0";',
+  // Deploys from a pre-synthed cloud assembly. Used by the stages pipeline
+  // (action-deploy.yml downloads the stage's artifact and calls this).
+  'deploy:artifact': 'cdk deploy --concurrency 10 --ci --all --require-approval never --app "$0";',
   'destroy': 'cdk destroy --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --swc --prefer-ts-exts $0";',
 };

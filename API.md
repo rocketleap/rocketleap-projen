@@ -6189,10 +6189,22 @@ Optional workload name for multi-app projects.
 
 Pipeline workflow configuration for a Rocketleap CDK project.
 
-Field naming follows the lifecycle: diff on PR, deploy on merge.
-`Main` fields drive `pr-main.yml` / `push-main.yml`. `Production` fields,
-when present, enable the GitOps promotion flow and drive the diff on the
-auto-opened main → production PR plus the deploy on push to `production`.
+Two shapes are supported so consumers can migrate gradually:
+
+1. **Legacy shape** — set `deployMain` (+ optional `diffMain`,
+   `deployProduction`, `diffProduction`). Emits the historical set of
+   workflows including the GitOps `production`-branch flow when
+   `deployProduction` is set.
+
+2. **Stages shape** — set `stages` to an ordered list of promotion
+   stages. Emits a single `main` → prod pipeline (no `production`
+   branch): `build` uploads a workspace artifact once, `synth` is one
+   matrix job fanning out over every stage in parallel, and
+   `push-main.yml` deploys stages sequentially with consecutive
+   same-environment stages grouped into a parallel fan-out under one
+   GitHub Environment gate.
+
+Exactly one of `stages` or `deployMain` must be provided.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
 
@@ -6206,26 +6218,12 @@ const pipelineOptions: PipelineOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain">deployMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflows. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain">deployMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.deployProduction">deployProduction</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs deployed by `push-production.yml` on pushes to `production`. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffMain">diffMain</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMain` when omitted. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.diffProduction">diffProduction</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]</code> | Matrix of (environment, workload) pairs diffed on the auto-opened main → production promote PR. |
-
----
-
-##### `deployMain`<sup>Required</sup> <a name="deployMain" id="@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain"></a>
-
-```typescript
-public readonly deployMain: PipelineMatrixEntry[];
-```
-
-- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
-
-Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`.
-
-A single entry without a `workload` collapses to a non-matrix job;
-otherwise the workflow fans out via a `strategy.matrix` block.
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the `main` → prod pipeline promotes through. |
 
 ---
 
@@ -6239,6 +6237,23 @@ public readonly cdkDiff: CdkDiffOptions;
 - *Default:* failOnDestructiveChanges: false
 
 Customize the `corymhall/cdk-diff-action` step used in the PR diff workflows.
+
+---
+
+##### `deployMain`<sup>Optional</sup> <a name="deployMain" id="@rocketleap/rocketleap-projen.PipelineOptions.property.deployMain"></a>
+
+```typescript
+public readonly deployMain: PipelineMatrixEntry[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineMatrixEntry">PipelineMatrixEntry</a>[]
+
+Matrix of (environment, workload) pairs deployed by `push-main.yml` on pushes to `main` / `dev`.
+
+A single entry without a `workload` collapses to a non-matrix job;
+otherwise the workflow fans out via a `strategy.matrix` block.
+
+Legacy shape. Required unless `stages` is provided.
 
 ---
 
@@ -6295,6 +6310,76 @@ Matrix of (environment, workload) pairs diffed on the auto-opened main → produ
 
 Defaults to `deployProduction` when
 omitted. Ignored if `deployProduction` is not set.
+
+---
+
+##### `stages`<sup>Optional</sup> <a name="stages" id="@rocketleap/rocketleap-projen.PipelineOptions.property.stages"></a>
+
+```typescript
+public readonly stages: PipelineStage[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]
+- *Default:* use the legacy `deployMain` shape
+
+Ordered list of stages the `main` → prod pipeline promotes through.
+
+When set, the new pipeline shape is emitted and the legacy
+`deployMain` / `deployProduction` fields are ignored.
+
+---
+
+### PipelineStage <a name="PipelineStage" id="@rocketleap/rocketleap-projen.PipelineStage"></a>
+
+A stage in the ordered `main` → prod pipeline emitted by the new `stages` shape of `PipelineOptions`.
+
+`environment` is used both as the CDK app file segment for
+`yarn synth` (looks at `bin/<environment>.ts` or
+`bin/<environment>/<workload>.ts`) and as the GitHub Environment
+name applied to the deploy job. Gating for a stage is configured
+entirely via required reviewers on the matching GitHub Environment
+in the repo settings.
+
+`workload` is only used by multi-app projects.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineStage.Initializer"></a>
+
+```typescript
+import { PipelineStage } from '@rocketleap/rocketleap-projen'
+
+const pipelineStage: PipelineStage = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment AND the GitHub Environment name. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
+
+---
+
+##### `environment`<sup>Required</sup> <a name="environment" id="@rocketleap/rocketleap-projen.PipelineStage.property.environment"></a>
+
+```typescript
+public readonly environment: string;
+```
+
+- *Type:* string
+
+The CDK app file segment AND the GitHub Environment name.
+
+---
+
+##### `workload`<sup>Optional</sup> <a name="workload" id="@rocketleap/rocketleap-projen.PipelineStage.property.workload"></a>
+
+```typescript
+public readonly workload: string;
+```
+
+- *Type:* string
+
+Optional workload name for multi-app projects.
 
 ---
 
