@@ -231,8 +231,20 @@ pipeline: {
     { environment: 'prodeu', workload: 'example-ecs' },
     { environment: 'produs', workload: 'example-ecs' },
   ],
+  diffProduction: [
+    { environment: 'prodeu', workload: 'example-ecs' },
+  ],
 }
 ```
+
+| Field | Type | Purpose |
+| --- | --- | --- |
+| `deployMain` | `PipelineMatrixEntry[]` | Deployed by `push-main.yml` on push to `main` / `dev`. |
+| `diffMain` | `PipelineMatrixEntry[]` (optional) | Diffed by `pr-main.yml` on PRs to `main` / `dev`. Defaults to `deployMain`. Typically set to staging / production-like environments to preview the change that will eventually reach prod. |
+| `deployProduction` | `PipelineMatrixEntry[]` (optional) | Deployed by `push-production.yml` on push to `production`. Setting this enables the GitOps promote-PR flow. Omit for platform repos that skip the production flow (e.g. `iam-cdk`, `root-cdk`). |
+| `diffProduction` | `PipelineMatrixEntry[]` (optional) | Diffed on the auto-opened `main` → `production` promote PR. Defaults to `deployProduction`. Ignored if `deployProduction` is not set. |
+
+Each entry is a `PipelineMatrixEntry` — `{ environment: string, workload?: string }` — mapping to the CDK app file `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`.
 
 ### Stages shape — `stages`
 
@@ -253,7 +265,24 @@ pipeline: {
 
 Every deploy job sets `environment: <environment>` at the job level; configure required reviewers on the corresponding GitHub Environment in repo settings to gate that tier. The two `platform/*` stages deploy in parallel under one `platform` gate; between-env promotion stays sequential.
 
+Each entry is a `PipelineStage` — `{ environment: string, workload?: string }`.
+
 Passing both `stages` and `deployMain` errors — pick one per project.
+
+### `cdkDiff` — customize the `corymhall/cdk-diff-action` step
+
+Both shapes accept an optional `cdkDiff` field of type `CdkDiffOptions`:
+
+```typescript
+pipeline: {
+  stages: [...],
+  cdkDiff: { failOnDestructiveChanges: true },
+}
+```
+
+| Field | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `failOnDestructiveChanges` | `boolean` (optional) | `false` | Fail the diff workflow when destructive changes are detected. The default surfaces destructive changes in the rich PR comment for reviewer attention without blocking the workflow — the reviewer (or, for legacy shape, the GitOps promote PR) is the gate. Set to `true` to make destructive changes a hard fail on PR CI. |
 
 ## Generated GitHub Actions workflows
 
