@@ -10,6 +10,8 @@ import {
   addPrProductionWorkflow,
   addPushMainWorkflow,
   addPushProductionWorkflow,
+  addStagesActionSynthWorkflow,
+  addStagesPushMainWorkflow,
 } from '../src/common/workflows';
 
 function newProject(): Project {
@@ -285,5 +287,87 @@ describe('addCdkPipelineWorkflows', () => {
         deployProduction: [],
       }),
     ).toThrow('pipeline.deployProduction');
+  });
+});
+
+describe('addCdkPipelineWorkflows: stages shape', () => {
+  test('emits the stages pipeline file set when `stages` is set', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, {
+      stages: [{ environment: 'dev' }, { environment: 'prod' }],
+    });
+    const snapshot = synthSnapshot(project);
+    // action-build.yml, action-deploy.yml, action-diff.yml, pr-main.yml, push-main.yml
+    // are shared filenames; the STAGES variant is written when `stages` is used.
+    expect(snapshot['.github/workflows/action-build.yml']).toContain('build-workspace');
+    expect(snapshot['.github/workflows/action-synth.yml']).toBeDefined();
+    expect(snapshot['.github/workflows/action-deploy.yml']).toContain('yarn run deploy:artifact');
+    expect(snapshot['.github/workflows/action-diff.yml']).toContain('noSynth: "true"');
+    // No legacy production-branch workflows.
+    expect(snapshot['.github/workflows/push-production.yml']).toBeUndefined();
+    expect(snapshot['.github/workflows/pr-production.yml']).toBeUndefined();
+    expect(snapshot['.github/workflows/action-promote-pr.yml']).toBeUndefined();
+  });
+
+  test('rejects passing both stages and deployMain', () => {
+    const project = newProject();
+    expect(() =>
+      addCdkPipelineWorkflows(project, {
+        stages: [{ environment: 'dev' }],
+        deployMain: [{ environment: 'dev' }],
+      }),
+    ).toThrow(/either `stages` .* or `deployMain`/);
+  });
+
+  test('rejects passing neither stages nor deployMain', () => {
+    const project = newProject();
+    expect(() => addCdkPipelineWorkflows(project, {})).toThrow(/one of `stages` or `deployMain`/);
+  });
+
+  test('action-synth.yml is a single-stage reusable (like action-diff.yml)', () => {
+    const project = newProject();
+    addStagesActionSynthWorkflow(project);
+    const synth = synthSnapshot(project)['.github/workflows/action-synth.yml'];
+    expect(synth).toContain('workflow_call:');
+    expect(synth).toMatch(/environment:\s*\n\s*type: string\s*\n\s*required: true/);
+    expect(synth).not.toContain('matrix:');
+    expect(synth).toContain('name: build-workspace');
+    expect(synth).toContain('cdk_out_dir=cdk.out/${{inputs.environment}}');
+    expect(synth).toContain('name: ${{ env.artifact_name }}');
+  });
+
+  test('push-main groups consecutive same-env stages into a parallel deploy group', () => {
+    const project = newProject();
+    addStagesPushMainWorkflow(project, [
+      { environment: 'dev', workload: 'main' },
+      { environment: 'platform', workload: 'a' },
+      { environment: 'platform', workload: 'b' },
+      { environment: 'platform', workload: 'c' },
+      { environment: 'prodeu', workload: 'main' },
+    ]);
+    const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
+
+    // synth is a single matrix job.
+    expect(push).toMatch(/^\s*synth:\s*$/m);
+    expect(push).toMatch(/synth:[\s\S]*?matrix:/);
+    expect(push).toMatch(/synth:[\s\S]*?uses: \.\/\.github\/workflows\/action-synth\.yml/);
+
+    // dev is first group → deploy needs synth.
+    expect(push).toMatch(/deploy-dev-main-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+
+    // All 3 platform deploys share the same needs — the dev group id.
+    expect(push).toMatch(/deploy-platform-a-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-main-0/);
+    expect(push).toMatch(/deploy-platform-b-2:[\s\S]*?needs:\s*\n\s*- deploy-dev-main-0/);
+    expect(push).toMatch(/deploy-platform-c-3:[\s\S]*?needs:\s*\n\s*- deploy-dev-main-0/);
+
+    // prodeu needs the previous group — all 3 platform deploys.
+    expect(push).toMatch(
+      /deploy-prodeu-main-4:[\s\S]*?needs:\s*\n\s*- deploy-platform-a-1\s*\n\s*- deploy-platform-b-2\s*\n\s*- deploy-platform-c-3/,
+    );
+  });
+
+  test('empty stages array throws', () => {
+    const project = newProject();
+    expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow('pipeline.stages');
   });
 });
