@@ -11,15 +11,13 @@ export * as git from './common/git';
 export * as actions from './common/actions';
 export {
   PipelineOptions,
-  PipelineMatrixEntry,
+  PipelineStage,
   CdkDiffOptions,
   addCdkPipelineWorkflows,
   addActionBuildWorkflow,
+  addActionSynthWorkflow,
   addActionDeployWorkflow,
   addActionDiffWorkflow,
-  addActionPromotePrWorkflow,
   addPrMainWorkflow,
-  addPrProductionWorkflow,
   addPushMainWorkflow,
-  addPushProductionWorkflow,
 } from './common/workflows';
