@@ -11,25 +11,13 @@ export * as git from './common/git';
 export * as actions from './common/actions';
 export {
   PipelineOptions,
-  PipelineMatrixEntry,
   PipelineStage,
   CdkDiffOptions,
   addCdkPipelineWorkflows,
-  // Legacy-shape emitters (kept for consumers still on `deployMain`).
   addActionBuildWorkflow,
+  addActionSynthWorkflow,
   addActionDeployWorkflow,
   addActionDiffWorkflow,
-  addActionPromotePrWorkflow,
   addPrMainWorkflow,
-  addPrProductionWorkflow,
   addPushMainWorkflow,
-  addPushProductionWorkflow,
-  // Stages-shape emitters.
-  addStagesPipelineWorkflows,
-  addStagesActionBuildWorkflow,
-  addStagesActionSynthWorkflow,
-  addStagesActionDeployWorkflow,
-  addStagesActionDiffWorkflow,
-  addStagesPrMainWorkflow,
-  addStagesPushMainWorkflow,
 } from './common/workflows';
