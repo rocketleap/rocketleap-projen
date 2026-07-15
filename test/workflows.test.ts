@@ -4,45 +4,36 @@ import {
   addActionBuildWorkflow,
   addActionDeployWorkflow,
   addActionDiffWorkflow,
-  addActionPromotePrWorkflow,
+  addActionSynthWorkflow,
   addCdkPipelineWorkflows,
   addPrMainWorkflow,
-  addPrProductionWorkflow,
   addPushMainWorkflow,
-  addPushProductionWorkflow,
-  addStagesActionSynthWorkflow,
-  addStagesPushMainWorkflow,
 } from '../src/common/workflows';
 
 function newProject(): Project {
   return new Project({ name: 'test' });
 }
 
-describe('reusable action workflows', () => {
-  test('action-build.yml is emitted', () => {
+describe('action-build.yml', () => {
+  test('install → drift check → format/lint/tsc/test → upload build-workspace (excluding node_modules)', () => {
     const project = newProject();
     addActionBuildWorkflow(project);
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
-    expect(snapshot['.github/workflows/action-build.yml']).toContain('workflow_call:');
-    expect(snapshot['.github/workflows/action-build.yml']).toContain('yarn test:ci');
-    expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/checkout@v6');
-    expect(snapshot['.github/workflows/action-build.yml']).toContain('actions/setup-node@v6');
-    // Node 18 is EOL (April 2025); every workflow the projen library
-    // emits standardizes on Node 24 (current active LTS).
-    expect(snapshot['.github/workflows/action-build.yml']).toMatch(/node-version:\s*['"]?24['"]?/);
-    expect(snapshot['.github/workflows/action-build.yml']).not.toMatch(/node-version:\s*['"]?18['"]?/);
+    const build = synthSnapshot(project)['.github/workflows/action-build.yml'];
+    expect(build).toContain('workflow_call:');
+    expect(build).toContain('yarn test:ci');
+    expect(build).toMatch(/node-version:\s*['"]?24['"]?/);
+    expect(build).toContain('name: build-workspace');
+    // The node_modules exclusion is the whole reason synth reinstalls.
+    expect(build).toContain('!node_modules');
+    expect(build).toContain('!.git');
+    expect(build).toContain('!cdk.out');
   });
 
-  test('action-build.yml verifies projen synth is a no-op before build', () => {
+  test('projen drift check runs after install and before compile', () => {
     const project = newProject();
     addActionBuildWorkflow(project);
-    const snapshot = synthSnapshot(project);
-    const build = snapshot['.github/workflows/action-build.yml'];
-    expect(build).toContain('name: projen');
-    expect(build).toContain('npx projen');
+    const build = synthSnapshot(project)['.github/workflows/action-build.yml'];
     expect(build).toContain('git diff --exit-code');
-    // Drift check must run after install and before build/test so it fails fast.
     const verifyIdx = build.indexOf('name: projen');
     const yarnBuildIdx = build.indexOf('yarn build');
     const yarnInstallIdx = build.indexOf('- run: yarn\n');
@@ -50,323 +41,177 @@ describe('reusable action workflows', () => {
     expect(verifyIdx).toBeGreaterThan(yarnInstallIdx);
     expect(verifyIdx).toBeLessThan(yarnBuildIdx);
   });
+});
 
-  test('action-deploy.yml is emitted', () => {
+describe('action-synth.yml', () => {
+  test('single-stage reusable: downloads build-workspace, reinstalls, synths, uploads per-env cdk-out', () => {
+    const project = newProject();
+    addActionSynthWorkflow(project);
+    const synth = synthSnapshot(project)['.github/workflows/action-synth.yml'];
+    expect(synth).toContain('workflow_call:');
+    expect(synth).toMatch(/environment:\s*\n\s*type: string\s*\n\s*required: true/);
+    expect(synth).toMatch(/workload:\s*\n\s*type: string\s*\n\s*required: false/);
+    expect(synth).not.toContain('matrix:');
+    expect(synth).toContain('name: build-workspace');
+    // Reinstall preserves executable bits on native binaries that
+    // upload-artifact drops.
+    expect(synth).toContain('- run: yarn\n');
+    expect(synth).toContain('cdk_out_dir=cdk.out/${{inputs.environment}}');
+    expect(synth).toContain('artifact_name=cdk-out-${{inputs.environment}}');
+    expect(synth).toContain('name: ${{ env.artifact_name }}');
+    expect(synth).toContain('path: ${{ env.cdk_out_dir }}');
+  });
+});
+
+describe('action-deploy.yml', () => {
+  test('installs, downloads per-env cdk.out artifact, deploys via yarn run deploy:ci', () => {
     const project = newProject();
     addActionDeployWorkflow(project);
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/action-deploy.yml']).toContain('role/CdkDeployRole');
-    expect(snapshot['.github/workflows/action-deploy.yml']).toContain('yarn run deploy:ci');
+    const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
+    expect(deploy).toContain('actions/download-artifact@v4');
+    expect(deploy).toContain('name: ${{ env.artifact_name }}');
+    expect(deploy).toContain('role/CdkDeployRole');
+    expect(deploy).toContain('yarn run deploy:ci "${{env.cdk_out_dir}}"');
+    expect(deploy).toContain('- run: yarn\n');
   });
 
-  test('action-diff.yml synths then runs corymhall/cdk-diff-action with defaults', () => {
+  test('deploy job binds the GH Environment to the `environment` input', () => {
+    const project = newProject();
+    addActionDeployWorkflow(project);
+    const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
+    expect(deploy).toContain('environment: ${{ inputs.environment }}');
+  });
+});
+
+describe('action-diff.yml', () => {
+  test('downloads per-env cdk.out and diffs with noSynth: true', () => {
     const project = newProject();
     addActionDiffWorkflow(project);
-    const snapshot = synthSnapshot(project);
-    const diff = snapshot['.github/workflows/action-diff.yml'];
-    expect(diff).toContain('yarn synth:ci');
+    const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
+    expect(diff).toContain('actions/download-artifact@v4');
+    expect(diff).toContain('name: ${{ env.artifact_name }}');
     expect(diff).toContain('corymhall/cdk-diff-action@v2');
-    expect(diff).toContain('title: ${{ inputs.job-name }}');
     expect(diff).toContain('failOnDestructiveChanges: "false"');
-    expect(diff).not.toContain('yarn diff:ci');
-    expect(diff).not.toContain('gha-jobid-action');
-    expect(diff).not.toContain('gh pr comment');
-    expect(diff).not.toContain('pr-number');
+    expect(diff).toContain('cdkOutDir: ${{ env.cdk_out_dir }}');
+    expect(diff).toContain('noSynth: "true"');
+    // Diff runs against the pre-synthed assembly; no install/build needed.
+    expect(diff).not.toContain('yarn install');
+    expect(diff).not.toContain('yarn build');
   });
 
-  test('action-diff.yml accepts failOnDestructiveChanges: true opt-in', () => {
+  test('accepts failOnDestructiveChanges: true opt-in', () => {
     const project = newProject();
     addActionDiffWorkflow(project, { failOnDestructiveChanges: true });
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
     expect(diff).toContain('failOnDestructiveChanges: "true"');
   });
+});
 
-  test('action-promote-pr.yml is emitted', () => {
+describe('pr-main.yml', () => {
+  test('build → synth (matrix) → per-stage diff (each needs synth)', () => {
     const project = newProject();
-    addActionPromotePrWorkflow(project);
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/action-promote-pr.yml']).toContain('Production Promotion');
-    expect(snapshot['.github/workflows/action-promote-pr.yml']).toContain('peter-evans/create-pull-request');
+    addPrMainWorkflow(project, [{ environment: 'dev' }, { environment: 'prodeu', workload: 'example-ecs' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+    expect(pr).toMatch(/^\s*synth:\s*$/m);
+    expect(pr).toMatch(/synth:[\s\S]*?needs: build/);
+    expect(pr).toMatch(/synth:[\s\S]*?uses: \.\/\.github\/workflows\/action-synth\.yml/);
+    expect(pr).toMatch(/synth:[\s\S]*?matrix:\s*\n\s*stage:/);
+    expect(pr).toContain('- environment: dev');
+    expect(pr).toContain('environment: prodeu');
+    expect(pr).toContain('workload: example-ecs');
+    expect(pr).toMatch(/diff-dev-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+    expect(pr).toMatch(/diff-prodeu-example-ecs-1:[\s\S]*?needs:\s*\n\s*- synth\n/);
+  });
+
+  test('empty stages throws', () => {
+    const project = newProject();
+    expect(() => addPrMainWorkflow(project, [])).toThrow('at least one entry');
   });
 });
 
-describe('pr-main and push-main workflows', () => {
-  test('single-entry matrix collapses to non-matrix job', () => {
+describe('push-main.yml', () => {
+  test('deploy chain of distinct environments is fully sequential', () => {
     const project = newProject();
-    addPrMainWorkflow(project, [{ environment: 'iam' }]);
-    addPushMainWorkflow(project, [{ environment: 'iam' }]);
-    const snapshot = synthSnapshot(project);
-    const pr = snapshot['.github/workflows/pr-main.yml'];
-    const push = snapshot['.github/workflows/push-main.yml'];
-    expect(pr).toContain('environment: iam');
-    expect(pr).not.toContain('strategy:');
-    expect(push).toContain('environment: iam');
-    expect(push).not.toContain('strategy:');
-    expect(push).not.toContain('promote:');
-  });
-
-  test('multi-entry matrix uses strategy.matrix', () => {
-    const project = newProject();
-    addPrMainWorkflow(project, [
-      { environment: 'dev', workload: 'example-ecs' },
-      { environment: 'dev', workload: 'example-lambda' },
+    addPushMainWorkflow(project, [
+      { environment: 'dev' },
+      { environment: 'staging' },
+      { environment: 'prodeu' },
+      { environment: 'produs' },
     ]);
-    const snapshot = synthSnapshot(project);
-    const pr = snapshot['.github/workflows/pr-main.yml'];
-    expect(pr).toContain('strategy:');
-    expect(pr).toContain('workloads:');
-    expect(pr).toContain('example-ecs');
-    expect(pr).toContain('example-lambda');
-  });
-
-  test('includePromote injects only the promote job into push-main (no production-diff)', () => {
-    const project = newProject();
-    addPushMainWorkflow(project, [{ environment: 'dev', workload: 'example-ecs' }], true);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
-    expect(push).toContain('promote:');
-    expect(push).toContain('action-promote-pr.yml');
-    expect(push).toContain('target-branch: production');
-    expect(push).toContain('source-branch: ${{ github.ref_name }}');
-    expect(push).not.toContain('production-diff');
+    expect(push).toMatch(/^\s*synth:\s*$/m);
+    expect(push).toMatch(/synth:[\s\S]*?needs: build/);
+    expect(push).toMatch(/deploy-dev-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+    expect(push).toMatch(/deploy-staging-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-0/);
+    expect(push).toMatch(/deploy-prodeu-2:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
+    expect(push).toMatch(/deploy-produs-3:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-2/);
   });
-});
 
-describe('pr-production workflow', () => {
-  test('pr-production.yml triggers on production branch PRs with given matrix', () => {
+  test('consecutive same-environment stages deploy in parallel under one gate', () => {
     const project = newProject();
-    addPrProductionWorkflow(project, [
+    addPushMainWorkflow(project, [
+      { environment: 'dev', workload: 'example-ecs' },
+      { environment: 'platform', workload: 'management' },
+      { environment: 'platform', workload: 'security' },
+      { environment: 'platform', workload: 'backup' },
+      { environment: 'platform', workload: 'observability' },
+      { environment: 'platform', workload: 'log-archive' },
       { environment: 'prodeu', workload: 'example-ecs' },
       { environment: 'produs', workload: 'example-ecs' },
     ]);
-    const pr = synthSnapshot(project)['.github/workflows/pr-production.yml'];
-    expect(pr).toContain('pull_request:');
-    expect(pr).toContain('- production');
-    expect(pr).toContain('prodeu');
-    expect(pr).toContain('produs');
+    const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
+
+    // dev is the first group → waits on the whole synth matrix.
+    expect(push).toMatch(/deploy-dev-example-ecs-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+
+    // All platform-* deploys share the SAME needs — the dev group id.
+    expect(push).toMatch(/deploy-platform-management-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+    expect(push).toMatch(/deploy-platform-security-2:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+    expect(push).toMatch(/deploy-platform-log-archive-5:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
+
+    // prodeu needs every platform deploy id (fan-in).
+    expect(push).toMatch(
+      /deploy-prodeu-example-ecs-6:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-1\s*\n\s*- deploy-platform-security-2\s*\n\s*- deploy-platform-backup-3\s*\n\s*- deploy-platform-observability-4\s*\n\s*- deploy-platform-log-archive-5/,
+    );
+
+    // produs needs prodeu.
+    expect(push).toMatch(/deploy-produs-example-ecs-7:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-example-ecs-6/);
   });
 
-  test('pr-production.yml omits workload input when no entry has one', () => {
+  test('empty stages throws', () => {
     const project = newProject();
-    addPrProductionWorkflow(project, [{ environment: 'prodeu' }, { environment: 'produs' }]);
-    const pr = synthSnapshot(project)['.github/workflows/pr-production.yml'];
-    expect(pr).not.toContain('matrix.workloads.name');
-    expect(pr).not.toContain('workload: ');
-    expect(pr).toContain('environment: ${{ matrix.workloads.environment }}');
-  });
-});
-
-describe('push-production workflow', () => {
-  test('push-production.yml is emitted with matrix', () => {
-    const project = newProject();
-    addPushProductionWorkflow(project, [
-      { environment: 'prodeu', workload: 'example-ecs' },
-      { environment: 'produs', workload: 'example-ecs' },
-    ]);
-    const push = synthSnapshot(project)['.github/workflows/push-production.yml'];
-    expect(push).toContain('branches:');
-    expect(push).toContain('- production');
-    expect(push).toContain('prodeu');
-    expect(push).toContain('produs');
+    expect(() => addPushMainWorkflow(project, [])).toThrow('at least one entry');
   });
 });
 
 describe('addCdkPipelineWorkflows', () => {
-  test('simple flow emits 5 files (no production promotion)', () => {
+  test('emits exactly six workflow files', () => {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { deployMain: [{ environment: 'iam' }] });
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
+    expect(snapshot['.github/workflows/action-synth.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-deploy.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-diff.yml']).toBeDefined();
     expect(snapshot['.github/workflows/pr-main.yml']).toBeDefined();
     expect(snapshot['.github/workflows/push-main.yml']).toBeDefined();
+    // No legacy production-branch workflows.
     expect(snapshot['.github/workflows/action-promote-pr.yml']).toBeUndefined();
     expect(snapshot['.github/workflows/push-production.yml']).toBeUndefined();
     expect(snapshot['.github/workflows/pr-production.yml']).toBeUndefined();
   });
 
-  test('GitOps production flow emits 8 files when deployProduction is set', () => {
+  test('cdkDiff.failOnDestructiveChanges: true flows through', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'dev', workload: 'example-ecs' }],
-      deployProduction: [{ environment: 'prodeu', workload: 'example-ecs' }],
-    });
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/action-promote-pr.yml']).toBeDefined();
-    expect(snapshot['.github/workflows/push-production.yml']).toBeDefined();
-    expect(snapshot['.github/workflows/pr-production.yml']).toBeDefined();
-  });
-
-  test('push-main.yml has no production-diff job; pr-production runs the prod diff instead', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'dev', workload: 'example-ecs' }],
-      deployProduction: [
-        { environment: 'prodeu', workload: 'example-ecs' },
-        { environment: 'produs', workload: 'example-ecs' },
-      ],
-    });
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/push-main.yml']).not.toContain('production-diff');
-    expect(snapshot['.github/workflows/push-main.yml']).toContain('promote:');
-    expect(snapshot['.github/workflows/pr-production.yml']).toContain('prodeu');
-    expect(snapshot['.github/workflows/pr-production.yml']).toContain('produs');
-  });
-
-  test('empty deployMain throws', () => {
-    const project = newProject();
-    expect(() => addCdkPipelineWorkflows(project, { deployMain: [] })).toThrow('pipeline.deployMain');
-  });
-
-  test('diffMain drives pr-main when supplied; deployMain still drives push-main', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'dev', workload: 'example-ecs' }],
-      diffMain: [
-        { environment: 'staging', workload: 'example-ecs' },
-        { environment: 'platform', workload: 'management' },
-      ],
-    });
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/pr-main.yml']).toContain('staging');
-    expect(snapshot['.github/workflows/pr-main.yml']).toContain('management');
-    expect(snapshot['.github/workflows/pr-main.yml']).not.toContain('environment: dev');
-    expect(snapshot['.github/workflows/push-main.yml']).toContain('environment: dev');
-    expect(snapshot['.github/workflows/push-main.yml']).not.toContain('staging');
-  });
-
-  test('diffMain defaults to deployMain when omitted', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'iam' }],
-    });
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/pr-main.yml']).toContain('environment: iam');
-    expect(snapshot['.github/workflows/push-main.yml']).toContain('environment: iam');
-  });
-
-  test('diffProduction drives pr-production when supplied; deployProduction drives push-production', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'dev' }],
-      deployProduction: [{ environment: 'prodeu', workload: 'example-ecs' }],
-      diffProduction: [{ environment: 'platform', workload: 'management' }],
-    });
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/pr-production.yml']).toContain('management');
-    expect(snapshot['.github/workflows/pr-production.yml']).not.toContain('prodeu');
-    expect(snapshot['.github/workflows/push-production.yml']).toContain('prodeu');
-    expect(snapshot['.github/workflows/push-production.yml']).not.toContain('management');
-  });
-
-  test('diffProduction defaults to deployProduction when omitted', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'dev' }],
-      deployProduction: [{ environment: 'prodeu', workload: 'example-ecs' }],
-    });
-    const snapshot = synthSnapshot(project);
-    expect(snapshot['.github/workflows/pr-production.yml']).toContain('prodeu');
-  });
-
-  test('cdkDiff.failOnDestructiveChanges: true flows through addCdkPipelineWorkflows', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      deployMain: [{ environment: 'iam' }],
+      stages: [{ environment: 'iam' }],
       cdkDiff: { failOnDestructiveChanges: true },
     });
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
     expect(diff).toContain('failOnDestructiveChanges: "true"');
   });
 
-  test('empty deployProduction throws', () => {
-    const project = newProject();
-    expect(() =>
-      addCdkPipelineWorkflows(project, {
-        deployMain: [{ environment: 'dev' }],
-        deployProduction: [],
-      }),
-    ).toThrow('pipeline.deployProduction');
-  });
-});
-
-describe('addCdkPipelineWorkflows: stages shape', () => {
-  test('emits the stages pipeline file set when `stages` is set', () => {
-    const project = newProject();
-    addCdkPipelineWorkflows(project, {
-      stages: [{ environment: 'dev' }, { environment: 'prod' }],
-    });
-    const snapshot = synthSnapshot(project);
-    // action-build.yml, action-deploy.yml, action-diff.yml, pr-main.yml, push-main.yml
-    // are shared filenames; the STAGES variant is written when `stages` is used.
-    expect(snapshot['.github/workflows/action-build.yml']).toContain('build-workspace');
-    expect(snapshot['.github/workflows/action-synth.yml']).toBeDefined();
-    expect(snapshot['.github/workflows/action-deploy.yml']).toContain('yarn run deploy:artifact');
-    expect(snapshot['.github/workflows/action-diff.yml']).toContain('noSynth: "true"');
-    // No legacy production-branch workflows.
-    expect(snapshot['.github/workflows/push-production.yml']).toBeUndefined();
-    expect(snapshot['.github/workflows/pr-production.yml']).toBeUndefined();
-    expect(snapshot['.github/workflows/action-promote-pr.yml']).toBeUndefined();
-  });
-
-  test('rejects passing both stages and deployMain', () => {
-    const project = newProject();
-    expect(() =>
-      addCdkPipelineWorkflows(project, {
-        stages: [{ environment: 'dev' }],
-        deployMain: [{ environment: 'dev' }],
-      }),
-    ).toThrow(/either `stages` .* or `deployMain`/);
-  });
-
-  test('rejects passing neither stages nor deployMain', () => {
-    const project = newProject();
-    expect(() => addCdkPipelineWorkflows(project, {})).toThrow(/one of `stages` or `deployMain`/);
-  });
-
-  test('action-synth.yml is a single-stage reusable (like action-diff.yml)', () => {
-    const project = newProject();
-    addStagesActionSynthWorkflow(project);
-    const synth = synthSnapshot(project)['.github/workflows/action-synth.yml'];
-    expect(synth).toContain('workflow_call:');
-    expect(synth).toMatch(/environment:\s*\n\s*type: string\s*\n\s*required: true/);
-    expect(synth).not.toContain('matrix:');
-    expect(synth).toContain('name: build-workspace');
-    expect(synth).toContain('cdk_out_dir=cdk.out/${{inputs.environment}}');
-    expect(synth).toContain('name: ${{ env.artifact_name }}');
-  });
-
-  test('push-main groups consecutive same-env stages into a parallel deploy group', () => {
-    const project = newProject();
-    addStagesPushMainWorkflow(project, [
-      { environment: 'dev', workload: 'main' },
-      { environment: 'platform', workload: 'a' },
-      { environment: 'platform', workload: 'b' },
-      { environment: 'platform', workload: 'c' },
-      { environment: 'prodeu', workload: 'main' },
-    ]);
-    const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
-
-    // synth is a single matrix job.
-    expect(push).toMatch(/^\s*synth:\s*$/m);
-    expect(push).toMatch(/synth:[\s\S]*?matrix:/);
-    expect(push).toMatch(/synth:[\s\S]*?uses: \.\/\.github\/workflows\/action-synth\.yml/);
-
-    // dev is first group → deploy needs synth.
-    expect(push).toMatch(/deploy-dev-main-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
-
-    // All 3 platform deploys share the same needs — the dev group id.
-    expect(push).toMatch(/deploy-platform-a-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-main-0/);
-    expect(push).toMatch(/deploy-platform-b-2:[\s\S]*?needs:\s*\n\s*- deploy-dev-main-0/);
-    expect(push).toMatch(/deploy-platform-c-3:[\s\S]*?needs:\s*\n\s*- deploy-dev-main-0/);
-
-    // prodeu needs the previous group — all 3 platform deploys.
-    expect(push).toMatch(
-      /deploy-prodeu-main-4:[\s\S]*?needs:\s*\n\s*- deploy-platform-a-1\s*\n\s*- deploy-platform-b-2\s*\n\s*- deploy-platform-c-3/,
-    );
-  });
-
-  test('empty stages array throws', () => {
+  test('empty stages throws', () => {
     const project = newProject();
     expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow('pipeline.stages');
   });
