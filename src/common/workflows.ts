@@ -118,7 +118,21 @@ function pathsScript(): string {
 
 function accountAndRegionFromManifestScript(): string {
   return [
-    'env_uri=$(jq -r \'.artifacts | to_entries | map(select(.value.type == "aws:cloudformation:stack")) | .[0].value.environment\' "${{env.cdk_out_dir}}/manifest.json")',
+    'set -euo pipefail',
+    'manifest="${{env.cdk_out_dir}}/manifest.json"',
+    'if [ ! -f "$manifest" ]; then',
+    '  echo "::error::$manifest not found — the cdk.out artifact for this stage was not downloaded."',
+    '  exit 1',
+    'fi',
+    'env_uri=$(jq -r \'.artifacts | to_entries | map(select(.value.type == "aws:cloudformation:stack")) | .[0].value.environment // ""\' "$manifest")',
+    'if [ -z "$env_uri" ] || [ "$env_uri" = "null" ]; then',
+    '  echo "::error::No aws:cloudformation:stack artifact found in $manifest — nothing to deploy."',
+    '  exit 1',
+    'fi',
+    'if [[ ! "$env_uri" =~ ^aws://[0-9]+/[a-z0-9-]+$ ]]; then',
+    '  echo "::error::Malformed CDK environment URI in $manifest: $env_uri (expected aws://ACCOUNT/REGION)."',
+    '  exit 1',
+    'fi',
     'echo "account_id=$(echo "$env_uri" | awk -F\'/\' \'{print $3}\')" >> "$GITHUB_ENV"',
     'echo "region=$(echo "$env_uri" | awk -F\'/\' \'{print $4}\')" >> "$GITHUB_ENV"',
   ].join('\n');
@@ -290,10 +304,6 @@ export function addActionDeployWorkflow(project: Project): void {
       concurrency: '${{inputs.environment}}${{inputs.workload}}',
       permissions: { ...PERMISSIONS_DEFAULT, 'id-token': 'write' },
       jobs: {
-        // No `environment:` on the deploy job — the GitHub Environment
-        // gate lives on the caller's per-env `gate-<env>-<idx>` job so
-        // one approval unlocks the whole parallel deploy group. The
-        // `environment` input here is used only for CDK bin selection.
         deploy: {
           'runs-on': 'ubuntu-latest',
           'steps': [
