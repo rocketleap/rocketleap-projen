@@ -14,7 +14,6 @@ import { addRocketleapLicense } from './license';
 export interface RocketleapPlatformMinimalProjectOptions extends javascript.NodeProjectOptions {
   /**
    * The owning company slug — used as the npm scope (e.g. `rocketleap`).
-   * @default no scope
    */
   readonly company: string;
 

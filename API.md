@@ -13594,7 +13594,6 @@ public readonly company: string;
 ```
 
 - *Type:* string
-- *Default:* no scope
 
 The owning company slug — used as the npm scope (e.g. `rocketleap`).
 
