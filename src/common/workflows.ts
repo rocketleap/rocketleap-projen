@@ -118,7 +118,21 @@ function pathsScript(): string {
 
 function accountAndRegionFromManifestScript(): string {
   return [
-    'env_uri=$(jq -r \'.artifacts | to_entries | map(select(.value.type == "aws:cloudformation:stack")) | .[0].value.environment\' "${{env.cdk_out_dir}}/manifest.json")',
+    'set -euo pipefail',
+    'manifest="${{env.cdk_out_dir}}/manifest.json"',
+    'if [ ! -f "$manifest" ]; then',
+    '  echo "::error::$manifest not found — the cdk.out artifact for this stage was not downloaded."',
+    '  exit 1',
+    'fi',
+    'env_uri=$(jq -r \'.artifacts | to_entries | map(select(.value.type == "aws:cloudformation:stack")) | .[0].value.environment // ""\' "$manifest")',
+    'if [ -z "$env_uri" ] || [ "$env_uri" = "null" ]; then',
+    '  echo "::error::No aws:cloudformation:stack artifact found in $manifest — nothing to deploy."',
+    '  exit 1',
+    'fi',
+    'if [[ ! "$env_uri" =~ ^aws://[0-9]+/[a-z0-9-]+$ ]]; then',
+    '  echo "::error::Malformed CDK environment URI in $manifest: $env_uri (expected aws://ACCOUNT/REGION)."',
+    '  exit 1',
+    'fi',
     'echo "account_id=$(echo "$env_uri" | awk -F\'/\' \'{print $3}\')" >> "$GITHUB_ENV"',
     'echo "region=$(echo "$env_uri" | awk -F\'/\' \'{print $4}\')" >> "$GITHUB_ENV"',
   ].join('\n');
@@ -292,7 +306,6 @@ export function addActionDeployWorkflow(project: Project): void {
       jobs: {
         deploy: {
           'runs-on': 'ubuntu-latest',
-          'environment': '${{ inputs.environment }}',
           'steps': [
             checkoutStep(),
             ...bootstrapSteps(),
@@ -422,10 +435,11 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
 }
 
 /**
- * Emits `push-main.yml`: `build` → `synth` (matrix over every stage) → deploy chain
- * grouped by `environment`. Consecutive same-environment stages share the same
- * `needs:` (the previous env group's deploy ids) so they run in parallel under
- * one GitHub Environment gate.
+ * Emits `push-main.yml`: `build` → `synth` (matrix over every stage) → for each
+ * consecutive same-`environment` group, one `gate-<env>-<idx>` job that owns
+ * the GitHub Environment approval, followed by every deploy in the group
+ * running in parallel behind that single gate. Between-env promotion is
+ * sequential: the next group's gate waits for the previous group's deploys.
  */
 export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): void {
   if (!stages || stages.length === 0) {
@@ -436,18 +450,38 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
     synth: synthMatrixJob(stages),
   };
 
-  let previousGroup: string[] = ['synth'];
-  let currentGroup: string[] = [];
+  // Group consecutive stages by environment. Each group gets ONE gate
+  // job that carries `environment: <env>` (so GH Environment protection
+  // asks for a single approval per env group), and the group's deploy
+  // jobs run in parallel behind that gate.
+  //
+  // - First group's gate needs `synth`.
+  // - Subsequent groups' gates need every deploy id from the previous group.
+  // - Deploy jobs never carry `environment:` themselves — the gate owns it.
+  let previousGroupDeploys: string[] = ['synth'];
+  let currentGroupDeploys: string[] = [];
   let currentEnv: string | null = null;
+  let currentGateId: string | null = null;
   stages.forEach((stage, index) => {
-    if (currentEnv !== null && stage.environment !== currentEnv) {
-      previousGroup = currentGroup;
-      currentGroup = [];
+    if (currentEnv === null || stage.environment !== currentEnv) {
+      // New group starts.
+      if (currentEnv !== null) {
+        previousGroupDeploys = currentGroupDeploys;
+        currentGroupDeploys = [];
+      }
+      currentEnv = stage.environment;
+      currentGateId = `gate-${stageSlug({ environment: stage.environment })}-${index}`;
+      jobs[currentGateId] = {
+        'name': `Await approval for ${stage.environment}`,
+        'needs': previousGroupDeploys,
+        'runs-on': 'ubuntu-latest',
+        'environment': stage.environment,
+        'steps': [{ run: `echo "Approved — starting deploys to ${stage.environment}"` }],
+      };
     }
-    currentEnv = stage.environment;
     const deployId = `deploy-${stageSlug(stage)}-${index}`;
-    jobs[deployId] = deployJobFor(stage, previousGroup);
-    currentGroup.push(deployId);
+    jobs[deployId] = deployJobFor(stage, [currentGateId!]);
+    currentGroupDeploys.push(deployId);
   });
 
   new YamlFile(project, '.github/workflows/push-main.yml', {

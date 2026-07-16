@@ -75,11 +75,13 @@ describe('action-deploy.yml', () => {
     expect(deploy).toContain('- run: yarn\n');
   });
 
-  test('deploy job binds the GH Environment to the `environment` input', () => {
+  test("deploy job does NOT bind a GitHub Environment — the caller's gate job owns it", () => {
     const project = newProject();
     addActionDeployWorkflow(project);
     const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
-    expect(deploy).toContain('environment: ${{ inputs.environment }}');
+    // The `environment` input is used only for CDK bin selection here.
+    // The GH Environment approval sits on push-main.yml's `gate-<env>` job.
+    expect(deploy).not.toMatch(/^\s+environment: \$\{\{ inputs\.environment \}\}/m);
   });
 });
 
@@ -130,7 +132,7 @@ describe('pr-main.yml', () => {
 });
 
 describe('push-main.yml', () => {
-  test('deploy chain of distinct environments is fully sequential', () => {
+  test('deploy chain of distinct environments — one gate per group; deploys sit behind their gate', () => {
     const project = newProject();
     addPushMainWorkflow(project, [
       { environment: 'dev' },
@@ -141,10 +143,24 @@ describe('push-main.yml', () => {
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
     expect(push).toMatch(/^\s*synth:\s*$/m);
     expect(push).toMatch(/synth:[\s\S]*?needs: build/);
-    expect(push).toMatch(/deploy-dev-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
-    expect(push).toMatch(/deploy-staging-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-0/);
-    expect(push).toMatch(/deploy-prodeu-2:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
-    expect(push).toMatch(/deploy-produs-3:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-2/);
+
+    // Each env gets one gate job with `environment: <env>` — the single approval point.
+    expect(push).toMatch(/gate-dev-0:[\s\S]*?environment: dev/);
+    expect(push).toMatch(/gate-staging-1:[\s\S]*?environment: staging/);
+    expect(push).toMatch(/gate-prodeu-2:[\s\S]*?environment: prodeu/);
+    expect(push).toMatch(/gate-produs-3:[\s\S]*?environment: produs/);
+
+    // First gate needs synth; each subsequent gate needs the previous group's deploys.
+    expect(push).toMatch(/gate-dev-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+    expect(push).toMatch(/gate-staging-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-0/);
+    expect(push).toMatch(/gate-prodeu-2:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
+    expect(push).toMatch(/gate-produs-3:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-2/);
+
+    // Deploy jobs need ONLY their gate (no environment on the deploy itself).
+    expect(push).toMatch(/deploy-dev-0:[\s\S]*?needs:\s*\n\s*- gate-dev-0/);
+    expect(push).toMatch(/deploy-staging-1:[\s\S]*?needs:\s*\n\s*- gate-staging-1/);
+    expect(push).toMatch(/deploy-prodeu-2:[\s\S]*?needs:\s*\n\s*- gate-prodeu-2/);
+    expect(push).toMatch(/deploy-produs-3:[\s\S]*?needs:\s*\n\s*- gate-produs-3/);
   });
 
   test('consecutive same-environment stages deploy in parallel under one gate', () => {
@@ -161,21 +177,29 @@ describe('push-main.yml', () => {
     ]);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
 
-    // dev is the first group → waits on the whole synth matrix.
-    expect(push).toMatch(/deploy-dev-example-ecs-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+    // One gate job per env group. `platform` group has 5 deploys but only
+    // ONE gate → approve once, all 5 unlock.
+    expect(push).toMatch(/gate-dev-0:[\s\S]*?environment: dev/);
+    expect(push).toMatch(/gate-platform-1:[\s\S]*?environment: platform/);
+    expect(push).toMatch(/gate-prodeu-6:[\s\S]*?environment: prodeu/);
+    expect(push).toMatch(/gate-produs-7:[\s\S]*?environment: produs/);
+    // No second platform gate — the 5 platform stages share `gate-platform-1`.
+    expect(push).not.toMatch(/gate-platform-[2-9]/);
 
-    // All platform-* deploys share the SAME needs — the dev group id.
-    expect(push).toMatch(/deploy-platform-management-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-    expect(push).toMatch(/deploy-platform-security-2:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-    expect(push).toMatch(/deploy-platform-log-archive-5:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
-
-    // prodeu needs every platform deploy id (fan-in).
+    // Gate needs: first is synth; platform gate waits on dev's deploy;
+    // prodeu gate waits on ALL platform deploys (fan-in); produs waits on prodeu.
+    expect(push).toMatch(/gate-dev-0:[\s\S]*?needs:\s*\n\s*- synth\n/);
+    expect(push).toMatch(/gate-platform-1:[\s\S]*?needs:\s*\n\s*- deploy-dev-example-ecs-0/);
     expect(push).toMatch(
-      /deploy-prodeu-example-ecs-6:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-1\s*\n\s*- deploy-platform-security-2\s*\n\s*- deploy-platform-backup-3\s*\n\s*- deploy-platform-observability-4\s*\n\s*- deploy-platform-log-archive-5/,
+      /gate-prodeu-6:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-1\s*\n\s*- deploy-platform-security-2\s*\n\s*- deploy-platform-backup-3\s*\n\s*- deploy-platform-observability-4\s*\n\s*- deploy-platform-log-archive-5/,
     );
+    expect(push).toMatch(/gate-produs-7:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-example-ecs-6/);
 
-    // produs needs prodeu.
-    expect(push).toMatch(/deploy-produs-example-ecs-7:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-example-ecs-6/);
+    // All 5 platform deploys share the SAME needs — just `gate-platform-1`.
+    // They start in parallel the moment the single platform approval lands.
+    expect(push).toMatch(/deploy-platform-management-1:[\s\S]*?needs:\s*\n\s*- gate-platform-1/);
+    expect(push).toMatch(/deploy-platform-security-2:[\s\S]*?needs:\s*\n\s*- gate-platform-1/);
+    expect(push).toMatch(/deploy-platform-log-archive-5:[\s\S]*?needs:\s*\n\s*- gate-platform-1/);
   });
 
   test('empty stages throws', () => {
