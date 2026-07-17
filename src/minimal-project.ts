@@ -85,6 +85,12 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // and a top-level tsconfig that consumers don't need).
     new typescript.ProjenrcTs(this);
 
+    // NodeProject's default task starts with `node .projenrc.js` which fails
+    // for TS projects. Replace with a single ts-node step. `-y` fetches
+    // ts-node + typescript at run time; pin to a known-good version so a
+    // broken ts-node latest release can't take down every version-bump run.
+    this.defaultTask?.reset('npx -y ts-node@^10.9.2 --project tsconfig.projen.json .projenrc.ts');
+
     addRocketleapLicense(this);
   }
 }
