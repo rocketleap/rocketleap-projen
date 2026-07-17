@@ -22,10 +22,11 @@ const project = new cdk.JsiiProject({
   npmAccess: javascript.NpmAccess.PUBLIC,
 
   projenrcTs: true,
+  projenVersion: '^0.101.9',
 
   workflowBootstrapSteps: ACTIONS_CONFIGURATION.workflowBootstrapSteps,
 
-  peerDeps: ['projen', 'constructs'],
+  peerDeps: ['projen@^0.101.9', 'constructs@^10.5.0'],
   devDeps: ['@mrgrain/jsii-struct-builder', 'aws-cdk-lib'],
   bundledDeps: [],
 
@@ -40,7 +41,6 @@ configurePackageJson(project, {});
 
 project.release?.publisher.publishToNpm({
   registry: 'registry.npmjs.org',
-  distTag: 'latest',
   npmProvenance: true,
   prePublishSteps: ACTIONS_CONFIGURATION.npmPrePublishSteps,
   postPublishSteps: [
