@@ -68,6 +68,7 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
         workflows: false,
       },
       pullRequestTemplate: false,
+      projenrcJs: false,
 
       licensed: false,
       autoDetectBin: false,
@@ -83,13 +84,12 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // Enable TypeScript projenrc without making the whole project a
     // TypeScriptProject (which would drag in jest, eslint, sample src/test
     // and a top-level tsconfig that consumers don't need).
+    //
+    // With `projenrcJs: false` above, NodeProject does NOT instantiate
+    // `Projenrc.js` and does NOT append the broken `node .projenrc.js` step
+    // to the default task. `ProjenrcTs` here is the sole contributor to the
+    // default task and emits the correct `ts-node` step.
     new typescript.ProjenrcTs(this);
-
-    // NodeProject's default task starts with `node .projenrc.js` which fails
-    // for TS projects. Replace with a single ts-node step. `-y` fetches
-    // ts-node + typescript at run time; pin to a known-good version so a
-    // broken ts-node latest release can't take down every version-bump run.
-    this.defaultTask?.reset('npx -y ts-node@^10.9.2 --project tsconfig.projen.json .projenrc.ts');
 
     addRocketleapLicense(this);
   }
