@@ -91,6 +91,11 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // default task and emits the correct `ts-node` step.
     new typescript.ProjenrcTs(this);
 
+    // ProjenrcTs only adds ts-node; on a NodeProject base we also need
+    // typescript (ts-node peer) and @types/node so `ts-node .projenrc.ts`
+    // resolves locally instead of relying on `npx -y` to fetch peers.
+    this.addDevDeps('typescript', '@types/node');
+
     addRocketleapLicense(this);
   }
 }
