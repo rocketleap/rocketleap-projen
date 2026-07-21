@@ -376,7 +376,7 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
   });
 }
 
-function synthMatrixJob(stages: PipelineStage[]): Record<string, unknown> {
+function synthMatrixJob(stages: PipelineStage[], opts: { failFast: boolean }): Record<string, unknown> {
   const stageEntries = stages.map((stage) => {
     const entry: Record<string, string> = { environment: stage.environment };
     if (stage.workload) entry.workload = stage.workload;
@@ -385,7 +385,7 @@ function synthMatrixJob(stages: PipelineStage[]): Record<string, unknown> {
   return {
     name: "Synth ${{ matrix.stage.environment }}${{ matrix.stage.workload && format(' ({0})', matrix.stage.workload) || '' }}",
     needs: 'build',
-    strategy: { 'fail-fast': false, 'matrix': { stage: stageEntries } },
+    strategy: { 'fail-fast': opts.failFast, 'matrix': { stage: stageEntries } },
     uses: './.github/workflows/action-synth.yml',
     with: {
       environment: '${{ matrix.stage.environment }}',
@@ -419,7 +419,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages),
+    synth: synthMatrixJob(stages, { failFast: true }),
   };
   stages.forEach((stage, index) => {
     jobs[`diff-${stageSlug(stage)}-${index}`] = diffJobFor(stage, ['synth']);
@@ -451,7 +451,7 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages),
+    synth: synthMatrixJob(stages, { failFast: false }),
   };
 
   // Group consecutive stages by environment. Each group gets ONE gate
