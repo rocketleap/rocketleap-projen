@@ -68,11 +68,6 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
         workflows: false,
       },
       pullRequestTemplate: false,
-
-      // Skip projen's `.projenrc.js` bootstrap — `ProjenrcTs` below drives
-      // the projenrc from TypeScript. Leaving `projenrcJs: true` adds a
-      // `node .projenrc.js` step to the default task that fails on repos
-      // with no `.projenrc.js` on disk.
       projenrcJs: false,
 
       licensed: false,
@@ -96,12 +91,6 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // default task and emits the correct `ts-node` step.
     new typescript.ProjenrcTs(this);
 
-    // Pin `ts-node`, `typescript`, `@types/node` as devDeps so the
-    // default task's `npx -p ts-node -c 'ts-node …'` resolves the LOCAL
-    // ts-node. Without them, `npx -y ts-node` fetches ts-node@latest at
-    // release time, which is incompatible with Node 24 and fails synth
-    // with `TypeError: Cannot read properties of undefined (reading
-    // 'fileExists')`.
     this.addDevDeps('ts-node', 'typescript', '@types/node');
 
     addRocketleapLicense(this);
