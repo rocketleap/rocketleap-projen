@@ -433,7 +433,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
       name: 'PR: Main Branch',
       on: {
         pull_request: {
-          branches: ['main'],
+          branches: ['main', 'dev'],
           types: ['opened', 'synchronize', 'reopened', 'ready_for_review'],
         },
       },
