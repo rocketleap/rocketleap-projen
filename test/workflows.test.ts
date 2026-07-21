@@ -137,6 +137,13 @@ describe('pr-main.yml', () => {
     expect(pr).toMatch(/concurrency:[\s\S]*?group: pr-main-\$\{\{ github\.ref \}\}/);
     expect(pr).toMatch(/concurrency:[\s\S]*?cancel-in-progress: true/);
   });
+
+  test('synth matrix is fail-fast on PR builds to avoid wasting minutes on siblings once one stage breaks', () => {
+    const project = newProject();
+    addPrMainWorkflow(project, [{ environment: 'dev' }, { environment: 'prodeu' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+    expect(pr).toMatch(/synth:[\s\S]*?strategy:[\s\S]*?fail-fast: true/);
+  });
 });
 
 describe('push-main.yml', () => {
@@ -213,6 +220,13 @@ describe('push-main.yml', () => {
   test('empty stages throws', () => {
     const project = newProject();
     expect(() => addPushMainWorkflow(project, [])).toThrow('at least one entry');
+  });
+
+  test('synth matrix is fail-fast: false on push so a broken stage still surfaces sibling breakage on main', () => {
+    const project = newProject();
+    addPushMainWorkflow(project, [{ environment: 'dev' }, { environment: 'prodeu' }]);
+    const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
+    expect(push).toMatch(/synth:[\s\S]*?strategy:[\s\S]*?fail-fast: false/);
   });
 });
 
