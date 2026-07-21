@@ -129,6 +129,15 @@ describe('pr-main.yml', () => {
     const project = newProject();
     expect(() => addPrMainWorkflow(project, [])).toThrow('at least one entry');
   });
+
+  test('supports manual dispatch and only auto-runs on PRs into main', () => {
+    const project = newProject();
+    addPrMainWorkflow(project, [{ environment: 'dev' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+    expect(pr).toMatch(/on:[\s\S]*?workflow_dispatch:/);
+    expect(pr).toMatch(/pull_request:[\s\S]*?branches:\s*\n\s*- main\b/);
+    expect(pr).not.toMatch(/- dev\b/);
+  });
 });
 
 describe('push-main.yml', () => {
