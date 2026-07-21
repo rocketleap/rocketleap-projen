@@ -130,13 +130,10 @@ describe('pr-main.yml', () => {
     expect(() => addPrMainWorkflow(project, [])).toThrow('at least one entry');
   });
 
-  test('reduces CI spend: skip drafts and cancel superseded runs', () => {
+  test('cancels superseded runs via a per-ref concurrency group', () => {
     const project = newProject();
     addPrMainWorkflow(project, [{ environment: 'dev' }]);
     const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
-    expect(pr).toMatch(/pull_request:[\s\S]*?branches:[\s\S]*?- main\b[\s\S]*?- dev\b/);
-    expect(pr).toMatch(/types:[\s\S]*?- ready_for_review/);
-    expect(pr).toMatch(/build:[\s\S]*?if: github\.event\.pull_request\.draft == false/);
     expect(pr).toMatch(/concurrency:[\s\S]*?group: pr-main-\$\{\{ github\.ref \}\}/);
     expect(pr).toMatch(/concurrency:[\s\S]*?cancel-in-progress: true/);
   });

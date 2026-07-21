@@ -418,11 +418,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
     throw new Error('addPrMainWorkflow: stages must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
-    build: {
-      name: 'Build',
-      if: 'github.event.pull_request.draft == false',
-      uses: './.github/workflows/action-build.yml',
-    },
+    build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
     synth: synthMatrixJob(stages),
   };
   stages.forEach((stage, index) => {
@@ -431,12 +427,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
   new YamlFile(project, '.github/workflows/pr-main.yml', {
     obj: {
       name: 'PR: Main Branch',
-      on: {
-        pull_request: {
-          branches: ['main', 'dev'],
-          types: ['opened', 'synchronize', 'reopened', 'ready_for_review'],
-        },
-      },
+      on: { pull_request: { branches: ['main', 'dev'] } },
       concurrency: {
         'group': 'pr-main-${{ github.ref }}',
         'cancel-in-progress': true,
