@@ -427,7 +427,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
   new YamlFile(project, '.github/workflows/pr-main.yml', {
     obj: {
       name: 'PR: Main Branch',
-      on: { pull_request: { branches: ['main', 'dev'] } },
+      on: { pull_request: { branches: ['main'] } },
       permissions: PERMISSIONS_PR,
       jobs,
     },
