@@ -428,6 +428,10 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
     obj: {
       name: 'PR: Main Branch',
       on: { pull_request: { branches: ['main', 'dev'] } },
+      concurrency: {
+        'group': 'pr-main-${{ github.ref }}',
+        'cancel-in-progress': true,
+      },
       permissions: PERMISSIONS_PR,
       jobs,
     },

@@ -129,6 +129,14 @@ describe('pr-main.yml', () => {
     const project = newProject();
     expect(() => addPrMainWorkflow(project, [])).toThrow('at least one entry');
   });
+
+  test('cancels superseded runs via a per-ref concurrency group', () => {
+    const project = newProject();
+    addPrMainWorkflow(project, [{ environment: 'dev' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+    expect(pr).toMatch(/concurrency:[\s\S]*?group: pr-main-\$\{\{ github\.ref \}\}/);
+    expect(pr).toMatch(/concurrency:[\s\S]*?cancel-in-progress: true/);
+  });
 });
 
 describe('push-main.yml', () => {
