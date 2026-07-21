@@ -14,7 +14,6 @@ import { addRocketleapLicense } from './license';
 export interface RocketleapPlatformMinimalProjectOptions extends javascript.NodeProjectOptions {
   /**
    * The owning company slug — used as the npm scope (e.g. `rocketleap`).
-   * @default no scope
    */
   readonly company: string;
 
@@ -90,6 +89,11 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // Enable TypeScript projenrc without making the whole project a
     // TypeScriptProject (which would drag in jest, eslint, sample src/test
     // and a top-level tsconfig that consumers don't need).
+    //
+    // With `projenrcJs: false` above, NodeProject does NOT instantiate
+    // `Projenrc.js` and does NOT append the broken `node .projenrc.js` step
+    // to the default task. `ProjenrcTs` here is the sole contributor to the
+    // default task and emits the correct `ts-node` step.
     new typescript.ProjenrcTs(this);
 
     // Pin `ts-node`, `typescript`, `@types/node` as devDeps so the

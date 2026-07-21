@@ -34,11 +34,11 @@ new RocketleapLibraryCdkProject(options: RocketleapLibraryCdkProjectOptions)
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addExcludeFromCleanup">addExcludeFromCleanup</a></code> | Exclude the matching files from pre-synth cleanup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addGitIgnore">addGitIgnore</a></code> | Adds a .gitignore pattern. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addPackageIgnore">addPackageIgnore</a></code> | Adds patterns to be ignored by npm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTask">addTask</a></code> | Adds a new task to this project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTip">addTip</a></code> | Prints a "tip" message during synthesis. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.annotateGenerated">annotateGenerated</a></code> | Marks the provided file(s) as being generated. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.postSynthesize">postSynthesize</a></code> | Called after all components are synthesized. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.preSynthesize">preSynthesize</a></code> | Called before all components are synthesized. |
@@ -46,20 +46,16 @@ new RocketleapLibraryCdkProject(options: RocketleapLibraryCdkProjectOptions)
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.runTaskCommand">runTaskCommand</a></code> | Returns the shell command to execute in order to run a task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.synth">synth</a></code> | Synthesize all project files into `outdir`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryFindFile">tryFindFile</a></code> | Finds a file at the specified relative path within this project and all its subprojects. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryFindJsonFile">tryFindJsonFile</a></code> | Finds a json file by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryFindObjectFile">tryFindObjectFile</a></code> | Finds an object file (like JsonFile, YamlFile, etc.) by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryRemoveFile">tryRemoveFile</a></code> | Finds a file at the specified relative path within this project and removes it. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addBins">addBins</a></code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addBundledDeps">addBundledDeps</a></code> | Defines bundled dependencies. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addCompileCommand">addCompileCommand</a></code> | DEPRECATED. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addDeps">addDeps</a></code> | Defines normal dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addDevDeps">addDevDeps</a></code> | Defines development/test dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addFields">addFields</a></code> | Directly set fields in `package.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addKeywords">addKeywords</a></code> | Adds keywords to package.json (deduplicated). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addPeerDeps">addPeerDeps</a></code> | Defines peer dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addScripts">addScripts</a></code> | Replaces the contents of multiple npm package.json scripts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTestCommand">addTestCommand</a></code> | DEPRECATED. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.hasScript">hasScript</a></code> | Indicates if a script by the name name is defined. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.removeScript">removeScript</a></code> | Removes the npm script (always successful). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.renderWorkflowSetup">renderWorkflowSetup</a></code> | Returns the set of workflow steps which should be executed to bootstrap a workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.setScript">setScript</a></code> | Replaces the contents of an npm package.json script. |
@@ -73,6 +69,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `addExcludeFromCleanup` <a name="addExcludeFromCleanup" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addExcludeFromCleanup"></a>
 
@@ -152,22 +169,6 @@ Task properties.
 
 ---
 
-##### ~~`addTip`~~ <a name="addTip" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTip"></a>
-
-```typescript
-public addTip(message: string): void
-```
-
-Prints a "tip" message during synthesis.
-
-###### `message`<sup>Required</sup> <a name="message" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTip.parameter.message"></a>
-
-- *Type:* string
-
-The message.
-
----
-
 ##### `annotateGenerated` <a name="annotateGenerated" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.annotateGenerated"></a>
 
 ```typescript
@@ -233,7 +234,7 @@ public runTaskCommand(task: Task): string
 Returns the shell command to execute in order to run a task.
 
 This will
-typically be `npx projen TASK`.
+typically be `pnpm projen TASK`.
 
 ###### `task`<sup>Required</sup> <a name="task" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.runTaskCommand.parameter.task"></a>
 
@@ -255,8 +256,10 @@ Synthesize all project files into `outdir`.
 2. Delete all generated files
 3. Synthesize all subprojects
 4. Synthesize all components of this project
-5. Call "postSynthesize()" for all components of this project
-6. Call "this.postSynthesize()"
+5. Call "projectCreation()" for all components, only if the project is being created for the first time
+6. Call "postSynthesize()" for all components of this project
+7. Call "this.postSynthesize()"
+8. Call "postProjectCreation()" for all components, only if the project is being created for the first time
 
 ##### `tryFindFile` <a name="tryFindFile" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryFindFile"></a>
 
@@ -274,22 +277,6 @@ The file path.
 
 If this path is relative, it will be resolved
 from the root of _this_ project.
-
----
-
-##### ~~`tryFindJsonFile`~~ <a name="tryFindJsonFile" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryFindJsonFile"></a>
-
-```typescript
-public tryFindJsonFile(filePath: string): JsonFile
-```
-
-Finds a json file by name.
-
-###### `filePath`<sup>Required</sup> <a name="filePath" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.tryFindJsonFile.parameter.filePath"></a>
-
-- *Type:* string
-
-The file path.
 
 ---
 
@@ -358,24 +345,10 @@ Bundled dependencies will be added as normal dependencies as well as to the
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
-
----
-
-##### ~~`addCompileCommand`~~ <a name="addCompileCommand" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addCompileCommand"></a>
-
-```typescript
-public addCompileCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addCompileCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
 
 ---
 
@@ -394,9 +367,9 @@ Defines normal dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -416,9 +389,9 @@ Defines development/test dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -474,9 +447,9 @@ your code against the minimum version required from your consumers.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -494,36 +467,6 @@ Replaces the contents of multiple npm package.json scripts.
 - *Type:* {[ key: string ]: string}
 
 The scripts to set.
-
----
-
-##### ~~`addTestCommand`~~ <a name="addTestCommand" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTestCommand"></a>
-
-```typescript
-public addTestCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.addTestCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
-
----
-
-##### ~~`hasScript`~~ <a name="hasScript" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.hasScript"></a>
-
-```typescript
-public hasScript(name: string): boolean
-```
-
-Indicates if a script by the name name is defined.
-
-###### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.hasScript.parameter.name"></a>
-
-- *Type:* string
-
-The name of the script.
 
 ---
 
@@ -593,7 +536,7 @@ The command to execute.
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.isConstruct"></a>
 
 ```typescript
 import { RocketleapLibraryCdkProject } from '@rocketleap/rocketleap-projen'
@@ -602,6 +545,20 @@ RocketleapLibraryCdkProject.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.isConstruct.parameter.x"></a>
 
@@ -674,21 +631,16 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.defaultTask">defaultTask</a></code> | <code>projen.Task</code> | This is the "default" task, the one that executes "projen". |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.initProject">initProject</a></code> | <code>projen.InitProject</code> | The options used when this project is bootstrapped via `projen new`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.parent">parent</a></code> | <code>projen.Project</code> | A parent project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.autoApprove">autoApprove</a></code> | <code>projen.github.AutoApprove</code> | Auto approve set up for this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.devContainer">devContainer</a></code> | <code>projen.vscode.DevContainer</code> | Access for .devcontainer.json (used for GitHub Codespaces). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.github">github</a></code> | <code>projen.github.GitHub</code> | Access all github components. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.gitpod">gitpod</a></code> | <code>projen.Gitpod</code> | Access for Gitpod. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.vscode">vscode</a></code> | <code>projen.vscode.VsCode</code> | Access all VSCode components. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | The build output directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.artifactsJavascriptDirectory">artifactsJavascriptDirectory</a></code> | <code>string</code> | The location of the npm tarball after build (`${artifactsDirectory}/js`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.bundler">bundler</a></code> | <code>projen.javascript.Bundler</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.entrypoint">entrypoint</a></code> | <code>string</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.manifest">manifest</a></code> | <code>any</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.npmrc">npmrc</a></code> | <code>projen.javascript.NpmConfig</code> | The .npmrc file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.package">package</a></code> | <code>projen.javascript.NodePackage</code> | API for managing the node package. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.packageManager">packageManager</a></code> | <code>projen.javascript.NodePackageManager</code> | The package manager to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.runScriptCommand">runScriptCommand</a></code> | <code>string</code> | The command to use to run scripts (e.g. `yarn run` or `npm run` depends on the package manager). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.autoMerge">autoMerge</a></code> | <code>projen.github.AutoMerge</code> | Component that sets up mergify for merging approved pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.biome">biome</a></code> | <code>projen.javascript.Biome</code> | *No description.* |
@@ -699,11 +651,11 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.npmignore">npmignore</a></code> | <code>projen.IgnoreFile</code> | The .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.prettier">prettier</a></code> | <code>projen.javascript.Prettier</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.publisher">publisher</a></code> | <code>projen.release.Publisher</code> | Package publisher. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.release">release</a></code> | <code>projen.release.Release</code> | Release management. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.upgradeWorkflow">upgradeWorkflow</a></code> | <code>projen.javascript.UpgradeDependencies</code> | The upgrade workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.libdir">libdir</a></code> | <code>string</code> | The directory in which compiled .js files reside. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.runner">runner</a></code> | <code>projen.typescript.TypeScriptRunner</code> | The TypeScript runner used for executing TypeScript files. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.srcdir">srcdir</a></code> | <code>string</code> | The directory in which the .ts sources reside. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.testdir">testdir</a></code> | <code>string</code> | The directory in which tests reside. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfig</code> | A typescript configuration file which covers all files (sources, tests, projen). |
@@ -982,7 +934,9 @@ the project is being ejected.
 
 ---
 
-##### `initProject`<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.initProject"></a>
+##### ~~`initProject`~~<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.initProject"></a>
+
+- *Deprecated:* use the `initProject` argument passed to `Component.projectCreation()` instead.
 
 ```typescript
 public readonly initProject: InitProject;
@@ -1009,16 +963,6 @@ public readonly parent: Project;
 A parent project.
 
 If undefined, this is the root project.
-
----
-
-##### `projectType`<sup>Required</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.projectType"></a>
-
-```typescript
-public readonly projectType: ProjectType;
-```
-
-- *Type:* projen.ProjectType
 
 ---
 
@@ -1090,18 +1034,6 @@ This will be `undefined` for subprojects.
 
 ---
 
-##### ~~`allowLibraryDependencies`~~<sup>Required</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.allowLibraryDependencies"></a>
-
-- *Deprecated:* use `package.allowLibraryDependencies`
-
-```typescript
-public readonly allowLibraryDependencies: boolean;
-```
-
-- *Type:* boolean
-
----
-
 ##### `artifactsDirectory`<sup>Required</sup> <a name="artifactsDirectory" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.artifactsDirectory"></a>
 
 ```typescript
@@ -1140,30 +1072,6 @@ public readonly bundler: Bundler;
 
 ---
 
-##### ~~`entrypoint`~~<sup>Required</sup> <a name="entrypoint" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.entrypoint"></a>
-
-- *Deprecated:* use `package.entrypoint`
-
-```typescript
-public readonly entrypoint: string;
-```
-
-- *Type:* string
-
----
-
-##### ~~`manifest`~~<sup>Required</sup> <a name="manifest" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.manifest"></a>
-
-- *Deprecated:* use `package.addField(x, y)`
-
-```typescript
-public readonly manifest: any;
-```
-
-- *Type:* any
-
----
-
 ##### `npmrc`<sup>Required</sup> <a name="npmrc" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.npmrc"></a>
 
 ```typescript
@@ -1185,20 +1093,6 @@ public readonly package: NodePackage;
 - *Type:* projen.javascript.NodePackage
 
 API for managing the node package.
-
----
-
-##### ~~`packageManager`~~<sup>Required</sup> <a name="packageManager" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.packageManager"></a>
-
-- *Deprecated:* use `package.packageManager`
-
-```typescript
-public readonly packageManager: NodePackageManager;
-```
-
-- *Type:* projen.javascript.NodePackageManager
-
-The package manager to use.
 
 ---
 
@@ -1324,23 +1218,6 @@ public readonly prettier: Prettier;
 
 ---
 
-##### ~~`publisher`~~<sup>Optional</sup> <a name="publisher" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.publisher"></a>
-
-- *Deprecated:* use `release.publisher`.
-
-```typescript
-public readonly publisher: Publisher;
-```
-
-- *Type:* projen.release.Publisher
-
-Package publisher.
-
-This will be `undefined` if the project does not have a
-release workflow.
-
----
-
 ##### `release`<sup>Optional</sup> <a name="release" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.release"></a>
 
 ```typescript
@@ -1384,6 +1261,18 @@ public readonly libdir: string;
 - *Type:* string
 
 The directory in which compiled .js files reside.
+
+---
+
+##### `runner`<sup>Required</sup> <a name="runner" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProject.property.runner"></a>
+
+```typescript
+public readonly runner: TypeScriptRunner;
+```
+
+- *Type:* projen.typescript.TypeScriptRunner
+
+The TypeScript runner used for executing TypeScript files.
 
 ---
 
@@ -1541,11 +1430,11 @@ new RocketleapPlatformCdkProject(options: RocketleapCdkProjectOptions)
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addExcludeFromCleanup">addExcludeFromCleanup</a></code> | Exclude the matching files from pre-synth cleanup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addGitIgnore">addGitIgnore</a></code> | Adds a .gitignore pattern. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addPackageIgnore">addPackageIgnore</a></code> | Adds patterns to be ignored by npm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTask">addTask</a></code> | Adds a new task to this project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTip">addTip</a></code> | Prints a "tip" message during synthesis. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.annotateGenerated">annotateGenerated</a></code> | Marks the provided file(s) as being generated. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.postSynthesize">postSynthesize</a></code> | Called after all components are synthesized. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.preSynthesize">preSynthesize</a></code> | Called before all components are synthesized. |
@@ -1553,24 +1442,19 @@ new RocketleapPlatformCdkProject(options: RocketleapCdkProjectOptions)
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.runTaskCommand">runTaskCommand</a></code> | Returns the shell command to execute in order to run a task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.synth">synth</a></code> | Synthesize all project files into `outdir`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryFindFile">tryFindFile</a></code> | Finds a file at the specified relative path within this project and all its subprojects. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryFindJsonFile">tryFindJsonFile</a></code> | Finds a json file by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryFindObjectFile">tryFindObjectFile</a></code> | Finds an object file (like JsonFile, YamlFile, etc.) by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryRemoveFile">tryRemoveFile</a></code> | Finds a file at the specified relative path within this project and removes it. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addBins">addBins</a></code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addBundledDeps">addBundledDeps</a></code> | Defines bundled dependencies. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addCompileCommand">addCompileCommand</a></code> | DEPRECATED. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addDeps">addDeps</a></code> | Defines normal dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addDevDeps">addDevDeps</a></code> | Defines development/test dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addFields">addFields</a></code> | Directly set fields in `package.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addKeywords">addKeywords</a></code> | Adds keywords to package.json (deduplicated). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addPeerDeps">addPeerDeps</a></code> | Defines peer dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addScripts">addScripts</a></code> | Replaces the contents of multiple npm package.json scripts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTestCommand">addTestCommand</a></code> | DEPRECATED. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.hasScript">hasScript</a></code> | Indicates if a script by the name name is defined. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.removeScript">removeScript</a></code> | Removes the npm script (always successful). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.renderWorkflowSetup">renderWorkflowSetup</a></code> | Returns the set of workflow steps which should be executed to bootstrap a workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.setScript">setScript</a></code> | Replaces the contents of an npm package.json script. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addCdkDependency">addCdkDependency</a></code> | Adds an AWS CDK module dependencies. |
 
 ---
 
@@ -1581,6 +1465,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `addExcludeFromCleanup` <a name="addExcludeFromCleanup" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addExcludeFromCleanup"></a>
 
@@ -1660,22 +1565,6 @@ Task properties.
 
 ---
 
-##### ~~`addTip`~~ <a name="addTip" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTip"></a>
-
-```typescript
-public addTip(message: string): void
-```
-
-Prints a "tip" message during synthesis.
-
-###### `message`<sup>Required</sup> <a name="message" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTip.parameter.message"></a>
-
-- *Type:* string
-
-The message.
-
----
-
 ##### `annotateGenerated` <a name="annotateGenerated" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.annotateGenerated"></a>
 
 ```typescript
@@ -1741,7 +1630,7 @@ public runTaskCommand(task: Task): string
 Returns the shell command to execute in order to run a task.
 
 This will
-typically be `npx projen TASK`.
+typically be `pnpm projen TASK`.
 
 ###### `task`<sup>Required</sup> <a name="task" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.runTaskCommand.parameter.task"></a>
 
@@ -1763,8 +1652,10 @@ Synthesize all project files into `outdir`.
 2. Delete all generated files
 3. Synthesize all subprojects
 4. Synthesize all components of this project
-5. Call "postSynthesize()" for all components of this project
-6. Call "this.postSynthesize()"
+5. Call "projectCreation()" for all components, only if the project is being created for the first time
+6. Call "postSynthesize()" for all components of this project
+7. Call "this.postSynthesize()"
+8. Call "postProjectCreation()" for all components, only if the project is being created for the first time
 
 ##### `tryFindFile` <a name="tryFindFile" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryFindFile"></a>
 
@@ -1782,22 +1673,6 @@ The file path.
 
 If this path is relative, it will be resolved
 from the root of _this_ project.
-
----
-
-##### ~~`tryFindJsonFile`~~ <a name="tryFindJsonFile" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryFindJsonFile"></a>
-
-```typescript
-public tryFindJsonFile(filePath: string): JsonFile
-```
-
-Finds a json file by name.
-
-###### `filePath`<sup>Required</sup> <a name="filePath" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.tryFindJsonFile.parameter.filePath"></a>
-
-- *Type:* string
-
-The file path.
 
 ---
 
@@ -1866,24 +1741,10 @@ Bundled dependencies will be added as normal dependencies as well as to the
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
-
----
-
-##### ~~`addCompileCommand`~~ <a name="addCompileCommand" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addCompileCommand"></a>
-
-```typescript
-public addCompileCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addCompileCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
 
 ---
 
@@ -1902,9 +1763,9 @@ Defines normal dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -1924,9 +1785,9 @@ Defines development/test dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -1982,9 +1843,9 @@ your code against the minimum version required from your consumers.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -2002,36 +1863,6 @@ Replaces the contents of multiple npm package.json scripts.
 - *Type:* {[ key: string ]: string}
 
 The scripts to set.
-
----
-
-##### ~~`addTestCommand`~~ <a name="addTestCommand" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTestCommand"></a>
-
-```typescript
-public addTestCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addTestCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
-
----
-
-##### ~~`hasScript`~~ <a name="hasScript" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.hasScript"></a>
-
-```typescript
-public hasScript(name: string): boolean
-```
-
-Indicates if a script by the name name is defined.
-
-###### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.hasScript.parameter.name"></a>
-
-- *Type:* string
-
-The name of the script.
 
 ---
 
@@ -2091,22 +1922,6 @@ The command to execute.
 
 ---
 
-##### `addCdkDependency` <a name="addCdkDependency" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addCdkDependency"></a>
-
-```typescript
-public addCdkDependency(modules: ...string[]): void
-```
-
-Adds an AWS CDK module dependencies.
-
-###### `modules`<sup>Required</sup> <a name="modules" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.addCdkDependency.parameter.modules"></a>
-
-- *Type:* ...string[]
-
-The list of modules to depend on.
-
----
-
 #### Static Functions <a name="Static Functions" id="Static Functions"></a>
 
 | **Name** | **Description** |
@@ -2117,7 +1932,7 @@ The list of modules to depend on.
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.isConstruct"></a>
 
 ```typescript
 import { RocketleapPlatformCdkProject } from '@rocketleap/rocketleap-projen'
@@ -2126,6 +1941,20 @@ RocketleapPlatformCdkProject.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.isConstruct.parameter.x"></a>
 
@@ -2198,21 +2027,16 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.defaultTask">defaultTask</a></code> | <code>projen.Task</code> | This is the "default" task, the one that executes "projen". |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.initProject">initProject</a></code> | <code>projen.InitProject</code> | The options used when this project is bootstrapped via `projen new`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.parent">parent</a></code> | <code>projen.Project</code> | A parent project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.autoApprove">autoApprove</a></code> | <code>projen.github.AutoApprove</code> | Auto approve set up for this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.devContainer">devContainer</a></code> | <code>projen.vscode.DevContainer</code> | Access for .devcontainer.json (used for GitHub Codespaces). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.github">github</a></code> | <code>projen.github.GitHub</code> | Access all github components. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.gitpod">gitpod</a></code> | <code>projen.Gitpod</code> | Access for Gitpod. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.vscode">vscode</a></code> | <code>projen.vscode.VsCode</code> | Access all VSCode components. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | The build output directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.artifactsJavascriptDirectory">artifactsJavascriptDirectory</a></code> | <code>string</code> | The location of the npm tarball after build (`${artifactsDirectory}/js`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.bundler">bundler</a></code> | <code>projen.javascript.Bundler</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.entrypoint">entrypoint</a></code> | <code>string</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.manifest">manifest</a></code> | <code>any</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.npmrc">npmrc</a></code> | <code>projen.javascript.NpmConfig</code> | The .npmrc file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.package">package</a></code> | <code>projen.javascript.NodePackage</code> | API for managing the node package. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.packageManager">packageManager</a></code> | <code>projen.javascript.NodePackageManager</code> | The package manager to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.runScriptCommand">runScriptCommand</a></code> | <code>string</code> | The command to use to run scripts (e.g. `yarn run` or `npm run` depends on the package manager). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.autoMerge">autoMerge</a></code> | <code>projen.github.AutoMerge</code> | Component that sets up mergify for merging approved pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.biome">biome</a></code> | <code>projen.javascript.Biome</code> | *No description.* |
@@ -2223,11 +2047,11 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.npmignore">npmignore</a></code> | <code>projen.IgnoreFile</code> | The .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.prettier">prettier</a></code> | <code>projen.javascript.Prettier</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.publisher">publisher</a></code> | <code>projen.release.Publisher</code> | Package publisher. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.release">release</a></code> | <code>projen.release.Release</code> | Release management. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.upgradeWorkflow">upgradeWorkflow</a></code> | <code>projen.javascript.UpgradeDependencies</code> | The upgrade workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.libdir">libdir</a></code> | <code>string</code> | The directory in which compiled .js files reside. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.runner">runner</a></code> | <code>projen.typescript.TypeScriptRunner</code> | The TypeScript runner used for executing TypeScript files. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.srcdir">srcdir</a></code> | <code>string</code> | The directory in which the .ts sources reside. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.testdir">testdir</a></code> | <code>string</code> | The directory in which tests reside. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfig</code> | A typescript configuration file which covers all files (sources, tests, projen). |
@@ -2511,7 +2335,9 @@ the project is being ejected.
 
 ---
 
-##### `initProject`<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.initProject"></a>
+##### ~~`initProject`~~<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.initProject"></a>
+
+- *Deprecated:* use the `initProject` argument passed to `Component.projectCreation()` instead.
 
 ```typescript
 public readonly initProject: InitProject;
@@ -2538,16 +2364,6 @@ public readonly parent: Project;
 A parent project.
 
 If undefined, this is the root project.
-
----
-
-##### `projectType`<sup>Required</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.projectType"></a>
-
-```typescript
-public readonly projectType: ProjectType;
-```
-
-- *Type:* projen.ProjectType
 
 ---
 
@@ -2619,18 +2435,6 @@ This will be `undefined` for subprojects.
 
 ---
 
-##### ~~`allowLibraryDependencies`~~<sup>Required</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.allowLibraryDependencies"></a>
-
-- *Deprecated:* use `package.allowLibraryDependencies`
-
-```typescript
-public readonly allowLibraryDependencies: boolean;
-```
-
-- *Type:* boolean
-
----
-
 ##### `artifactsDirectory`<sup>Required</sup> <a name="artifactsDirectory" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.artifactsDirectory"></a>
 
 ```typescript
@@ -2669,30 +2473,6 @@ public readonly bundler: Bundler;
 
 ---
 
-##### ~~`entrypoint`~~<sup>Required</sup> <a name="entrypoint" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.entrypoint"></a>
-
-- *Deprecated:* use `package.entrypoint`
-
-```typescript
-public readonly entrypoint: string;
-```
-
-- *Type:* string
-
----
-
-##### ~~`manifest`~~<sup>Required</sup> <a name="manifest" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.manifest"></a>
-
-- *Deprecated:* use `package.addField(x, y)`
-
-```typescript
-public readonly manifest: any;
-```
-
-- *Type:* any
-
----
-
 ##### `npmrc`<sup>Required</sup> <a name="npmrc" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.npmrc"></a>
 
 ```typescript
@@ -2714,20 +2494,6 @@ public readonly package: NodePackage;
 - *Type:* projen.javascript.NodePackage
 
 API for managing the node package.
-
----
-
-##### ~~`packageManager`~~<sup>Required</sup> <a name="packageManager" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.packageManager"></a>
-
-- *Deprecated:* use `package.packageManager`
-
-```typescript
-public readonly packageManager: NodePackageManager;
-```
-
-- *Type:* projen.javascript.NodePackageManager
-
-The package manager to use.
 
 ---
 
@@ -2853,23 +2619,6 @@ public readonly prettier: Prettier;
 
 ---
 
-##### ~~`publisher`~~<sup>Optional</sup> <a name="publisher" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.publisher"></a>
-
-- *Deprecated:* use `release.publisher`.
-
-```typescript
-public readonly publisher: Publisher;
-```
-
-- *Type:* projen.release.Publisher
-
-Package publisher.
-
-This will be `undefined` if the project does not have a
-release workflow.
-
----
-
 ##### `release`<sup>Optional</sup> <a name="release" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.release"></a>
 
 ```typescript
@@ -2913,6 +2662,18 @@ public readonly libdir: string;
 - *Type:* string
 
 The directory in which compiled .js files reside.
+
+---
+
+##### `runner`<sup>Required</sup> <a name="runner" id="@rocketleap/rocketleap-projen.RocketleapPlatformCdkProject.property.runner"></a>
+
+```typescript
+public readonly runner: TypeScriptRunner;
+```
+
+- *Type:* projen.typescript.TypeScriptRunner
+
+The TypeScript runner used for executing TypeScript files.
 
 ---
 
@@ -3148,11 +2909,11 @@ new RocketleapPlatformMinimalProject(options: RocketleapPlatformMinimalProjectOp
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addExcludeFromCleanup">addExcludeFromCleanup</a></code> | Exclude the matching files from pre-synth cleanup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addGitIgnore">addGitIgnore</a></code> | Adds a .gitignore pattern. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addPackageIgnore">addPackageIgnore</a></code> | Adds patterns to be ignored by npm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTask">addTask</a></code> | Adds a new task to this project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTip">addTip</a></code> | Prints a "tip" message during synthesis. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.annotateGenerated">annotateGenerated</a></code> | Marks the provided file(s) as being generated. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.postSynthesize">postSynthesize</a></code> | Called after all components are synthesized. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.preSynthesize">preSynthesize</a></code> | Called before all components are synthesized. |
@@ -3160,20 +2921,16 @@ new RocketleapPlatformMinimalProject(options: RocketleapPlatformMinimalProjectOp
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.runTaskCommand">runTaskCommand</a></code> | Returns the shell command to execute in order to run a task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.synth">synth</a></code> | Synthesize all project files into `outdir`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryFindFile">tryFindFile</a></code> | Finds a file at the specified relative path within this project and all its subprojects. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryFindJsonFile">tryFindJsonFile</a></code> | Finds a json file by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryFindObjectFile">tryFindObjectFile</a></code> | Finds an object file (like JsonFile, YamlFile, etc.) by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryRemoveFile">tryRemoveFile</a></code> | Finds a file at the specified relative path within this project and removes it. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addBins">addBins</a></code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addBundledDeps">addBundledDeps</a></code> | Defines bundled dependencies. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addCompileCommand">addCompileCommand</a></code> | DEPRECATED. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addDeps">addDeps</a></code> | Defines normal dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addDevDeps">addDevDeps</a></code> | Defines development/test dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addFields">addFields</a></code> | Directly set fields in `package.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addKeywords">addKeywords</a></code> | Adds keywords to package.json (deduplicated). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addPeerDeps">addPeerDeps</a></code> | Defines peer dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addScripts">addScripts</a></code> | Replaces the contents of multiple npm package.json scripts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTestCommand">addTestCommand</a></code> | DEPRECATED. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.hasScript">hasScript</a></code> | Indicates if a script by the name name is defined. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.removeScript">removeScript</a></code> | Removes the npm script (always successful). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.renderWorkflowSetup">renderWorkflowSetup</a></code> | Returns the set of workflow steps which should be executed to bootstrap a workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.setScript">setScript</a></code> | Replaces the contents of an npm package.json script. |
@@ -3187,6 +2944,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `addExcludeFromCleanup` <a name="addExcludeFromCleanup" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addExcludeFromCleanup"></a>
 
@@ -3266,22 +3044,6 @@ Task properties.
 
 ---
 
-##### ~~`addTip`~~ <a name="addTip" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTip"></a>
-
-```typescript
-public addTip(message: string): void
-```
-
-Prints a "tip" message during synthesis.
-
-###### `message`<sup>Required</sup> <a name="message" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTip.parameter.message"></a>
-
-- *Type:* string
-
-The message.
-
----
-
 ##### `annotateGenerated` <a name="annotateGenerated" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.annotateGenerated"></a>
 
 ```typescript
@@ -3347,7 +3109,7 @@ public runTaskCommand(task: Task): string
 Returns the shell command to execute in order to run a task.
 
 This will
-typically be `npx projen TASK`.
+typically be `pnpm projen TASK`.
 
 ###### `task`<sup>Required</sup> <a name="task" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.runTaskCommand.parameter.task"></a>
 
@@ -3369,8 +3131,10 @@ Synthesize all project files into `outdir`.
 2. Delete all generated files
 3. Synthesize all subprojects
 4. Synthesize all components of this project
-5. Call "postSynthesize()" for all components of this project
-6. Call "this.postSynthesize()"
+5. Call "projectCreation()" for all components, only if the project is being created for the first time
+6. Call "postSynthesize()" for all components of this project
+7. Call "this.postSynthesize()"
+8. Call "postProjectCreation()" for all components, only if the project is being created for the first time
 
 ##### `tryFindFile` <a name="tryFindFile" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryFindFile"></a>
 
@@ -3388,22 +3152,6 @@ The file path.
 
 If this path is relative, it will be resolved
 from the root of _this_ project.
-
----
-
-##### ~~`tryFindJsonFile`~~ <a name="tryFindJsonFile" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryFindJsonFile"></a>
-
-```typescript
-public tryFindJsonFile(filePath: string): JsonFile
-```
-
-Finds a json file by name.
-
-###### `filePath`<sup>Required</sup> <a name="filePath" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.tryFindJsonFile.parameter.filePath"></a>
-
-- *Type:* string
-
-The file path.
 
 ---
 
@@ -3472,24 +3220,10 @@ Bundled dependencies will be added as normal dependencies as well as to the
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
-
----
-
-##### ~~`addCompileCommand`~~ <a name="addCompileCommand" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addCompileCommand"></a>
-
-```typescript
-public addCompileCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addCompileCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
 
 ---
 
@@ -3508,9 +3242,9 @@ Defines normal dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -3530,9 +3264,9 @@ Defines development/test dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -3588,9 +3322,9 @@ your code against the minimum version required from your consumers.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -3608,36 +3342,6 @@ Replaces the contents of multiple npm package.json scripts.
 - *Type:* {[ key: string ]: string}
 
 The scripts to set.
-
----
-
-##### ~~`addTestCommand`~~ <a name="addTestCommand" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTestCommand"></a>
-
-```typescript
-public addTestCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.addTestCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
-
----
-
-##### ~~`hasScript`~~ <a name="hasScript" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.hasScript"></a>
-
-```typescript
-public hasScript(name: string): boolean
-```
-
-Indicates if a script by the name name is defined.
-
-###### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.hasScript.parameter.name"></a>
-
-- *Type:* string
-
-The name of the script.
 
 ---
 
@@ -3707,7 +3411,7 @@ The command to execute.
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.isConstruct"></a>
 
 ```typescript
 import { RocketleapPlatformMinimalProject } from '@rocketleap/rocketleap-projen'
@@ -3716,6 +3420,20 @@ RocketleapPlatformMinimalProject.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.isConstruct.parameter.x"></a>
 
@@ -3788,21 +3506,16 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.defaultTask">defaultTask</a></code> | <code>projen.Task</code> | This is the "default" task, the one that executes "projen". |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.initProject">initProject</a></code> | <code>projen.InitProject</code> | The options used when this project is bootstrapped via `projen new`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.parent">parent</a></code> | <code>projen.Project</code> | A parent project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.autoApprove">autoApprove</a></code> | <code>projen.github.AutoApprove</code> | Auto approve set up for this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.devContainer">devContainer</a></code> | <code>projen.vscode.DevContainer</code> | Access for .devcontainer.json (used for GitHub Codespaces). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.github">github</a></code> | <code>projen.github.GitHub</code> | Access all github components. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.gitpod">gitpod</a></code> | <code>projen.Gitpod</code> | Access for Gitpod. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.vscode">vscode</a></code> | <code>projen.vscode.VsCode</code> | Access all VSCode components. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | The build output directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.artifactsJavascriptDirectory">artifactsJavascriptDirectory</a></code> | <code>string</code> | The location of the npm tarball after build (`${artifactsDirectory}/js`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.bundler">bundler</a></code> | <code>projen.javascript.Bundler</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.entrypoint">entrypoint</a></code> | <code>string</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.manifest">manifest</a></code> | <code>any</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.npmrc">npmrc</a></code> | <code>projen.javascript.NpmConfig</code> | The .npmrc file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.package">package</a></code> | <code>projen.javascript.NodePackage</code> | API for managing the node package. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.packageManager">packageManager</a></code> | <code>projen.javascript.NodePackageManager</code> | The package manager to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.runScriptCommand">runScriptCommand</a></code> | <code>string</code> | The command to use to run scripts (e.g. `yarn run` or `npm run` depends on the package manager). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.autoMerge">autoMerge</a></code> | <code>projen.github.AutoMerge</code> | Component that sets up mergify for merging approved pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.biome">biome</a></code> | <code>projen.javascript.Biome</code> | *No description.* |
@@ -3813,7 +3526,6 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.npmignore">npmignore</a></code> | <code>projen.IgnoreFile</code> | The .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.prettier">prettier</a></code> | <code>projen.javascript.Prettier</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.publisher">publisher</a></code> | <code>projen.release.Publisher</code> | Package publisher. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.release">release</a></code> | <code>projen.release.Release</code> | Release management. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.upgradeWorkflow">upgradeWorkflow</a></code> | <code>projen.javascript.UpgradeDependencies</code> | The upgrade workflow. |
 
@@ -4086,7 +3798,9 @@ the project is being ejected.
 
 ---
 
-##### `initProject`<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.initProject"></a>
+##### ~~`initProject`~~<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.initProject"></a>
+
+- *Deprecated:* use the `initProject` argument passed to `Component.projectCreation()` instead.
 
 ```typescript
 public readonly initProject: InitProject;
@@ -4113,16 +3827,6 @@ public readonly parent: Project;
 A parent project.
 
 If undefined, this is the root project.
-
----
-
-##### `projectType`<sup>Required</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.projectType"></a>
-
-```typescript
-public readonly projectType: ProjectType;
-```
-
-- *Type:* projen.ProjectType
 
 ---
 
@@ -4194,18 +3898,6 @@ This will be `undefined` for subprojects.
 
 ---
 
-##### ~~`allowLibraryDependencies`~~<sup>Required</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.allowLibraryDependencies"></a>
-
-- *Deprecated:* use `package.allowLibraryDependencies`
-
-```typescript
-public readonly allowLibraryDependencies: boolean;
-```
-
-- *Type:* boolean
-
----
-
 ##### `artifactsDirectory`<sup>Required</sup> <a name="artifactsDirectory" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.artifactsDirectory"></a>
 
 ```typescript
@@ -4244,30 +3936,6 @@ public readonly bundler: Bundler;
 
 ---
 
-##### ~~`entrypoint`~~<sup>Required</sup> <a name="entrypoint" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.entrypoint"></a>
-
-- *Deprecated:* use `package.entrypoint`
-
-```typescript
-public readonly entrypoint: string;
-```
-
-- *Type:* string
-
----
-
-##### ~~`manifest`~~<sup>Required</sup> <a name="manifest" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.manifest"></a>
-
-- *Deprecated:* use `package.addField(x, y)`
-
-```typescript
-public readonly manifest: any;
-```
-
-- *Type:* any
-
----
-
 ##### `npmrc`<sup>Required</sup> <a name="npmrc" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.npmrc"></a>
 
 ```typescript
@@ -4289,20 +3957,6 @@ public readonly package: NodePackage;
 - *Type:* projen.javascript.NodePackage
 
 API for managing the node package.
-
----
-
-##### ~~`packageManager`~~<sup>Required</sup> <a name="packageManager" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.packageManager"></a>
-
-- *Deprecated:* use `package.packageManager`
-
-```typescript
-public readonly packageManager: NodePackageManager;
-```
-
-- *Type:* projen.javascript.NodePackageManager
-
-The package manager to use.
 
 ---
 
@@ -4428,23 +4082,6 @@ public readonly prettier: Prettier;
 
 ---
 
-##### ~~`publisher`~~<sup>Optional</sup> <a name="publisher" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.publisher"></a>
-
-- *Deprecated:* use `release.publisher`.
-
-```typescript
-public readonly publisher: Publisher;
-```
-
-- *Type:* projen.release.Publisher
-
-Package publisher.
-
-This will be `undefined` if the project does not have a
-release workflow.
-
----
-
 ##### `release`<sup>Optional</sup> <a name="release" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProject.property.release"></a>
 
 ```typescript
@@ -4524,11 +4161,11 @@ new RocketleapWorkloadCdkProject(options: RocketleapCdkProjectOptions)
 | **Name** | **Description** |
 | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.toString">toString</a></code> | Returns a string representation of this construct. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.with">with</a></code> | Applies one or more mixins to this construct. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addExcludeFromCleanup">addExcludeFromCleanup</a></code> | Exclude the matching files from pre-synth cleanup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addGitIgnore">addGitIgnore</a></code> | Adds a .gitignore pattern. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addPackageIgnore">addPackageIgnore</a></code> | Adds patterns to be ignored by npm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTask">addTask</a></code> | Adds a new task to this project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTip">addTip</a></code> | Prints a "tip" message during synthesis. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.annotateGenerated">annotateGenerated</a></code> | Marks the provided file(s) as being generated. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.postSynthesize">postSynthesize</a></code> | Called after all components are synthesized. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.preSynthesize">preSynthesize</a></code> | Called before all components are synthesized. |
@@ -4536,24 +4173,19 @@ new RocketleapWorkloadCdkProject(options: RocketleapCdkProjectOptions)
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.runTaskCommand">runTaskCommand</a></code> | Returns the shell command to execute in order to run a task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.synth">synth</a></code> | Synthesize all project files into `outdir`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryFindFile">tryFindFile</a></code> | Finds a file at the specified relative path within this project and all its subprojects. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryFindJsonFile">tryFindJsonFile</a></code> | Finds a json file by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryFindObjectFile">tryFindObjectFile</a></code> | Finds an object file (like JsonFile, YamlFile, etc.) by name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryRemoveFile">tryRemoveFile</a></code> | Finds a file at the specified relative path within this project and removes it. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addBins">addBins</a></code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addBundledDeps">addBundledDeps</a></code> | Defines bundled dependencies. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addCompileCommand">addCompileCommand</a></code> | DEPRECATED. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addDeps">addDeps</a></code> | Defines normal dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addDevDeps">addDevDeps</a></code> | Defines development/test dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addFields">addFields</a></code> | Directly set fields in `package.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addKeywords">addKeywords</a></code> | Adds keywords to package.json (deduplicated). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addPeerDeps">addPeerDeps</a></code> | Defines peer dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addScripts">addScripts</a></code> | Replaces the contents of multiple npm package.json scripts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTestCommand">addTestCommand</a></code> | DEPRECATED. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.hasScript">hasScript</a></code> | Indicates if a script by the name name is defined. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.removeScript">removeScript</a></code> | Removes the npm script (always successful). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.renderWorkflowSetup">renderWorkflowSetup</a></code> | Returns the set of workflow steps which should be executed to bootstrap a workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.setScript">setScript</a></code> | Replaces the contents of an npm package.json script. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addCdkDependency">addCdkDependency</a></code> | Adds an AWS CDK module dependencies. |
 
 ---
 
@@ -4564,6 +4196,27 @@ public toString(): string
 ```
 
 Returns a string representation of this construct.
+
+##### `with` <a name="with" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.with"></a>
+
+```typescript
+public with(mixins: ...IMixin[]): IConstruct
+```
+
+Applies one or more mixins to this construct.
+
+Mixins are applied in order. The list of constructs is captured at the
+start of the call, so constructs added by a mixin will not be visited.
+Use multiple `with()` calls if subsequent mixins should apply to added
+constructs.
+
+###### `mixins`<sup>Required</sup> <a name="mixins" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.with.parameter.mixins"></a>
+
+- *Type:* ...constructs.IMixin[]
+
+The mixins to apply.
+
+---
 
 ##### `addExcludeFromCleanup` <a name="addExcludeFromCleanup" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addExcludeFromCleanup"></a>
 
@@ -4643,22 +4296,6 @@ Task properties.
 
 ---
 
-##### ~~`addTip`~~ <a name="addTip" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTip"></a>
-
-```typescript
-public addTip(message: string): void
-```
-
-Prints a "tip" message during synthesis.
-
-###### `message`<sup>Required</sup> <a name="message" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTip.parameter.message"></a>
-
-- *Type:* string
-
-The message.
-
----
-
 ##### `annotateGenerated` <a name="annotateGenerated" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.annotateGenerated"></a>
 
 ```typescript
@@ -4724,7 +4361,7 @@ public runTaskCommand(task: Task): string
 Returns the shell command to execute in order to run a task.
 
 This will
-typically be `npx projen TASK`.
+typically be `pnpm projen TASK`.
 
 ###### `task`<sup>Required</sup> <a name="task" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.runTaskCommand.parameter.task"></a>
 
@@ -4746,8 +4383,10 @@ Synthesize all project files into `outdir`.
 2. Delete all generated files
 3. Synthesize all subprojects
 4. Synthesize all components of this project
-5. Call "postSynthesize()" for all components of this project
-6. Call "this.postSynthesize()"
+5. Call "projectCreation()" for all components, only if the project is being created for the first time
+6. Call "postSynthesize()" for all components of this project
+7. Call "this.postSynthesize()"
+8. Call "postProjectCreation()" for all components, only if the project is being created for the first time
 
 ##### `tryFindFile` <a name="tryFindFile" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryFindFile"></a>
 
@@ -4765,22 +4404,6 @@ The file path.
 
 If this path is relative, it will be resolved
 from the root of _this_ project.
-
----
-
-##### ~~`tryFindJsonFile`~~ <a name="tryFindJsonFile" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryFindJsonFile"></a>
-
-```typescript
-public tryFindJsonFile(filePath: string): JsonFile
-```
-
-Finds a json file by name.
-
-###### `filePath`<sup>Required</sup> <a name="filePath" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.tryFindJsonFile.parameter.filePath"></a>
-
-- *Type:* string
-
-The file path.
 
 ---
 
@@ -4849,24 +4472,10 @@ Bundled dependencies will be added as normal dependencies as well as to the
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
-
----
-
-##### ~~`addCompileCommand`~~ <a name="addCompileCommand" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addCompileCommand"></a>
-
-```typescript
-public addCompileCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addCompileCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
 
 ---
 
@@ -4885,9 +4494,9 @@ Defines normal dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -4907,9 +4516,9 @@ Defines development/test dependencies.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -4965,9 +4574,9 @@ your code against the minimum version required from your consumers.
 Names modules to install.
 
 By default, the the dependency will
-be installed in the next `npx projen` run and the version will be recorded
-in your `package.json` file. You can upgrade manually or using `yarn
-add/upgrade`. If you wish to specify a version range use this syntax:
+be installed in the next `pnpm projen` run and the version will be recorded
+in your `package.json` file. You can upgrade manually or using `pnpm
+add/update`. If you wish to specify a version range use this syntax:
 `module@^7`.
 
 ---
@@ -4985,36 +4594,6 @@ Replaces the contents of multiple npm package.json scripts.
 - *Type:* {[ key: string ]: string}
 
 The scripts to set.
-
----
-
-##### ~~`addTestCommand`~~ <a name="addTestCommand" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTestCommand"></a>
-
-```typescript
-public addTestCommand(commands: ...string[]): void
-```
-
-DEPRECATED.
-
-###### `commands`<sup>Required</sup> <a name="commands" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addTestCommand.parameter.commands"></a>
-
-- *Type:* ...string[]
-
----
-
-##### ~~`hasScript`~~ <a name="hasScript" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.hasScript"></a>
-
-```typescript
-public hasScript(name: string): boolean
-```
-
-Indicates if a script by the name name is defined.
-
-###### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.hasScript.parameter.name"></a>
-
-- *Type:* string
-
-The name of the script.
 
 ---
 
@@ -5074,22 +4653,6 @@ The command to execute.
 
 ---
 
-##### `addCdkDependency` <a name="addCdkDependency" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addCdkDependency"></a>
-
-```typescript
-public addCdkDependency(modules: ...string[]): void
-```
-
-Adds an AWS CDK module dependencies.
-
-###### `modules`<sup>Required</sup> <a name="modules" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.addCdkDependency.parameter.modules"></a>
-
-- *Type:* ...string[]
-
-The list of modules to depend on.
-
----
-
 #### Static Functions <a name="Static Functions" id="Static Functions"></a>
 
 | **Name** | **Description** |
@@ -5100,7 +4663,7 @@ The list of modules to depend on.
 
 ---
 
-##### ~~`isConstruct`~~ <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.isConstruct"></a>
+##### `isConstruct` <a name="isConstruct" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.isConstruct"></a>
 
 ```typescript
 import { RocketleapWorkloadCdkProject } from '@rocketleap/rocketleap-projen'
@@ -5109,6 +4672,20 @@ RocketleapWorkloadCdkProject.isConstruct(x: any)
 ```
 
 Checks if `x` is a construct.
+
+Use this method instead of `instanceof` to properly detect `Construct`
+instances, even when the construct library is symlinked.
+
+Explanation: in JavaScript, multiple copies of the `constructs` library on
+disk are seen as independent, completely different libraries. As a
+consequence, the class `Construct` in each copy of the `constructs` library
+is seen as a different class, and an instance of one class will not test as
+`instanceof` the other class. `npm install` will not create installations
+like this, but users may manually symlink construct libraries together or
+use a monorepo tool: in those cases, multiple copies of the `constructs`
+library can be accidentally installed, and `instanceof` will behave
+unpredictably. It is safest to avoid using `instanceof`, and using
+this type-testing method instead.
 
 ###### `x`<sup>Required</sup> <a name="x" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.isConstruct.parameter.x"></a>
 
@@ -5181,21 +4758,16 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.defaultTask">defaultTask</a></code> | <code>projen.Task</code> | This is the "default" task, the one that executes "projen". |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.initProject">initProject</a></code> | <code>projen.InitProject</code> | The options used when this project is bootstrapped via `projen new`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.parent">parent</a></code> | <code>projen.Project</code> | A parent project. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.autoApprove">autoApprove</a></code> | <code>projen.github.AutoApprove</code> | Auto approve set up for this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.devContainer">devContainer</a></code> | <code>projen.vscode.DevContainer</code> | Access for .devcontainer.json (used for GitHub Codespaces). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.github">github</a></code> | <code>projen.github.GitHub</code> | Access all github components. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.gitpod">gitpod</a></code> | <code>projen.Gitpod</code> | Access for Gitpod. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.vscode">vscode</a></code> | <code>projen.vscode.VsCode</code> | Access all VSCode components. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | The build output directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.artifactsJavascriptDirectory">artifactsJavascriptDirectory</a></code> | <code>string</code> | The location of the npm tarball after build (`${artifactsDirectory}/js`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.bundler">bundler</a></code> | <code>projen.javascript.Bundler</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.entrypoint">entrypoint</a></code> | <code>string</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.manifest">manifest</a></code> | <code>any</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.npmrc">npmrc</a></code> | <code>projen.javascript.NpmConfig</code> | The .npmrc file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.package">package</a></code> | <code>projen.javascript.NodePackage</code> | API for managing the node package. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.packageManager">packageManager</a></code> | <code>projen.javascript.NodePackageManager</code> | The package manager to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.runScriptCommand">runScriptCommand</a></code> | <code>string</code> | The command to use to run scripts (e.g. `yarn run` or `npm run` depends on the package manager). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.autoMerge">autoMerge</a></code> | <code>projen.github.AutoMerge</code> | Component that sets up mergify for merging approved pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.biome">biome</a></code> | <code>projen.javascript.Biome</code> | *No description.* |
@@ -5206,11 +4778,11 @@ When given a project, this it the project itself.
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.npmignore">npmignore</a></code> | <code>projen.IgnoreFile</code> | The .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.prettier">prettier</a></code> | <code>projen.javascript.Prettier</code> | *No description.* |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.publisher">publisher</a></code> | <code>projen.release.Publisher</code> | Package publisher. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.release">release</a></code> | <code>projen.release.Release</code> | Release management. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.upgradeWorkflow">upgradeWorkflow</a></code> | <code>projen.javascript.UpgradeDependencies</code> | The upgrade workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.libdir">libdir</a></code> | <code>string</code> | The directory in which compiled .js files reside. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.runner">runner</a></code> | <code>projen.typescript.TypeScriptRunner</code> | The TypeScript runner used for executing TypeScript files. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.srcdir">srcdir</a></code> | <code>string</code> | The directory in which the .ts sources reside. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.testdir">testdir</a></code> | <code>string</code> | The directory in which tests reside. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfig</code> | A typescript configuration file which covers all files (sources, tests, projen). |
@@ -5494,7 +5066,9 @@ the project is being ejected.
 
 ---
 
-##### `initProject`<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.initProject"></a>
+##### ~~`initProject`~~<sup>Optional</sup> <a name="initProject" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.initProject"></a>
+
+- *Deprecated:* use the `initProject` argument passed to `Component.projectCreation()` instead.
 
 ```typescript
 public readonly initProject: InitProject;
@@ -5521,16 +5095,6 @@ public readonly parent: Project;
 A parent project.
 
 If undefined, this is the root project.
-
----
-
-##### `projectType`<sup>Required</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.projectType"></a>
-
-```typescript
-public readonly projectType: ProjectType;
-```
-
-- *Type:* projen.ProjectType
 
 ---
 
@@ -5602,18 +5166,6 @@ This will be `undefined` for subprojects.
 
 ---
 
-##### ~~`allowLibraryDependencies`~~<sup>Required</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.allowLibraryDependencies"></a>
-
-- *Deprecated:* use `package.allowLibraryDependencies`
-
-```typescript
-public readonly allowLibraryDependencies: boolean;
-```
-
-- *Type:* boolean
-
----
-
 ##### `artifactsDirectory`<sup>Required</sup> <a name="artifactsDirectory" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.artifactsDirectory"></a>
 
 ```typescript
@@ -5652,30 +5204,6 @@ public readonly bundler: Bundler;
 
 ---
 
-##### ~~`entrypoint`~~<sup>Required</sup> <a name="entrypoint" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.entrypoint"></a>
-
-- *Deprecated:* use `package.entrypoint`
-
-```typescript
-public readonly entrypoint: string;
-```
-
-- *Type:* string
-
----
-
-##### ~~`manifest`~~<sup>Required</sup> <a name="manifest" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.manifest"></a>
-
-- *Deprecated:* use `package.addField(x, y)`
-
-```typescript
-public readonly manifest: any;
-```
-
-- *Type:* any
-
----
-
 ##### `npmrc`<sup>Required</sup> <a name="npmrc" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.npmrc"></a>
 
 ```typescript
@@ -5697,20 +5225,6 @@ public readonly package: NodePackage;
 - *Type:* projen.javascript.NodePackage
 
 API for managing the node package.
-
----
-
-##### ~~`packageManager`~~<sup>Required</sup> <a name="packageManager" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.packageManager"></a>
-
-- *Deprecated:* use `package.packageManager`
-
-```typescript
-public readonly packageManager: NodePackageManager;
-```
-
-- *Type:* projen.javascript.NodePackageManager
-
-The package manager to use.
 
 ---
 
@@ -5836,23 +5350,6 @@ public readonly prettier: Prettier;
 
 ---
 
-##### ~~`publisher`~~<sup>Optional</sup> <a name="publisher" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.publisher"></a>
-
-- *Deprecated:* use `release.publisher`.
-
-```typescript
-public readonly publisher: Publisher;
-```
-
-- *Type:* projen.release.Publisher
-
-Package publisher.
-
-This will be `undefined` if the project does not have a
-release workflow.
-
----
-
 ##### `release`<sup>Optional</sup> <a name="release" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.release"></a>
 
 ```typescript
@@ -5896,6 +5393,18 @@ public readonly libdir: string;
 - *Type:* string
 
 The directory in which compiled .js files reside.
+
+---
+
+##### `runner`<sup>Required</sup> <a name="runner" id="@rocketleap/rocketleap-projen.RocketleapWorkloadCdkProject.property.runner"></a>
+
+```typescript
+public readonly runner: TypeScriptRunner;
+```
+
+- *Type:* projen.typescript.TypeScriptRunner
+
+The TypeScript runner used for executing TypeScript files.
 
 ---
 
@@ -6244,7 +5753,9 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.company">company</a></code> | <code>string</code> | The company identifier used for package scoping. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pipeline">pipeline</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions">PipelineOptions</a></code> | Configuration for the generated CDK pipeline GitHub Actions workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.project">project</a></code> | <code>string</code> | The project name. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.addPackageManagerToDevEngines">addPackageManagerToDevEngines</a></code> | <code>boolean</code> | Automatically add the resolved `packageManager` to `devEngines.packageManager` in `package.json`, setting `onFail` to `ignore`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | Allow the project to include `peerDependencies` and `bundledDependencies`. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.allowScripts">allowScripts</a></code> | <code>string[]</code> | List of dependency (package) names that are allowed to run lifecycle install scripts (`preinstall`, `install`, `postinstall`, `prepare`) during dependency installation. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.app">app</a></code> | <code>string</code> | The command line to execute in order to synthesize the CDK application (language specific). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.appEntrypoint">appEntrypoint</a></code> | <code>string</code> | The CDK app's entrypoint (relative to the source directory, which is "src" by default). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | A directory which will contain build artifacts. |
@@ -6268,18 +5779,12 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.buildingBlocksVersion">buildingBlocksVersion</a></code> | <code>string</code> | The Rocketleap building blocks CDK version to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.buildWorkflow">buildWorkflow</a></code> | <code>boolean</code> | Define a GitHub workflow for building PRs. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.buildWorkflowOptions">buildWorkflowOptions</a></code> | <code>projen.javascript.BuildWorkflowOptions</code> | Options for PR build workflow. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.buildWorkflowTriggers">buildWorkflowTriggers</a></code> | <code>projen.github.workflows.Triggers</code> | Build workflow triggers. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.bumpPackage">bumpPackage</a></code> | <code>string</code> | The `commit-and-tag-version` compatible package used to bump the package version, as a dependency string. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.bundledDeps">bundledDeps</a></code> | <code>string[]</code> | List of dependencies to bundle into this module. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.bundlerOptions">bundlerOptions</a></code> | <code>projen.javascript.BundlerOptions</code> | Options for `Bundler`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.bunVersion">bunVersion</a></code> | <code>string</code> | The version of Bun to use if using Bun as a package manager. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkAssert">cdkAssert</a></code> | <code>boolean</code> | Warning: NodeJS only. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkAssertions">cdkAssertions</a></code> | <code>boolean</code> | Install the assertions library? |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkCliVersion">cdkCliVersion</a></code> | <code>string</code> | Version range of the AWS CDK CLI to depend on. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkDependencies">cdkDependencies</a></code> | <code>string[]</code> | Which AWS CDKv1 modules this project requires. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkDependenciesAsDeps">cdkDependenciesAsDeps</a></code> | <code>boolean</code> | If this is enabled (default), all modules declared in `cdkDependencies` will be also added as normal `dependencies` (as well as `peerDependencies`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkout">cdkout</a></code> | <code>string</code> | cdk.out directory. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkTestDependencies">cdkTestDependencies</a></code> | <code>string[]</code> | AWS CDK modules required for testing. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkVersion">cdkVersion</a></code> | <code>string</code> | The AWS CDK version to use in the project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkVersionPinning">cdkVersionPinning</a></code> | <code>boolean</code> | Use pinned version instead of caret version for CDK. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.checkLicenses">checkLicenses</a></code> | <code>projen.javascript.LicenseCheckerOptions</code> | Configure which licenses should be deemed acceptable for use by dependencies. |
@@ -6293,6 +5798,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.context">context</a></code> | <code>{[ key: string ]: any}</code> | Additional context to include in `cdk.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.copyrightOwner">copyrightOwner</a></code> | <code>string</code> | License copyright owner. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.copyrightPeriod">copyrightPeriod</a></code> | <code>string</code> | The copyright years to put in the LICENSE file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.deleteOrphanedLockFiles">deleteOrphanedLockFiles</a></code> | <code>boolean</code> | Automatically delete lockfiles from package managers that are not the active one. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.dependabot">dependabot</a></code> | <code>boolean</code> | Use dependabot to handle dependency upgrades. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.dependabotOptions">dependabotOptions</a></code> | <code>projen.github.DependabotOptions</code> | Options for dependabot. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.deps">deps</a></code> | <code>string[]</code> | Runtime dependencies of this module. |
@@ -6301,8 +5807,9 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.description">description</a></code> | <code>string</code> | The description is just a string that helps people understand the purpose of the package. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.devContainer">devContainer</a></code> | <code>boolean</code> | Add a VSCode development environment (used for GitHub Codespaces). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.devDeps">devDeps</a></code> | <code>string[]</code> | Build dependencies for this module. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.devEngines">devEngines</a></code> | <code>projen.javascript.DevEngines</code> | Configure the `devEngines` field in `package.json`. The `devEngines.packageManager` field is automatically populated based on the resolved `packageManager` value. Any fields provided here are merged with the auto-populated `packageManager` entry. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.disableTsconfig">disableTsconfig</a></code> | <code>boolean</code> | Do not generate a `tsconfig.json` file (used by jsii projects since tsconfig.json is generated by the jsii compiler). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.disableTsconfigDev">disableTsconfigDev</a></code> | <code>boolean</code> | Do not generate a `tsconfig.dev.json` file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.disableTsconfigDev">disableTsconfigDev</a></code> | <code>boolean</code> | Do not generate a development tsconfig file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.docgen">docgen</a></code> | <code>boolean</code> | Docgen by Typedoc. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | Docs directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.edgeLambdaAutoDiscover">edgeLambdaAutoDiscover</a></code> | <code>boolean</code> | Automatically adds an `cloudfront.experimental.EdgeFunction` for each `.edge-lambda.ts` handler in your source tree. If this is disabled, you can manually add an `awscdk.AutoDiscover` component to your project. |
@@ -6333,19 +5840,14 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.logging">logging</a></code> | <code>projen.LoggerOptions</code> | Configure logging options such as verbosity. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.majorVersion">majorVersion</a></code> | <code>number</code> | Major version to release from the default branch. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.maxNodeVersion">maxNodeVersion</a></code> | <code>string</code> | The maximum node version supported by this package. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.mergify">mergify</a></code> | <code>boolean</code> | Whether mergify should be enabled on this repository or not. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.mergifyOptions">mergifyOptions</a></code> | <code>projen.github.MergifyOptions</code> | Options for mergify. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.minMajorVersion">minMajorVersion</a></code> | <code>number</code> | Minimal Major version to release. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.mutableBuild">mutableBuild</a></code> | <code>boolean</code> | Automatically update files modified during builds to pull-request branches. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.nextVersionCommand">nextVersionCommand</a></code> | <code>string</code> | A shell command to control the next version to release. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmAccess">npmAccess</a></code> | <code>projen.javascript.NpmAccess</code> | Access level of the npm package. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmDistTag">npmDistTag</a></code> | <code>string</code> | The npmDistTag to use when publishing from the default branch. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmignore">npmignore</a></code> | <code>string[]</code> | Additional entries to .npmignore. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmignoreEnabled">npmignoreEnabled</a></code> | <code>boolean</code> | Defines an .npmignore file. Normally this is only needed for libraries that are packaged as tarballs. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmIgnoreOptions">npmIgnoreOptions</a></code> | <code>projen.IgnoreFileOptions</code> | Configuration options for .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmProvenance">npmProvenance</a></code> | <code>boolean</code> | Should provenance statements be generated when the package is published. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmRegistry">npmRegistry</a></code> | <code>string</code> | The host name of the npm registry to publish to. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmRegistryUrl">npmRegistryUrl</a></code> | <code>string</code> | The base URL of the npm package registry. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmTokenSecret">npmTokenSecret</a></code> | <code>string</code> | GitHub secret which contains the NPM token to use when publishing packages. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmTrustedPublishing">npmTrustedPublishing</a></code> | <code>boolean</code> | Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work. |
@@ -6356,12 +5858,13 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.parent">parent</a></code> | <code>projen.Project</code> | The parent project, if this project is part of a bigger project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.peerDependencyOptions">peerDependencyOptions</a></code> | <code>projen.javascript.PeerDependencyOptions</code> | Options for `peerDeps`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.peerDeps">peerDeps</a></code> | <code>string[]</code> | Peer dependencies for this module. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pnpmOptions">pnpmOptions</a></code> | <code>projen.javascript.PnpmOptions</code> | Options for pnpm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pnpmVersion">pnpmVersion</a></code> | <code>string</code> | The version of PNPM to use if using PNPM as a package manager. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.postBuildSteps">postBuildSteps</a></code> | <code>projen.github.workflows.JobStep[]</code> | Steps to execute after build as part of the release workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.prerelease">prerelease</a></code> | <code>string</code> | Bump versions from the default branch as pre-releases (e.g. "beta", "alpha", "pre"). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.prettier">prettier</a></code> | <code>boolean</code> | Setup prettier. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.prettierOptions">prettierOptions</a></code> | <code>projen.javascript.PrettierOptions</code> | Prettier options. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | Which type of project this is (library/app). |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projectTree">projectTree</a></code> | <code>boolean</code> | Generate a project tree file (`.projen/tree.json`) that shows all components and their relationships. Useful for understanding your project structure and debugging. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenCommand">projenCommand</a></code> | <code>string</code> | The shell command to use in order to run the projen CLI. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenCredentials">projenCredentials</a></code> | <code>projen.github.GithubCredentials</code> | Choose a method of providing GitHub API access for projen workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenDevDependency">projenDevDependency</a></code> | <code>boolean</code> | Indicates of "projen" should be installed as a devDependency. |
@@ -6371,7 +5874,6 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenrcJsOptions">projenrcJsOptions</a></code> | <code>projen.javascript.ProjenrcOptions</code> | Options for .projenrc.js. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenrcTs">projenrcTs</a></code> | <code>boolean</code> | Use TypeScript for your projenrc file (`.projenrc.ts`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenrcTsOptions">projenrcTsOptions</a></code> | <code>projen.typescript.ProjenrcOptions</code> | Options for .projenrc.ts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenTokenSecret">projenTokenSecret</a></code> | <code>string</code> | The name of a secret which includes a GitHub Personal Access Token to be used by projen workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenVersion">projenVersion</a></code> | <code>string</code> | Version of projen to install. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.publishDryRun">publishDryRun</a></code> | <code>boolean</code> | Instead of actually publishing to package managers, just print the publishing command. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.publishTasks">publishTasks</a></code> | <code>boolean</code> | Define publishing tasks that can be executed manually as well as workflows. |
@@ -6382,14 +5884,11 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.release">release</a></code> | <code>boolean</code> | Add release management to this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseBranches">releaseBranches</a></code> | <code>{[ key: string ]: projen.release.BranchOptions}</code> | Defines additional release branches. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseEnvironment">releaseEnvironment</a></code> | <code>string</code> | The GitHub Actions environment used for the release. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseEveryCommit">releaseEveryCommit</a></code> | <code>boolean</code> | Automatically release new versions every commit to one of branches in `releaseBranches`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseFailureIssue">releaseFailureIssue</a></code> | <code>boolean</code> | Create a github issue on every failed publishing task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseFailureIssueLabel">releaseFailureIssueLabel</a></code> | <code>string</code> | The label to apply to issues indicating publish failures. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseSchedule">releaseSchedule</a></code> | <code>string</code> | CRON schedule to trigger new releases. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseTagPrefix">releaseTagPrefix</a></code> | <code>string</code> | Automatically add the given prefix to release tags. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseToNpm">releaseToNpm</a></code> | <code>boolean</code> | Automatically release to npm when new versions are introduced. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseTrigger">releaseTrigger</a></code> | <code>projen.release.ReleaseTrigger</code> | The release trigger to use. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseWorkflow">releaseWorkflow</a></code> | <code>boolean</code> | DEPRECATED: renamed to `release`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseWorkflowEnv">releaseWorkflowEnv</a></code> | <code>{[ key: string ]: string}</code> | Build environment variables for release workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseWorkflowName">releaseWorkflowName</a></code> | <code>string</code> | The name of the default release workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseWorkflowSetupSteps">releaseWorkflowSetupSteps</a></code> | <code>projen.github.workflows.JobStep[]</code> | A set of workflow steps to execute in order to setup the workflow container. |
@@ -6398,9 +5897,10 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.repository">repository</a></code> | <code>string</code> | The repository is the location where the actual code for your package lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.repositoryDirectory">repositoryDirectory</a></code> | <code>string</code> | If the package.json for your package is not in the root directory (for example if it is part of a monorepo), you can specify the directory in which it lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.requireApproval">requireApproval</a></code> | <code>projen.awscdk.ApprovalLevel</code> | To protect you against unintended changes that affect your security posture, the AWS CDK Toolkit prompts you to approve security-related changes before deploying them. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.runner">runner</a></code> | <code>projen.typescript.TypeScriptRunner</code> | The TypeScript runner to use for executing TypeScript files. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.sampleCode">sampleCode</a></code> | <code>boolean</code> | Generate one-time sample in `src/` and `test/` if there are no files there. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.scopedPackagesOptions">scopedPackagesOptions</a></code> | <code>projen.javascript.ScopedPackagesOptions[]</code> | Options for privately hosted scoped packages. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.scripts">scripts</a></code> | <code>{[ key: string ]: string}</code> | npm scripts to include. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.singletonLambdaAutoDiscover">singletonLambdaAutoDiscover</a></code> | <code>boolean</code> | Automatically adds an `awscdk.SingletonFunction` for each `.singleton-lambda.ts` handler in your source tree. If this is disabled, you can manually add an `awscdk.AutoDiscover` component to your project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.srcdir">srcdir</a></code> | <code>string</code> | Typescript sources directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.stability">stability</a></code> | <code>string</code> | Package's Stability. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.stale">stale</a></code> | <code>boolean</code> | Auto-close of stale issues and pull request. |
@@ -6408,7 +5908,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.testdir">testdir</a></code> | <code>string</code> | Jest tests directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.tsconfig">tsconfig</a></code> | <code>projen.javascript.TypescriptConfigOptions</code> | Custom TSConfig. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfigOptions</code> | Custom tsconfig options for the development tsconfig.json file (used for testing). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.tsconfigDevFile">tsconfigDevFile</a></code> | <code>string</code> | The name of the development tsconfig.json file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.tsconfigDevFile">tsconfigDevFile</a></code> | <code>string</code> | The name (and path) of the development tsconfig file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.tsJestOptions">tsJestOptions</a></code> | <code>projen.typescript.TsJestOptions</code> | Options for ts-jest. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.typescriptVersion">typescriptVersion</a></code> | <code>string</code> | TypeScript version to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.versionrcOptions">versionrcOptions</a></code> | <code>{[ key: string ]: any}</code> | Custom configuration used when creating changelog with commit-and-tag-version package. |
@@ -6464,6 +5964,19 @@ The project name.
 
 ---
 
+##### `addPackageManagerToDevEngines`<sup>Optional</sup> <a name="addPackageManagerToDevEngines" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.addPackageManagerToDevEngines"></a>
+
+```typescript
+public readonly addPackageManagerToDevEngines: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically add the resolved `packageManager` to `devEngines.packageManager` in `package.json`, setting `onFail` to `ignore`.
+
+---
+
 ##### `allowLibraryDependencies`<sup>Optional</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.allowLibraryDependencies"></a>
 
 ```typescript
@@ -6477,6 +5990,44 @@ Allow the project to include `peerDependencies` and `bundledDependencies`.
 
 This is normally only allowed for libraries. For apps, there's no meaning
 for specifying these.
+
+---
+
+##### `allowScripts`<sup>Optional</sup> <a name="allowScripts" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.allowScripts"></a>
+
+```typescript
+public readonly allowScripts: string[];
+```
+
+- *Type:* string[]
+- *Default:* all install scripts are allowed to run (package manager default)
+
+List of dependency (package) names that are allowed to run lifecycle install scripts (`preinstall`, `install`, `postinstall`, `prepare`) during dependency installation.
+
+These scripts can execute arbitrary code, making them a common
+supply-chain attack vector. Package managers are moving toward
+blocking them by default and requiring an explicit allowlist.
+Configuring `allowScripts` sets up that allowlist so scripts only run
+for the packages you have explicitly reviewed and trust.
+
+Support for this setting depends on the configured `packageManager`:
+
+- `NPM`: written to the native `allowScripts` field in `package.json`
+  (requires npm >= 11.16; see https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts).
+- `BUN`: written to the native `trustedDependencies` field in
+  `package.json` (see https://bun.com/docs/pm/lifecycle).
+- `PNPM`: written to the `onlyBuiltDependencies` setting in
+  `pnpm-workspace.yaml` (see https://pnpm.io/settings#onlybuiltdependencies).
+- `YARN2`, `YARN_BERRY`: written to the native
+  `dependenciesMeta.<pkg>.built` allowlist in `package.json`, combined
+  with `enableScripts: false` in `.yarnrc.yml` (see
+  https://yarnpkg.com/features/security#postinstalls). If you set
+  `yarnBerryOptions.yarnRcOptions.enableScripts` explicitly, that value
+  is respected instead of being overridden.
+- `YARN`, `YARN_CLASSIC`: not supported. Yarn Classic has no native
+  mechanism to allowlist install scripts for specific dependencies.
+  Setting this option with one of these package managers throws an
+  error at synthesis time.
 
 ---
 
@@ -6790,21 +6341,6 @@ Options for PR build workflow.
 
 ---
 
-##### ~~`buildWorkflowTriggers`~~<sup>Optional</sup> <a name="buildWorkflowTriggers" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.buildWorkflowTriggers"></a>
-
-- *Deprecated:* - Use `buildWorkflowOptions.workflowTriggers`
-
-```typescript
-public readonly buildWorkflowTriggers: Triggers;
-```
-
-- *Type:* projen.github.workflows.Triggers
-- *Default:* "{ pullRequest: {}, workflowDispatch: {} }"
-
-Build workflow triggers.
-
----
-
 ##### `bumpPackage`<sup>Optional</sup> <a name="bumpPackage" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.bumpPackage"></a>
 
 ```typescript
@@ -6835,11 +6371,11 @@ added both to the `dependencies` section and `bundledDependencies` section of
 your `package.json`.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -6868,39 +6404,6 @@ The version of Bun to use if using Bun as a package manager.
 
 ---
 
-##### ~~`cdkAssert`~~<sup>Optional</sup> <a name="cdkAssert" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkAssert"></a>
-
-- *Deprecated:* The
-
-```typescript
-public readonly cdkAssert: boolean;
-```
-
-- *Type:* boolean
-- *Default:* will be included by default for AWS CDK >= 1.0.0 < 2.0.0
-
-Warning: NodeJS only.
-
-Install the
-
----
-
-##### `cdkAssertions`<sup>Optional</sup> <a name="cdkAssertions" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkAssertions"></a>
-
-```typescript
-public readonly cdkAssertions: boolean;
-```
-
-- *Type:* boolean
-- *Default:* will be included by default for AWS CDK >= 1.111.0 < 2.0.0
-
-Install the assertions library?
-
-Only needed for CDK 1.x. If using CDK 2.x then
-assertions is already included in 'aws-cdk-lib'
-
----
-
 ##### `cdkCliVersion`<sup>Optional</sup> <a name="cdkCliVersion" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkCliVersion"></a>
 
 ```typescript
@@ -6919,42 +6422,6 @@ option to restrict it to a specific version or version range.
 
 ---
 
-##### ~~`cdkDependencies`~~<sup>Optional</sup> <a name="cdkDependencies" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkDependencies"></a>
-
-- *Deprecated:* For CDK 2.x use "deps" instead. (or "peerDeps" if you're building a library)
-
-```typescript
-public readonly cdkDependencies: string[];
-```
-
-- *Type:* string[]
-
-Which AWS CDKv1 modules this project requires.
-
----
-
-##### ~~`cdkDependenciesAsDeps`~~<sup>Optional</sup> <a name="cdkDependenciesAsDeps" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkDependenciesAsDeps"></a>
-
-- *Deprecated:* Not supported in CDK v2.
-
-```typescript
-public readonly cdkDependenciesAsDeps: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-If this is enabled (default), all modules declared in `cdkDependencies` will be also added as normal `dependencies` (as well as `peerDependencies`).
-
-This is to ensure that downstream consumers actually have your CDK dependencies installed
-when using npm < 7 or yarn, where peer dependencies are not automatically installed.
-If this is disabled, `cdkDependencies` will be added to `devDependencies` to ensure
-they are present during development.
-
-Note: this setting only applies to construct library projects
-
----
-
 ##### `cdkout`<sup>Optional</sup> <a name="cdkout" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkout"></a>
 
 ```typescript
@@ -6965,20 +6432,6 @@ public readonly cdkout: string;
 - *Default:* "cdk.out"
 
 cdk.out directory.
-
----
-
-##### ~~`cdkTestDependencies`~~<sup>Optional</sup> <a name="cdkTestDependencies" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.cdkTestDependencies"></a>
-
-- *Deprecated:* For CDK 2.x use 'devDeps' (in node.js projects) or 'testDeps' (in java projects) instead
-
-```typescript
-public readonly cdkTestDependencies: string[];
-```
-
-- *Type:* string[]
-
-AWS CDK modules required for testing.
 
 ---
 
@@ -7099,7 +6552,7 @@ public readonly constructsVersion: string;
 ```
 
 - *Type:* string
-- *Default:* for CDK 1.x the default is "3.2.27", for CDK 2.x the default is "10.0.5".
+- *Default:* for CDK 1.x the default is "3.2.27", for CDK 2.x the default is "10.5.1".
 
 Minimum version of the `constructs` library to depend on.
 
@@ -7157,6 +6610,24 @@ The copyright years to put in the LICENSE file.
 
 ---
 
+##### `deleteOrphanedLockFiles`<sup>Optional</sup> <a name="deleteOrphanedLockFiles" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.deleteOrphanedLockFiles"></a>
+
+```typescript
+public readonly deleteOrphanedLockFiles: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically delete lockfiles from package managers that are not the active one.
+
+Only triggered when the lockfile for the configured package
+manager already exists.
+
+This is useful when migrating between package managers to avoid conflicts.
+
+---
+
 ##### `dependabot`<sup>Optional</sup> <a name="dependabot" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.dependabot"></a>
 
 ```typescript
@@ -7197,11 +6668,11 @@ public readonly deps: string[];
 Runtime dependencies of this module.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -7277,11 +6748,23 @@ available in your build environment but will not be fetched when this
 module is consumed.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
+
+---
+
+##### `devEngines`<sup>Optional</sup> <a name="devEngines" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.devEngines"></a>
+
+```typescript
+public readonly devEngines: DevEngines;
+```
+
+- *Type:* projen.javascript.DevEngines
+
+Configure the `devEngines` field in `package.json`. The `devEngines.packageManager` field is automatically populated based on the resolved `packageManager` value. Any fields provided here are merged with the auto-populated `packageManager` entry.
 
 ---
 
@@ -7307,7 +6790,7 @@ public readonly disableTsconfigDev: boolean;
 - *Type:* boolean
 - *Default:* false
 
-Do not generate a `tsconfig.dev.json` file.
+Do not generate a development tsconfig file.
 
 ---
 
@@ -7711,36 +7194,6 @@ Consider this option only if your package is known to not function with newer ve
 
 ---
 
-##### ~~`mergify`~~<sup>Optional</sup> <a name="mergify" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.mergify"></a>
-
-- *Deprecated:* use `githubOptions.mergify` instead
-
-```typescript
-public readonly mergify: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Whether mergify should be enabled on this repository or not.
-
----
-
-##### ~~`mergifyOptions`~~<sup>Optional</sup> <a name="mergifyOptions" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.mergifyOptions"></a>
-
-- *Deprecated:* use `githubOptions.mergifyOptions` instead
-
-```typescript
-public readonly mergifyOptions: MergifyOptions;
-```
-
-- *Type:* projen.github.MergifyOptions
-- *Default:* default options
-
-Options for mergify.
-
----
-
 ##### `minMajorVersion`<sup>Optional</sup> <a name="minMajorVersion" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.minMajorVersion"></a>
 
 ```typescript
@@ -7780,27 +7233,6 @@ Setting this option has very high impact on the consumers of your package,
 as package managers will actively prevent usage with node versions you have marked as incompatible.
 
 To change the node version of your CI/CD workflows, use `workflowNodeVersion`.
-
----
-
-##### ~~`mutableBuild`~~<sup>Optional</sup> <a name="mutableBuild" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.mutableBuild"></a>
-
-- *Deprecated:* - Use `buildWorkflowOptions.mutableBuild`
-
-```typescript
-public readonly mutableBuild: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Automatically update files modified during builds to pull-request branches.
-
-This means
-that any files synthesized by projen or e.g. test snapshots will always be up-to-date
-before a PR is merged.
-
-Implies that PR builds do not have anti-tamper checks.
 
 ---
 
@@ -7865,20 +7297,6 @@ for each branch.
 
 ---
 
-##### ~~`npmignore`~~<sup>Optional</sup> <a name="npmignore" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmignore"></a>
-
-- *Deprecated:* - use `project.addPackageIgnore`
-
-```typescript
-public readonly npmignore: string[];
-```
-
-- *Type:* string[]
-
-Additional entries to .npmignore.
-
----
-
 ##### `npmignoreEnabled`<sup>Optional</sup> <a name="npmignoreEnabled" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmignoreEnabled"></a>
 
 ```typescript
@@ -7920,22 +7338,6 @@ you will need to use a supported CI/CD provider.
 
 Note that the projen `Release` and `Publisher` components are using `publib` to publish packages,
 which is using npm internally and supports provenance statements independently of the package manager used.
-
----
-
-##### ~~`npmRegistry`~~<sup>Optional</sup> <a name="npmRegistry" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.npmRegistry"></a>
-
-- *Deprecated:* use `npmRegistryUrl` instead
-
-```typescript
-public readonly npmRegistry: string;
-```
-
-- *Type:* string
-
-The host name of the npm registry to publish to.
-
-Cannot be set together with `npmRegistryUrl`.
 
 ---
 
@@ -8017,7 +7419,7 @@ public readonly packageManager: NodePackageManager;
 ```
 
 - *Type:* projen.javascript.NodePackageManager
-- *Default:* NodePackageManager.YARN_CLASSIC
+- *Default:* Detected from the calling process or `YARN_CLASSIC` if detection fails.
 
 The Node Package Manager used to execute scripts.
 
@@ -8087,6 +7489,19 @@ test your module against the lowest peer version required.
 
 ---
 
+##### `pnpmOptions`<sup>Optional</sup> <a name="pnpmOptions" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pnpmOptions"></a>
+
+```typescript
+public readonly pnpmOptions: PnpmOptions;
+```
+
+- *Type:* projen.javascript.PnpmOptions
+- *Default:* all default options
+
+Options for pnpm.
+
+---
+
 ##### `pnpmVersion`<sup>Optional</sup> <a name="pnpmVersion" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.pnpmVersion"></a>
 
 ```typescript
@@ -8094,7 +7509,7 @@ public readonly pnpmVersion: string;
 ```
 
 - *Type:* string
-- *Default:* "9"
+- *Default:* "10.33.0"
 
 The version of PNPM to use if using PNPM as a package manager.
 
@@ -8152,18 +7567,16 @@ Prettier options.
 
 ---
 
-##### ~~`projectType`~~<sup>Optional</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projectType"></a>
-
-- *Deprecated:* no longer supported at the base project level
+##### `projectTree`<sup>Optional</sup> <a name="projectTree" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projectTree"></a>
 
 ```typescript
-public readonly projectType: ProjectType;
+public readonly projectTree: boolean;
 ```
 
-- *Type:* projen.ProjectType
-- *Default:* ProjectType.UNKNOWN
+- *Type:* boolean
+- *Default:* false
 
-Which type of project this is (library/app).
+Generate a project tree file (`.projen/tree.json`) that shows all components and their relationships. Useful for understanding your project structure and debugging.
 
 ---
 
@@ -8282,24 +7695,6 @@ public readonly projenrcTsOptions: ProjenrcOptions;
 - *Type:* projen.typescript.ProjenrcOptions
 
 Options for .projenrc.ts.
-
----
-
-##### ~~`projenTokenSecret`~~<sup>Optional</sup> <a name="projenTokenSecret" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.projenTokenSecret"></a>
-
-- *Deprecated:* use `projenCredentials`
-
-```typescript
-public readonly projenTokenSecret: string;
-```
-
-- *Type:* string
-- *Default:* "PROJEN_GITHUB_TOKEN"
-
-The name of a secret which includes a GitHub Personal Access Token to be used by projen workflows.
-
-This token needs to have the `repo`, `workflows`
-and `packages` scope.
 
 ---
 
@@ -8449,21 +7844,6 @@ on a per artifact basis.
 
 ---
 
-##### ~~`releaseEveryCommit`~~<sup>Optional</sup> <a name="releaseEveryCommit" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseEveryCommit"></a>
-
-- *Deprecated:* Use `releaseTrigger: ReleaseTrigger.continuous()` instead
-
-```typescript
-public readonly releaseEveryCommit: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Automatically release new versions every commit to one of branches in `releaseBranches`.
-
----
-
 ##### `releaseFailureIssue`<sup>Optional</sup> <a name="releaseFailureIssue" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseFailureIssue"></a>
 
 ```typescript
@@ -8489,21 +7869,6 @@ public readonly releaseFailureIssueLabel: string;
 The label to apply to issues indicating publish failures.
 
 Only applies if `releaseFailureIssue` is true.
-
----
-
-##### ~~`releaseSchedule`~~<sup>Optional</sup> <a name="releaseSchedule" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseSchedule"></a>
-
-- *Deprecated:* Use `releaseTrigger: ReleaseTrigger.scheduled()` instead
-
-```typescript
-public readonly releaseSchedule: string;
-```
-
-- *Type:* string
-- *Default:* no scheduled releases
-
-CRON schedule to trigger new releases.
 
 ---
 
@@ -8549,21 +7914,6 @@ public readonly releaseTrigger: ReleaseTrigger;
 - *Default:* Continuous releases (`ReleaseTrigger.continuous()`)
 
 The release trigger to use.
-
----
-
-##### ~~`releaseWorkflow`~~<sup>Optional</sup> <a name="releaseWorkflow" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.releaseWorkflow"></a>
-
-- *Deprecated:* see `release`.
-
-```typescript
-public readonly releaseWorkflow: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true if not a subproject
-
-DEPRECATED: renamed to `release`.
 
 ---
 
@@ -8670,6 +8020,22 @@ To protect you against unintended changes that affect your security posture, the
 
 ---
 
+##### `runner`<sup>Optional</sup> <a name="runner" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.runner"></a>
+
+```typescript
+public readonly runner: TypeScriptRunner;
+```
+
+- *Type:* projen.typescript.TypeScriptRunner
+- *Default:* TypeScriptRunner.tsNode()
+
+The TypeScript runner to use for executing TypeScript files.
+
+This is a project-level setting that components (e.g. projenrc) will
+use as their default runner.
+
+---
+
 ##### `sampleCode`<sup>Optional</sup> <a name="sampleCode" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.sampleCode"></a>
 
 ```typescript
@@ -8696,22 +8062,16 @@ Options for privately hosted scoped packages.
 
 ---
 
-##### ~~`scripts`~~<sup>Optional</sup> <a name="scripts" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.scripts"></a>
-
-- *Deprecated:* use `project.addTask()` or `package.setScript()`
+##### `singletonLambdaAutoDiscover`<sup>Optional</sup> <a name="singletonLambdaAutoDiscover" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.singletonLambdaAutoDiscover"></a>
 
 ```typescript
-public readonly scripts: {[ key: string ]: string};
+public readonly singletonLambdaAutoDiscover: boolean;
 ```
 
-- *Type:* {[ key: string ]: string}
-- *Default:* {}
+- *Type:* boolean
+- *Default:* true
 
-npm scripts to include.
-
-If a script has the same name as a standard script,
-the standard script will be overwritten.
-Also adds the script as a task.
+Automatically adds an `awscdk.SingletonFunction` for each `.singleton-lambda.ts` handler in your source tree. If this is disabled, you can manually add an `awscdk.AutoDiscover` component to your project.
 
 ---
 
@@ -8822,9 +8182,13 @@ public readonly tsconfigDevFile: string;
 ```
 
 - *Type:* string
-- *Default:* "tsconfig.dev.json"
+- *Default:* "{testdir}/tsconfig.json"
 
-The name of the development tsconfig.json file.
+The name (and path) of the development tsconfig file.
+
+By default this lives inside the test directory (e.g. `test/tsconfig.json`)
+so that the TypeScript language service resolves it as the nearest config
+for test files.
 
 ---
 
@@ -9035,7 +8399,9 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.company">company</a></code> | <code>string</code> | The company identifier used for package scoping. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.project">project</a></code> | <code>string</code> | The project name. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.addPackageManagerToDevEngines">addPackageManagerToDevEngines</a></code> | <code>boolean</code> | Automatically add the resolved `packageManager` to `devEngines.packageManager` in `package.json`, setting `onFail` to `ignore`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | Allow the project to include `peerDependencies` and `bundledDependencies`. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.allowScripts">allowScripts</a></code> | <code>string[]</code> | List of dependency (package) names that are allowed to run lifecycle install scripts (`preinstall`, `install`, `postinstall`, `prepare`) during dependency installation. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | A directory which will contain build artifacts. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.auditDeps">auditDeps</a></code> | <code>boolean</code> | Run security audit on dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.auditDepsOptions">auditDepsOptions</a></code> | <code>projen.javascript.AuditOptions</code> | Security audit options. |
@@ -9055,7 +8421,6 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.bugsUrl">bugsUrl</a></code> | <code>string</code> | The url to your project's issue tracker. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.buildWorkflow">buildWorkflow</a></code> | <code>boolean</code> | Define a GitHub workflow for building PRs. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.buildWorkflowOptions">buildWorkflowOptions</a></code> | <code>projen.javascript.BuildWorkflowOptions</code> | Options for PR build workflow. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.buildWorkflowTriggers">buildWorkflowTriggers</a></code> | <code>projen.github.workflows.Triggers</code> | Build workflow triggers. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.bumpPackage">bumpPackage</a></code> | <code>string</code> | The `commit-and-tag-version` compatible package used to bump the package version, as a dependency string. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.bundledDeps">bundledDeps</a></code> | <code>string[]</code> | List of dependencies to bundle into this module. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.bundlerOptions">bundlerOptions</a></code> | <code>projen.javascript.BundlerOptions</code> | Options for `Bundler`. |
@@ -9070,6 +8435,7 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.constructVersion">constructVersion</a></code> | <code>string</code> | The constructs library version to use as peer dependency. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.copyrightOwner">copyrightOwner</a></code> | <code>string</code> | License copyright owner. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.copyrightPeriod">copyrightPeriod</a></code> | <code>string</code> | The copyright years to put in the LICENSE file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.deleteOrphanedLockFiles">deleteOrphanedLockFiles</a></code> | <code>boolean</code> | Automatically delete lockfiles from package managers that are not the active one. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.dependabot">dependabot</a></code> | <code>boolean</code> | Use dependabot to handle dependency upgrades. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.dependabotOptions">dependabotOptions</a></code> | <code>projen.github.DependabotOptions</code> | Options for dependabot. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.deps">deps</a></code> | <code>string[]</code> | Runtime dependencies of this module. |
@@ -9078,8 +8444,9 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.description">description</a></code> | <code>string</code> | The description is just a string that helps people understand the purpose of the package. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.devContainer">devContainer</a></code> | <code>boolean</code> | Add a VSCode development environment (used for GitHub Codespaces). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.devDeps">devDeps</a></code> | <code>string[]</code> | Build dependencies for this module. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.devEngines">devEngines</a></code> | <code>projen.javascript.DevEngines</code> | Configure the `devEngines` field in `package.json`. The `devEngines.packageManager` field is automatically populated based on the resolved `packageManager` value. Any fields provided here are merged with the auto-populated `packageManager` entry. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.disableTsconfig">disableTsconfig</a></code> | <code>boolean</code> | Do not generate a `tsconfig.json` file (used by jsii projects since tsconfig.json is generated by the jsii compiler). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.disableTsconfigDev">disableTsconfigDev</a></code> | <code>boolean</code> | Do not generate a `tsconfig.dev.json` file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.disableTsconfigDev">disableTsconfigDev</a></code> | <code>boolean</code> | Do not generate a development tsconfig file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.docgen">docgen</a></code> | <code>boolean</code> | Docgen by Typedoc. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.docsDirectory">docsDirectory</a></code> | <code>string</code> | Docs directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.entrypoint">entrypoint</a></code> | <code>string</code> | Module entrypoint (`main` in `package.json`). Set to an empty string to not include `main` in your package.json. |
@@ -9103,19 +8470,14 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.logging">logging</a></code> | <code>projen.LoggerOptions</code> | Configure logging options such as verbosity. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.majorVersion">majorVersion</a></code> | <code>number</code> | Major version to release from the default branch. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.maxNodeVersion">maxNodeVersion</a></code> | <code>string</code> | The maximum node version supported by this package. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.mergify">mergify</a></code> | <code>boolean</code> | Whether mergify should be enabled on this repository or not. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.mergifyOptions">mergifyOptions</a></code> | <code>projen.github.MergifyOptions</code> | Options for mergify. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.minMajorVersion">minMajorVersion</a></code> | <code>number</code> | Minimal Major version to release. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.mutableBuild">mutableBuild</a></code> | <code>boolean</code> | Automatically update files modified during builds to pull-request branches. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.nextVersionCommand">nextVersionCommand</a></code> | <code>string</code> | A shell command to control the next version to release. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmAccess">npmAccess</a></code> | <code>projen.javascript.NpmAccess</code> | Access level of the npm package. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmDistTag">npmDistTag</a></code> | <code>string</code> | The npmDistTag to use when publishing from the default branch. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmignore">npmignore</a></code> | <code>string[]</code> | Additional entries to .npmignore. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmignoreEnabled">npmignoreEnabled</a></code> | <code>boolean</code> | Defines an .npmignore file. Normally this is only needed for libraries that are packaged as tarballs. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmIgnoreOptions">npmIgnoreOptions</a></code> | <code>projen.IgnoreFileOptions</code> | Configuration options for .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmProvenance">npmProvenance</a></code> | <code>boolean</code> | Should provenance statements be generated when the package is published. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmRegistry">npmRegistry</a></code> | <code>string</code> | The host name of the npm registry to publish to. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmRegistryUrl">npmRegistryUrl</a></code> | <code>string</code> | The base URL of the npm package registry. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmTokenSecret">npmTokenSecret</a></code> | <code>string</code> | GitHub secret which contains the NPM token to use when publishing packages. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmTrustedPublishing">npmTrustedPublishing</a></code> | <code>boolean</code> | Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work. |
@@ -9126,12 +8488,13 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.parent">parent</a></code> | <code>projen.Project</code> | The parent project, if this project is part of a bigger project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.peerDependencyOptions">peerDependencyOptions</a></code> | <code>projen.javascript.PeerDependencyOptions</code> | Options for `peerDeps`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.peerDeps">peerDeps</a></code> | <code>string[]</code> | Peer dependencies for this module. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pnpmOptions">pnpmOptions</a></code> | <code>projen.javascript.PnpmOptions</code> | Options for pnpm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pnpmVersion">pnpmVersion</a></code> | <code>string</code> | The version of PNPM to use if using PNPM as a package manager. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.postBuildSteps">postBuildSteps</a></code> | <code>projen.github.workflows.JobStep[]</code> | Steps to execute after build as part of the release workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.prerelease">prerelease</a></code> | <code>string</code> | Bump versions from the default branch as pre-releases (e.g. "beta", "alpha", "pre"). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.prettier">prettier</a></code> | <code>boolean</code> | Setup prettier. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.prettierOptions">prettierOptions</a></code> | <code>projen.javascript.PrettierOptions</code> | Prettier options. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | Which type of project this is (library/app). |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projectTree">projectTree</a></code> | <code>boolean</code> | Generate a project tree file (`.projen/tree.json`) that shows all components and their relationships. Useful for understanding your project structure and debugging. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenCommand">projenCommand</a></code> | <code>string</code> | The shell command to use in order to run the projen CLI. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenCredentials">projenCredentials</a></code> | <code>projen.github.GithubCredentials</code> | Choose a method of providing GitHub API access for projen workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenDevDependency">projenDevDependency</a></code> | <code>boolean</code> | Indicates of "projen" should be installed as a devDependency. |
@@ -9141,7 +8504,6 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenrcJsOptions">projenrcJsOptions</a></code> | <code>projen.javascript.ProjenrcOptions</code> | Options for .projenrc.js. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenrcTs">projenrcTs</a></code> | <code>boolean</code> | Use TypeScript for your projenrc file (`.projenrc.ts`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenrcTsOptions">projenrcTsOptions</a></code> | <code>projen.typescript.ProjenrcOptions</code> | Options for .projenrc.ts. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenTokenSecret">projenTokenSecret</a></code> | <code>string</code> | The name of a secret which includes a GitHub Personal Access Token to be used by projen workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenVersion">projenVersion</a></code> | <code>string</code> | Version of projen to install. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.publishDryRun">publishDryRun</a></code> | <code>boolean</code> | Instead of actually publishing to package managers, just print the publishing command. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.publishTasks">publishTasks</a></code> | <code>boolean</code> | Define publishing tasks that can be executed manually as well as workflows. |
@@ -9152,14 +8514,11 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.release">release</a></code> | <code>boolean</code> | Add release management to this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseBranches">releaseBranches</a></code> | <code>{[ key: string ]: projen.release.BranchOptions}</code> | Defines additional release branches. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseEnvironment">releaseEnvironment</a></code> | <code>string</code> | The GitHub Actions environment used for the release. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseEveryCommit">releaseEveryCommit</a></code> | <code>boolean</code> | Automatically release new versions every commit to one of branches in `releaseBranches`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseFailureIssue">releaseFailureIssue</a></code> | <code>boolean</code> | Create a github issue on every failed publishing task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseFailureIssueLabel">releaseFailureIssueLabel</a></code> | <code>string</code> | The label to apply to issues indicating publish failures. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseSchedule">releaseSchedule</a></code> | <code>string</code> | CRON schedule to trigger new releases. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseTagPrefix">releaseTagPrefix</a></code> | <code>string</code> | Automatically add the given prefix to release tags. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseToNpm">releaseToNpm</a></code> | <code>boolean</code> | Automatically release to npm when new versions are introduced. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseTrigger">releaseTrigger</a></code> | <code>projen.release.ReleaseTrigger</code> | The release trigger to use. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseWorkflow">releaseWorkflow</a></code> | <code>boolean</code> | DEPRECATED: renamed to `release`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseWorkflowEnv">releaseWorkflowEnv</a></code> | <code>{[ key: string ]: string}</code> | Build environment variables for release workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseWorkflowName">releaseWorkflowName</a></code> | <code>string</code> | The name of the default release workflow. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseWorkflowSetupSteps">releaseWorkflowSetupSteps</a></code> | <code>projen.github.workflows.JobStep[]</code> | A set of workflow steps to execute in order to setup the workflow container. |
@@ -9167,9 +8526,9 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.renovatebotOptions">renovatebotOptions</a></code> | <code>projen.RenovatebotOptions</code> | Options for renovatebot. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.repository">repository</a></code> | <code>string</code> | The repository is the location where the actual code for your package lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.repositoryDirectory">repositoryDirectory</a></code> | <code>string</code> | If the package.json for your package is not in the root directory (for example if it is part of a monorepo), you can specify the directory in which it lives. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.runner">runner</a></code> | <code>projen.typescript.TypeScriptRunner</code> | The TypeScript runner to use for executing TypeScript files. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.sampleCode">sampleCode</a></code> | <code>boolean</code> | Generate one-time sample in `src/` and `test/` if there are no files there. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.scopedPackagesOptions">scopedPackagesOptions</a></code> | <code>projen.javascript.ScopedPackagesOptions[]</code> | Options for privately hosted scoped packages. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.scripts">scripts</a></code> | <code>{[ key: string ]: string}</code> | npm scripts to include. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.srcdir">srcdir</a></code> | <code>string</code> | Typescript sources directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.stability">stability</a></code> | <code>string</code> | Package's Stability. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.stale">stale</a></code> | <code>boolean</code> | Auto-close of stale issues and pull request. |
@@ -9177,7 +8536,7 @@ const rocketleapLibraryCdkProjectOptions: RocketleapLibraryCdkProjectOptions = {
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.testdir">testdir</a></code> | <code>string</code> | Jest tests directory. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.tsconfig">tsconfig</a></code> | <code>projen.javascript.TypescriptConfigOptions</code> | Custom TSConfig. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.tsconfigDev">tsconfigDev</a></code> | <code>projen.javascript.TypescriptConfigOptions</code> | Custom tsconfig options for the development tsconfig.json file (used for testing). |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.tsconfigDevFile">tsconfigDevFile</a></code> | <code>string</code> | The name of the development tsconfig.json file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.tsconfigDevFile">tsconfigDevFile</a></code> | <code>string</code> | The name (and path) of the development tsconfig file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.tsJestOptions">tsJestOptions</a></code> | <code>projen.typescript.TsJestOptions</code> | Options for ts-jest. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.typescriptVersion">typescriptVersion</a></code> | <code>string</code> | TypeScript version to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.versionrcOptions">versionrcOptions</a></code> | <code>{[ key: string ]: any}</code> | Custom configuration used when creating changelog with commit-and-tag-version package. |
@@ -9217,6 +8576,19 @@ The project name.
 
 ---
 
+##### `addPackageManagerToDevEngines`<sup>Optional</sup> <a name="addPackageManagerToDevEngines" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.addPackageManagerToDevEngines"></a>
+
+```typescript
+public readonly addPackageManagerToDevEngines: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically add the resolved `packageManager` to `devEngines.packageManager` in `package.json`, setting `onFail` to `ignore`.
+
+---
+
 ##### `allowLibraryDependencies`<sup>Optional</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.allowLibraryDependencies"></a>
 
 ```typescript
@@ -9230,6 +8602,44 @@ Allow the project to include `peerDependencies` and `bundledDependencies`.
 
 This is normally only allowed for libraries. For apps, there's no meaning
 for specifying these.
+
+---
+
+##### `allowScripts`<sup>Optional</sup> <a name="allowScripts" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.allowScripts"></a>
+
+```typescript
+public readonly allowScripts: string[];
+```
+
+- *Type:* string[]
+- *Default:* all install scripts are allowed to run (package manager default)
+
+List of dependency (package) names that are allowed to run lifecycle install scripts (`preinstall`, `install`, `postinstall`, `prepare`) during dependency installation.
+
+These scripts can execute arbitrary code, making them a common
+supply-chain attack vector. Package managers are moving toward
+blocking them by default and requiring an explicit allowlist.
+Configuring `allowScripts` sets up that allowlist so scripts only run
+for the packages you have explicitly reviewed and trust.
+
+Support for this setting depends on the configured `packageManager`:
+
+- `NPM`: written to the native `allowScripts` field in `package.json`
+  (requires npm >= 11.16; see https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts).
+- `BUN`: written to the native `trustedDependencies` field in
+  `package.json` (see https://bun.com/docs/pm/lifecycle).
+- `PNPM`: written to the `onlyBuiltDependencies` setting in
+  `pnpm-workspace.yaml` (see https://pnpm.io/settings#onlybuiltdependencies).
+- `YARN2`, `YARN_BERRY`: written to the native
+  `dependenciesMeta.<pkg>.built` allowlist in `package.json`, combined
+  with `enableScripts: false` in `.yarnrc.yml` (see
+  https://yarnpkg.com/features/security#postinstalls). If you set
+  `yarnBerryOptions.yarnRcOptions.enableScripts` explicitly, that value
+  is respected instead of being overridden.
+- `YARN`, `YARN_CLASSIC`: not supported. Yarn Classic has no native
+  mechanism to allowlist install scripts for specific dependencies.
+  Setting this option with one of these package managers throws an
+  error at synthesis time.
 
 ---
 
@@ -9488,21 +8898,6 @@ Options for PR build workflow.
 
 ---
 
-##### ~~`buildWorkflowTriggers`~~<sup>Optional</sup> <a name="buildWorkflowTriggers" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.buildWorkflowTriggers"></a>
-
-- *Deprecated:* - Use `buildWorkflowOptions.workflowTriggers`
-
-```typescript
-public readonly buildWorkflowTriggers: Triggers;
-```
-
-- *Type:* projen.github.workflows.Triggers
-- *Default:* "{ pullRequest: {}, workflowDispatch: {} }"
-
-Build workflow triggers.
-
----
-
 ##### `bumpPackage`<sup>Optional</sup> <a name="bumpPackage" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.bumpPackage"></a>
 
 ```typescript
@@ -9533,11 +8928,11 @@ added both to the `dependencies` section and `bundledDependencies` section of
 your `package.json`.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -9700,6 +9095,24 @@ The copyright years to put in the LICENSE file.
 
 ---
 
+##### `deleteOrphanedLockFiles`<sup>Optional</sup> <a name="deleteOrphanedLockFiles" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.deleteOrphanedLockFiles"></a>
+
+```typescript
+public readonly deleteOrphanedLockFiles: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically delete lockfiles from package managers that are not the active one.
+
+Only triggered when the lockfile for the configured package
+manager already exists.
+
+This is useful when migrating between package managers to avoid conflicts.
+
+---
+
 ##### `dependabot`<sup>Optional</sup> <a name="dependabot" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.dependabot"></a>
 
 ```typescript
@@ -9740,11 +9153,11 @@ public readonly deps: string[];
 Runtime dependencies of this module.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -9820,11 +9233,23 @@ available in your build environment but will not be fetched when this
 module is consumed.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
+
+---
+
+##### `devEngines`<sup>Optional</sup> <a name="devEngines" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.devEngines"></a>
+
+```typescript
+public readonly devEngines: DevEngines;
+```
+
+- *Type:* projen.javascript.DevEngines
+
+Configure the `devEngines` field in `package.json`. The `devEngines.packageManager` field is automatically populated based on the resolved `packageManager` value. Any fields provided here are merged with the auto-populated `packageManager` entry.
 
 ---
 
@@ -9850,7 +9275,7 @@ public readonly disableTsconfigDev: boolean;
 - *Type:* boolean
 - *Default:* false
 
-Do not generate a `tsconfig.dev.json` file.
+Do not generate a development tsconfig file.
 
 ---
 
@@ -10163,36 +9588,6 @@ Consider this option only if your package is known to not function with newer ve
 
 ---
 
-##### ~~`mergify`~~<sup>Optional</sup> <a name="mergify" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.mergify"></a>
-
-- *Deprecated:* use `githubOptions.mergify` instead
-
-```typescript
-public readonly mergify: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Whether mergify should be enabled on this repository or not.
-
----
-
-##### ~~`mergifyOptions`~~<sup>Optional</sup> <a name="mergifyOptions" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.mergifyOptions"></a>
-
-- *Deprecated:* use `githubOptions.mergifyOptions` instead
-
-```typescript
-public readonly mergifyOptions: MergifyOptions;
-```
-
-- *Type:* projen.github.MergifyOptions
-- *Default:* default options
-
-Options for mergify.
-
----
-
 ##### `minMajorVersion`<sup>Optional</sup> <a name="minMajorVersion" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.minMajorVersion"></a>
 
 ```typescript
@@ -10232,27 +9627,6 @@ Setting this option has very high impact on the consumers of your package,
 as package managers will actively prevent usage with node versions you have marked as incompatible.
 
 To change the node version of your CI/CD workflows, use `workflowNodeVersion`.
-
----
-
-##### ~~`mutableBuild`~~<sup>Optional</sup> <a name="mutableBuild" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.mutableBuild"></a>
-
-- *Deprecated:* - Use `buildWorkflowOptions.mutableBuild`
-
-```typescript
-public readonly mutableBuild: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Automatically update files modified during builds to pull-request branches.
-
-This means
-that any files synthesized by projen or e.g. test snapshots will always be up-to-date
-before a PR is merged.
-
-Implies that PR builds do not have anti-tamper checks.
 
 ---
 
@@ -10317,20 +9691,6 @@ for each branch.
 
 ---
 
-##### ~~`npmignore`~~<sup>Optional</sup> <a name="npmignore" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmignore"></a>
-
-- *Deprecated:* - use `project.addPackageIgnore`
-
-```typescript
-public readonly npmignore: string[];
-```
-
-- *Type:* string[]
-
-Additional entries to .npmignore.
-
----
-
 ##### `npmignoreEnabled`<sup>Optional</sup> <a name="npmignoreEnabled" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmignoreEnabled"></a>
 
 ```typescript
@@ -10372,22 +9732,6 @@ you will need to use a supported CI/CD provider.
 
 Note that the projen `Release` and `Publisher` components are using `publib` to publish packages,
 which is using npm internally and supports provenance statements independently of the package manager used.
-
----
-
-##### ~~`npmRegistry`~~<sup>Optional</sup> <a name="npmRegistry" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.npmRegistry"></a>
-
-- *Deprecated:* use `npmRegistryUrl` instead
-
-```typescript
-public readonly npmRegistry: string;
-```
-
-- *Type:* string
-
-The host name of the npm registry to publish to.
-
-Cannot be set together with `npmRegistryUrl`.
 
 ---
 
@@ -10469,7 +9813,7 @@ public readonly packageManager: NodePackageManager;
 ```
 
 - *Type:* projen.javascript.NodePackageManager
-- *Default:* NodePackageManager.YARN_CLASSIC
+- *Default:* Detected from the calling process or `YARN_CLASSIC` if detection fails.
 
 The Node Package Manager used to execute scripts.
 
@@ -10539,6 +9883,19 @@ test your module against the lowest peer version required.
 
 ---
 
+##### `pnpmOptions`<sup>Optional</sup> <a name="pnpmOptions" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pnpmOptions"></a>
+
+```typescript
+public readonly pnpmOptions: PnpmOptions;
+```
+
+- *Type:* projen.javascript.PnpmOptions
+- *Default:* all default options
+
+Options for pnpm.
+
+---
+
 ##### `pnpmVersion`<sup>Optional</sup> <a name="pnpmVersion" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.pnpmVersion"></a>
 
 ```typescript
@@ -10546,7 +9903,7 @@ public readonly pnpmVersion: string;
 ```
 
 - *Type:* string
-- *Default:* "9"
+- *Default:* "10.33.0"
 
 The version of PNPM to use if using PNPM as a package manager.
 
@@ -10604,18 +9961,16 @@ Prettier options.
 
 ---
 
-##### ~~`projectType`~~<sup>Optional</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projectType"></a>
-
-- *Deprecated:* no longer supported at the base project level
+##### `projectTree`<sup>Optional</sup> <a name="projectTree" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projectTree"></a>
 
 ```typescript
-public readonly projectType: ProjectType;
+public readonly projectTree: boolean;
 ```
 
-- *Type:* projen.ProjectType
-- *Default:* ProjectType.UNKNOWN
+- *Type:* boolean
+- *Default:* false
 
-Which type of project this is (library/app).
+Generate a project tree file (`.projen/tree.json`) that shows all components and their relationships. Useful for understanding your project structure and debugging.
 
 ---
 
@@ -10734,24 +10089,6 @@ public readonly projenrcTsOptions: ProjenrcOptions;
 - *Type:* projen.typescript.ProjenrcOptions
 
 Options for .projenrc.ts.
-
----
-
-##### ~~`projenTokenSecret`~~<sup>Optional</sup> <a name="projenTokenSecret" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.projenTokenSecret"></a>
-
-- *Deprecated:* use `projenCredentials`
-
-```typescript
-public readonly projenTokenSecret: string;
-```
-
-- *Type:* string
-- *Default:* "PROJEN_GITHUB_TOKEN"
-
-The name of a secret which includes a GitHub Personal Access Token to be used by projen workflows.
-
-This token needs to have the `repo`, `workflows`
-and `packages` scope.
 
 ---
 
@@ -10901,21 +10238,6 @@ on a per artifact basis.
 
 ---
 
-##### ~~`releaseEveryCommit`~~<sup>Optional</sup> <a name="releaseEveryCommit" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseEveryCommit"></a>
-
-- *Deprecated:* Use `releaseTrigger: ReleaseTrigger.continuous()` instead
-
-```typescript
-public readonly releaseEveryCommit: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Automatically release new versions every commit to one of branches in `releaseBranches`.
-
----
-
 ##### `releaseFailureIssue`<sup>Optional</sup> <a name="releaseFailureIssue" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseFailureIssue"></a>
 
 ```typescript
@@ -10941,21 +10263,6 @@ public readonly releaseFailureIssueLabel: string;
 The label to apply to issues indicating publish failures.
 
 Only applies if `releaseFailureIssue` is true.
-
----
-
-##### ~~`releaseSchedule`~~<sup>Optional</sup> <a name="releaseSchedule" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseSchedule"></a>
-
-- *Deprecated:* Use `releaseTrigger: ReleaseTrigger.scheduled()` instead
-
-```typescript
-public readonly releaseSchedule: string;
-```
-
-- *Type:* string
-- *Default:* no scheduled releases
-
-CRON schedule to trigger new releases.
 
 ---
 
@@ -11001,21 +10308,6 @@ public readonly releaseTrigger: ReleaseTrigger;
 - *Default:* Continuous releases (`ReleaseTrigger.continuous()`)
 
 The release trigger to use.
-
----
-
-##### ~~`releaseWorkflow`~~<sup>Optional</sup> <a name="releaseWorkflow" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.releaseWorkflow"></a>
-
-- *Deprecated:* see `release`.
-
-```typescript
-public readonly releaseWorkflow: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true if not a subproject
-
-DEPRECATED: renamed to `release`.
 
 ---
 
@@ -11109,6 +10401,22 @@ If the package.json for your package is not in the root directory (for example i
 
 ---
 
+##### `runner`<sup>Optional</sup> <a name="runner" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.runner"></a>
+
+```typescript
+public readonly runner: TypeScriptRunner;
+```
+
+- *Type:* projen.typescript.TypeScriptRunner
+- *Default:* TypeScriptRunner.tsNode()
+
+The TypeScript runner to use for executing TypeScript files.
+
+This is a project-level setting that components (e.g. projenrc) will
+use as their default runner.
+
+---
+
 ##### `sampleCode`<sup>Optional</sup> <a name="sampleCode" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.sampleCode"></a>
 
 ```typescript
@@ -11132,25 +10440,6 @@ public readonly scopedPackagesOptions: ScopedPackagesOptions[];
 - *Default:* fetch all scoped packages from the public npm registry
 
 Options for privately hosted scoped packages.
-
----
-
-##### ~~`scripts`~~<sup>Optional</sup> <a name="scripts" id="@rocketleap/rocketleap-projen.RocketleapLibraryCdkProjectOptions.property.scripts"></a>
-
-- *Deprecated:* use `project.addTask()` or `package.setScript()`
-
-```typescript
-public readonly scripts: {[ key: string ]: string};
-```
-
-- *Type:* {[ key: string ]: string}
-- *Default:* {}
-
-npm scripts to include.
-
-If a script has the same name as a standard script,
-the standard script will be overwritten.
-Also adds the script as a task.
 
 ---
 
@@ -11261,9 +10550,13 @@ public readonly tsconfigDevFile: string;
 ```
 
 - *Type:* string
-- *Default:* "tsconfig.dev.json"
+- *Default:* "{testdir}/tsconfig.json"
 
-The name of the development tsconfig.json file.
+The name (and path) of the development tsconfig file.
+
+By default this lives inside the test directory (e.g. `test/tsconfig.json`)
+so that the TypeScript language service resolves it as the nearest config
+for test files.
 
 ---
 
@@ -11456,6 +10749,7 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.logging">logging</a></code> | <code>projen.LoggerOptions</code> | Configure logging options such as verbosity. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.outdir">outdir</a></code> | <code>string</code> | The root directory of the project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.parent">parent</a></code> | <code>projen.Project</code> | The parent project, if this project is part of a bigger project. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projectTree">projectTree</a></code> | <code>boolean</code> | Generate a project tree file (`.projen/tree.json`) that shows all components and their relationships. Useful for understanding your project structure and debugging. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenCommand">projenCommand</a></code> | <code>string</code> | The shell command to use in order to run the projen CLI. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenrcJson">projenrcJson</a></code> | <code>boolean</code> | Generate (once) .projenrc.json (in JSON). Set to `false` in order to disable .projenrc.json generation. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenrcJsonOptions">projenrcJsonOptions</a></code> | <code>projen.ProjenrcJsonOptions</code> | Options for .projenrc.json. |
@@ -11469,16 +10763,14 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.github">github</a></code> | <code>boolean</code> | Enable GitHub integration. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.githubOptions">githubOptions</a></code> | <code>projen.github.GitHubOptions</code> | Options for GitHub integration. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.gitpod">gitpod</a></code> | <code>boolean</code> | Add a Gitpod development environment. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.mergify">mergify</a></code> | <code>boolean</code> | Whether mergify should be enabled on this repository or not. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.mergifyOptions">mergifyOptions</a></code> | <code>projen.github.MergifyOptions</code> | Options for mergify. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projectType">projectType</a></code> | <code>projen.ProjectType</code> | Which type of project this is (library/app). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenCredentials">projenCredentials</a></code> | <code>projen.github.GithubCredentials</code> | Choose a method of providing GitHub API access for projen workflows. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenTokenSecret">projenTokenSecret</a></code> | <code>string</code> | The name of a secret which includes a GitHub Personal Access Token to be used by projen workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.readme">readme</a></code> | <code>projen.SampleReadmeProps</code> | The README setup. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.stale">stale</a></code> | <code>boolean</code> | Auto-close of stale issues and pull request. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.staleOptions">staleOptions</a></code> | <code>projen.github.StaleOptions</code> | Auto-close stale issues and pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.vscode">vscode</a></code> | <code>boolean</code> | Enable VSCode integration. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.addPackageManagerToDevEngines">addPackageManagerToDevEngines</a></code> | <code>boolean</code> | Automatically add the resolved `packageManager` to `devEngines.packageManager` in `package.json`, setting `onFail` to `ignore`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.allowLibraryDependencies">allowLibraryDependencies</a></code> | <code>boolean</code> | Allow the project to include `peerDependencies` and `bundledDependencies`. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.allowScripts">allowScripts</a></code> | <code>string[]</code> | List of dependency (package) names that are allowed to run lifecycle install scripts (`preinstall`, `install`, `postinstall`, `prepare`) during dependency installation. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.authorEmail">authorEmail</a></code> | <code>string</code> | Author's e-mail. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.authorName">authorName</a></code> | <code>string</code> | Author's name. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.authorOrganization">authorOrganization</a></code> | <code>boolean</code> | Is the author an organization. |
@@ -11490,9 +10782,11 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.bundledDeps">bundledDeps</a></code> | <code>string[]</code> | List of dependencies to bundle into this module. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.bunVersion">bunVersion</a></code> | <code>string</code> | The version of Bun to use if using Bun as a package manager. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.codeArtifactOptions">codeArtifactOptions</a></code> | <code>projen.javascript.CodeArtifactOptions</code> | Options for npm packages using AWS CodeArtifact. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.deleteOrphanedLockFiles">deleteOrphanedLockFiles</a></code> | <code>boolean</code> | Automatically delete lockfiles from package managers that are not the active one. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.deps">deps</a></code> | <code>string[]</code> | Runtime dependencies of this module. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.description">description</a></code> | <code>string</code> | The description is just a string that helps people understand the purpose of the package. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.devDeps">devDeps</a></code> | <code>string[]</code> | Build dependencies for this module. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.devEngines">devEngines</a></code> | <code>projen.javascript.DevEngines</code> | Configure the `devEngines` field in `package.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.entrypoint">entrypoint</a></code> | <code>string</code> | Module entrypoint (`main` in `package.json`). |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.homepage">homepage</a></code> | <code>string</code> | Package's Homepage / Website. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.keywords">keywords</a></code> | <code>string[]</code> | Keywords to include in `package.json`. |
@@ -11502,7 +10796,6 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.minNodeVersion">minNodeVersion</a></code> | <code>string</code> | The minimum node version required by this package to function. Most projects should not use this option. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmAccess">npmAccess</a></code> | <code>projen.javascript.NpmAccess</code> | Access level of the npm package. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmProvenance">npmProvenance</a></code> | <code>boolean</code> | Should provenance statements be generated when the package is published. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmRegistry">npmRegistry</a></code> | <code>string</code> | The host name of the npm registry to publish to. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmRegistryUrl">npmRegistryUrl</a></code> | <code>string</code> | The base URL of the npm package registry. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmTokenSecret">npmTokenSecret</a></code> | <code>string</code> | GitHub secret which contains the NPM token to use when publishing packages. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmTrustedPublishing">npmTrustedPublishing</a></code> | <code>boolean</code> | Use trusted publishing for publishing to npmjs.com Needs to be pre-configured on npm.js to work. |
@@ -11510,11 +10803,11 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.packageName">packageName</a></code> | <code>string</code> | The "name" in package.json. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.peerDependencyOptions">peerDependencyOptions</a></code> | <code>projen.javascript.PeerDependencyOptions</code> | Options for `peerDeps`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.peerDeps">peerDeps</a></code> | <code>string[]</code> | Peer dependencies for this module. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.pnpmOptions">pnpmOptions</a></code> | <code>projen.javascript.PnpmOptions</code> | Options for pnpm. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.pnpmVersion">pnpmVersion</a></code> | <code>string</code> | The version of PNPM to use if using PNPM as a package manager. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.repository">repository</a></code> | <code>string</code> | The repository is the location where the actual code for your package lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.repositoryDirectory">repositoryDirectory</a></code> | <code>string</code> | If the package.json for your package is not in the root directory (for example if it is part of a monorepo), you can specify the directory in which it lives. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.scopedPackagesOptions">scopedPackagesOptions</a></code> | <code>projen.javascript.ScopedPackagesOptions[]</code> | Options for privately hosted scoped packages. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.scripts">scripts</a></code> | <code>{[ key: string ]: string}</code> | npm scripts to include. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.stability">stability</a></code> | <code>string</code> | Package's Stability. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.yarnBerryOptions">yarnBerryOptions</a></code> | <code>projen.javascript.YarnBerryOptions</code> | Options for Yarn Berry. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.bumpPackage">bumpPackage</a></code> | <code>string</code> | The `commit-and-tag-version` compatible package used to bump the package version, as a dependency string. |
@@ -11530,10 +10823,8 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releasableCommits">releasableCommits</a></code> | <code>projen.ReleasableCommits</code> | Find commits that should be considered releasable Used to decide if a release is required. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseBranches">releaseBranches</a></code> | <code>{[ key: string ]: projen.release.BranchOptions}</code> | Defines additional release branches. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseEnvironment">releaseEnvironment</a></code> | <code>string</code> | The GitHub Actions environment used for the release. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseEveryCommit">releaseEveryCommit</a></code> | <code>boolean</code> | Automatically release new versions every commit to one of branches in `releaseBranches`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseFailureIssue">releaseFailureIssue</a></code> | <code>boolean</code> | Create a github issue on every failed publishing task. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseFailureIssueLabel">releaseFailureIssueLabel</a></code> | <code>string</code> | The label to apply to issues indicating publish failures. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseSchedule">releaseSchedule</a></code> | <code>string</code> | CRON schedule to trigger new releases. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseTagPrefix">releaseTagPrefix</a></code> | <code>string</code> | Automatically add the given prefix to release tags. Useful if you are releasing on multiple branches with overlapping version numbers. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseTrigger">releaseTrigger</a></code> | <code>projen.release.ReleaseTrigger</code> | The release trigger to use. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseWorkflowEnv">releaseWorkflowEnv</a></code> | <code>{[ key: string ]: string}</code> | Build environment variables for release workflows. |
@@ -11543,7 +10834,6 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowContainerImage">workflowContainerImage</a></code> | <code>string</code> | Container image to use for GitHub workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowRunsOn">workflowRunsOn</a></code> | <code>string[]</code> | Github Runner selection labels. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowRunsOnGroup">workflowRunsOnGroup</a></code> | <code>projen.GroupRunnerOptions</code> | Github Runner Group selection options. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.defaultReleaseBranch">defaultReleaseBranch</a></code> | <code>string</code> | The name of the main release branch. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.artifactsDirectory">artifactsDirectory</a></code> | <code>string</code> | A directory which will contain build artifacts. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.auditDeps">auditDeps</a></code> | <code>boolean</code> | Run security audit on dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.auditDepsOptions">auditDepsOptions</a></code> | <code>projen.javascript.AuditOptions</code> | Security audit options. |
@@ -11552,13 +10842,13 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.biomeOptions">biomeOptions</a></code> | <code>projen.javascript.BiomeOptions</code> | Biome options. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.buildWorkflow">buildWorkflow</a></code> | <code>boolean</code> | Define a GitHub workflow for building PRs. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.buildWorkflowOptions">buildWorkflowOptions</a></code> | <code>projen.javascript.BuildWorkflowOptions</code> | Options for PR build workflow. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.buildWorkflowTriggers">buildWorkflowTriggers</a></code> | <code>projen.github.workflows.Triggers</code> | Build workflow triggers. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.bundlerOptions">bundlerOptions</a></code> | <code>projen.javascript.BundlerOptions</code> | Options for `Bundler`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.checkLicenses">checkLicenses</a></code> | <code>projen.javascript.LicenseCheckerOptions</code> | Configure which licenses should be deemed acceptable for use by dependencies. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.codeCov">codeCov</a></code> | <code>boolean</code> | Define a GitHub workflow step for sending code coverage metrics to https://codecov.io/ Uses codecov/codecov-action@v5 By default, OIDC auth is used. Alternatively a token can be provided via `codeCovTokenSecret`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.codeCovTokenSecret">codeCovTokenSecret</a></code> | <code>string</code> | Define the secret name for a specified https://codecov.io/ token. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.copyrightOwner">copyrightOwner</a></code> | <code>string</code> | License copyright owner. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.copyrightPeriod">copyrightPeriod</a></code> | <code>string</code> | The copyright years to put in the LICENSE file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.defaultReleaseBranch">defaultReleaseBranch</a></code> | <code>string</code> | The name of the main release branch. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.dependabot">dependabot</a></code> | <code>boolean</code> | Use dependabot to handle dependency upgrades. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.dependabotOptions">dependabotOptions</a></code> | <code>projen.github.DependabotOptions</code> | Options for dependabot. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.depsUpgrade">depsUpgrade</a></code> | <code>boolean</code> | Use tasks and github workflows to handle dependency upgrades. |
@@ -11566,8 +10856,6 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.gitignore">gitignore</a></code> | <code>string[]</code> | Additional entries to .gitignore. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.jest">jest</a></code> | <code>boolean</code> | Setup jest unit tests. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.jestOptions">jestOptions</a></code> | <code>projen.javascript.JestOptions</code> | Jest options. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.mutableBuild">mutableBuild</a></code> | <code>boolean</code> | Automatically update files modified during builds to pull-request branches. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmignore">npmignore</a></code> | <code>string[]</code> | Additional entries to .npmignore. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmignoreEnabled">npmignoreEnabled</a></code> | <code>boolean</code> | Defines an .npmignore file. Normally this is only needed for libraries that are packaged as tarballs. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmIgnoreOptions">npmIgnoreOptions</a></code> | <code>projen.IgnoreFileOptions</code> | Configuration options for .npmignore file. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.package">package</a></code> | <code>boolean</code> | Defines a `package` task that will produce an npm tarball under the artifacts directory (e.g. `dist`). |
@@ -11581,7 +10869,6 @@ const rocketleapPlatformMinimalProjectOptions: RocketleapPlatformMinimalProjectO
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.pullRequestTemplateContents">pullRequestTemplateContents</a></code> | <code>string[]</code> | The contents of the pull request template. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.release">release</a></code> | <code>boolean</code> | Add release management to this project. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseToNpm">releaseToNpm</a></code> | <code>boolean</code> | Automatically release to npm when new versions are introduced. |
-| <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseWorkflow">releaseWorkflow</a></code> | <code>boolean</code> | DEPRECATED: renamed to `release`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowBootstrapSteps">workflowBootstrapSteps</a></code> | <code>projen.github.workflows.JobStep[]</code> | Workflow steps to use in order to bootstrap this repo. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowGitIdentity">workflowGitIdentity</a></code> | <code>projen.github.GitIdentity</code> | The git identity to use in workflows. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowNodeVersion">workflowNodeVersion</a></code> | <code>string</code> | The node version used in GitHub Actions workflows. |
@@ -11682,6 +10969,19 @@ public readonly parent: Project;
 - *Type:* projen.Project
 
 The parent project, if this project is part of a bigger project.
+
+---
+
+##### `projectTree`<sup>Optional</sup> <a name="projectTree" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projectTree"></a>
+
+```typescript
+public readonly projectTree: boolean;
+```
+
+- *Type:* boolean
+- *Default:* false
+
+Generate a project tree file (`.projen/tree.json`) that shows all components and their relationships. Useful for understanding your project structure and debugging.
 
 ---
 
@@ -11864,51 +11164,6 @@ Add a Gitpod development environment.
 
 ---
 
-##### ~~`mergify`~~<sup>Optional</sup> <a name="mergify" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.mergify"></a>
-
-- *Deprecated:* use `githubOptions.mergify` instead
-
-```typescript
-public readonly mergify: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Whether mergify should be enabled on this repository or not.
-
----
-
-##### ~~`mergifyOptions`~~<sup>Optional</sup> <a name="mergifyOptions" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.mergifyOptions"></a>
-
-- *Deprecated:* use `githubOptions.mergifyOptions` instead
-
-```typescript
-public readonly mergifyOptions: MergifyOptions;
-```
-
-- *Type:* projen.github.MergifyOptions
-- *Default:* default options
-
-Options for mergify.
-
----
-
-##### ~~`projectType`~~<sup>Optional</sup> <a name="projectType" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projectType"></a>
-
-- *Deprecated:* no longer supported at the base project level
-
-```typescript
-public readonly projectType: ProjectType;
-```
-
-- *Type:* projen.ProjectType
-- *Default:* ProjectType.UNKNOWN
-
-Which type of project this is (library/app).
-
----
-
 ##### `projenCredentials`<sup>Optional</sup> <a name="projenCredentials" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenCredentials"></a>
 
 ```typescript
@@ -11919,24 +11174,6 @@ public readonly projenCredentials: GithubCredentials;
 - *Default:* use a personal access token named PROJEN_GITHUB_TOKEN
 
 Choose a method of providing GitHub API access for projen workflows.
-
----
-
-##### ~~`projenTokenSecret`~~<sup>Optional</sup> <a name="projenTokenSecret" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.projenTokenSecret"></a>
-
-- *Deprecated:* use `projenCredentials`
-
-```typescript
-public readonly projenTokenSecret: string;
-```
-
-- *Type:* string
-- *Default:* "PROJEN_GITHUB_TOKEN"
-
-The name of a secret which includes a GitHub Personal Access Token to be used by projen workflows.
-
-This token needs to have the `repo`, `workflows`
-and `packages` scope.
 
 ---
 
@@ -12005,6 +11242,19 @@ Enabled by default for root projects. Disabled for non-root projects.
 
 ---
 
+##### `addPackageManagerToDevEngines`<sup>Optional</sup> <a name="addPackageManagerToDevEngines" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.addPackageManagerToDevEngines"></a>
+
+```typescript
+public readonly addPackageManagerToDevEngines: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically add the resolved `packageManager` to `devEngines.packageManager` in `package.json`, setting `onFail` to `ignore`.
+
+---
+
 ##### `allowLibraryDependencies`<sup>Optional</sup> <a name="allowLibraryDependencies" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.allowLibraryDependencies"></a>
 
 ```typescript
@@ -12018,6 +11268,44 @@ Allow the project to include `peerDependencies` and `bundledDependencies`.
 
 This is normally only allowed for libraries. For apps, there's no meaning
 for specifying these.
+
+---
+
+##### `allowScripts`<sup>Optional</sup> <a name="allowScripts" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.allowScripts"></a>
+
+```typescript
+public readonly allowScripts: string[];
+```
+
+- *Type:* string[]
+- *Default:* all install scripts are allowed to run (package manager default)
+
+List of dependency (package) names that are allowed to run lifecycle install scripts (`preinstall`, `install`, `postinstall`, `prepare`) during dependency installation.
+
+These scripts can execute arbitrary code, making them a common
+supply-chain attack vector. Package managers are moving toward
+blocking them by default and requiring an explicit allowlist.
+Configuring `allowScripts` sets up that allowlist so scripts only run
+for the packages you have explicitly reviewed and trust.
+
+Support for this setting depends on the configured `packageManager`:
+
+- `NPM`: written to the native `allowScripts` field in `package.json`
+  (requires npm >= 11.16; see https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts).
+- `BUN`: written to the native `trustedDependencies` field in
+  `package.json` (see https://bun.com/docs/pm/lifecycle).
+- `PNPM`: written to the `onlyBuiltDependencies` setting in
+  `pnpm-workspace.yaml` (see https://pnpm.io/settings#onlybuiltdependencies).
+- `YARN2`, `YARN_BERRY`: written to the native
+  `dependenciesMeta.<pkg>.built` allowlist in `package.json`, combined
+  with `enableScripts: false` in `.yarnrc.yml` (see
+  https://yarnpkg.com/features/security#postinstalls). If you set
+  `yarnBerryOptions.yarnRcOptions.enableScripts` explicitly, that value
+  is respected instead of being overridden.
+- `YARN`, `YARN_CLASSIC`: not supported. Yarn Classic has no native
+  mechanism to allowlist install scripts for specific dependencies.
+  Setting this option with one of these package managers throws an
+  error at synthesis time.
 
 ---
 
@@ -12137,11 +11425,11 @@ added both to the `dependencies` section and `bundledDependencies` section of
 your `package.json`.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -12173,6 +11461,24 @@ This is required if publishing packages to, or installing scoped packages from A
 
 ---
 
+##### `deleteOrphanedLockFiles`<sup>Optional</sup> <a name="deleteOrphanedLockFiles" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.deleteOrphanedLockFiles"></a>
+
+```typescript
+public readonly deleteOrphanedLockFiles: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Automatically delete lockfiles from package managers that are not the active one.
+
+Only triggered when the lockfile for the configured package
+manager already exists.
+
+This is useful when migrating between package managers to avoid conflicts.
+
+---
+
 ##### `deps`<sup>Optional</sup> <a name="deps" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.deps"></a>
 
 ```typescript
@@ -12185,11 +11491,11 @@ public readonly deps: string[];
 Runtime dependencies of this module.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -12231,11 +11537,11 @@ available in your build environment but will not be fetched when this
 module is consumed.
 
 The recommendation is to only specify the module name here (e.g.
-`express`). This will behave similar to `yarn add` or `npm install` in the
+`express`). This will behave similar to `pnpm add` or `npm install` in the
 sense that it will add the module as a dependency to your `package.json`
 file with the latest version (`^`). You can specify semver requirements in
-the same syntax passed to `npm i` or `yarn add` (e.g. `express@^2`) and
-this will be what you `package.json` will eventually include.
+the same syntax passed to `pnpm add` or `npm i` (e.g. `express@^2`) and
+this will be what your `package.json` will eventually include.
 
 ---
 
@@ -12245,6 +11551,24 @@ this will be what you `package.json` will eventually include.
 [ 'typescript', '@types/express' ]
 ```
 
+
+##### `devEngines`<sup>Optional</sup> <a name="devEngines" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.devEngines"></a>
+
+```typescript
+public readonly devEngines: DevEngines;
+```
+
+- *Type:* projen.javascript.DevEngines
+
+Configure the `devEngines` field in `package.json`.
+
+The `devEngines.packageManager` field is automatically populated based on
+the resolved `packageManager` value. Any fields provided here are merged
+with the auto-populated `packageManager` entry.
+
+> [https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines)
+
+---
 
 ##### `entrypoint`<sup>Optional</sup> <a name="entrypoint" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.entrypoint"></a>
 
@@ -12390,22 +11714,6 @@ which is using npm internally and supports provenance statements independently o
 
 ---
 
-##### ~~`npmRegistry`~~<sup>Optional</sup> <a name="npmRegistry" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmRegistry"></a>
-
-- *Deprecated:* use `npmRegistryUrl` instead
-
-```typescript
-public readonly npmRegistry: string;
-```
-
-- *Type:* string
-
-The host name of the npm registry to publish to.
-
-Cannot be set together with `npmRegistryUrl`.
-
----
-
 ##### `npmRegistryUrl`<sup>Optional</sup> <a name="npmRegistryUrl" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmRegistryUrl"></a>
 
 ```typescript
@@ -12454,7 +11762,7 @@ public readonly packageManager: NodePackageManager;
 ```
 
 - *Type:* projen.javascript.NodePackageManager
-- *Default:* NodePackageManager.YARN_CLASSIC
+- *Default:* Detected from the calling process or `YARN_CLASSIC` if detection fails.
 
 The Node Package Manager used to execute scripts.
 
@@ -12512,6 +11820,19 @@ test your module against the lowest peer version required.
 
 ---
 
+##### `pnpmOptions`<sup>Optional</sup> <a name="pnpmOptions" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.pnpmOptions"></a>
+
+```typescript
+public readonly pnpmOptions: PnpmOptions;
+```
+
+- *Type:* projen.javascript.PnpmOptions
+- *Default:* all default options
+
+Options for pnpm.
+
+---
+
 ##### `pnpmVersion`<sup>Optional</sup> <a name="pnpmVersion" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.pnpmVersion"></a>
 
 ```typescript
@@ -12519,7 +11840,7 @@ public readonly pnpmVersion: string;
 ```
 
 - *Type:* string
-- *Default:* "9"
+- *Default:* "10.33.0"
 
 The version of PNPM to use if using PNPM as a package manager.
 
@@ -12561,25 +11882,6 @@ public readonly scopedPackagesOptions: ScopedPackagesOptions[];
 - *Default:* fetch all scoped packages from the public npm registry
 
 Options for privately hosted scoped packages.
-
----
-
-##### ~~`scripts`~~<sup>Optional</sup> <a name="scripts" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.scripts"></a>
-
-- *Deprecated:* use `project.addTask()` or `package.setScript()`
-
-```typescript
-public readonly scripts: {[ key: string ]: string};
-```
-
-- *Type:* {[ key: string ]: string}
-- *Default:* {}
-
-npm scripts to include.
-
-If a script has the same name as a standard script,
-the standard script will be overwritten.
-Also adds the script as a task.
 
 ---
 
@@ -12825,21 +12127,6 @@ on a per artifact basis.
 
 ---
 
-##### ~~`releaseEveryCommit`~~<sup>Optional</sup> <a name="releaseEveryCommit" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseEveryCommit"></a>
-
-- *Deprecated:* Use `releaseTrigger: ReleaseTrigger.continuous()` instead
-
-```typescript
-public readonly releaseEveryCommit: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Automatically release new versions every commit to one of branches in `releaseBranches`.
-
----
-
 ##### `releaseFailureIssue`<sup>Optional</sup> <a name="releaseFailureIssue" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseFailureIssue"></a>
 
 ```typescript
@@ -12865,21 +12152,6 @@ public readonly releaseFailureIssueLabel: string;
 The label to apply to issues indicating publish failures.
 
 Only applies if `releaseFailureIssue` is true.
-
----
-
-##### ~~`releaseSchedule`~~<sup>Optional</sup> <a name="releaseSchedule" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseSchedule"></a>
-
-- *Deprecated:* Use `releaseTrigger: ReleaseTrigger.scheduled()` instead
-
-```typescript
-public readonly releaseSchedule: string;
-```
-
-- *Type:* string
-- *Default:* no scheduled releases
-
-CRON schedule to trigger new releases.
 
 ---
 
@@ -13005,19 +12277,6 @@ Github Runner Group selection options.
 
 ---
 
-##### `defaultReleaseBranch`<sup>Required</sup> <a name="defaultReleaseBranch" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.defaultReleaseBranch"></a>
-
-```typescript
-public readonly defaultReleaseBranch: string;
-```
-
-- *Type:* string
-- *Default:* "main"
-
-The name of the main release branch.
-
----
-
 ##### `artifactsDirectory`<sup>Optional</sup> <a name="artifactsDirectory" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.artifactsDirectory"></a>
 
 ```typescript
@@ -13127,21 +12386,6 @@ Options for PR build workflow.
 
 ---
 
-##### ~~`buildWorkflowTriggers`~~<sup>Optional</sup> <a name="buildWorkflowTriggers" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.buildWorkflowTriggers"></a>
-
-- *Deprecated:* - Use `buildWorkflowOptions.workflowTriggers`
-
-```typescript
-public readonly buildWorkflowTriggers: Triggers;
-```
-
-- *Type:* projen.github.workflows.Triggers
-- *Default:* "{ pullRequest: {}, workflowDispatch: {} }"
-
-Build workflow triggers.
-
----
-
 ##### `bundlerOptions`<sup>Optional</sup> <a name="bundlerOptions" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.bundlerOptions"></a>
 
 ```typescript
@@ -13218,6 +12462,19 @@ public readonly copyrightPeriod: string;
 - *Default:* current year
 
 The copyright years to put in the LICENSE file.
+
+---
+
+##### `defaultReleaseBranch`<sup>Optional</sup> <a name="defaultReleaseBranch" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.defaultReleaseBranch"></a>
+
+```typescript
+public readonly defaultReleaseBranch: string;
+```
+
+- *Type:* string
+- *Default:* "main"
+
+The name of the main release branch.
 
 ---
 
@@ -13312,41 +12569,6 @@ public readonly jestOptions: JestOptions;
 - *Default:* default options
 
 Jest options.
-
----
-
-##### ~~`mutableBuild`~~<sup>Optional</sup> <a name="mutableBuild" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.mutableBuild"></a>
-
-- *Deprecated:* - Use `buildWorkflowOptions.mutableBuild`
-
-```typescript
-public readonly mutableBuild: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true
-
-Automatically update files modified during builds to pull-request branches.
-
-This means
-that any files synthesized by projen or e.g. test snapshots will always be up-to-date
-before a PR is merged.
-
-Implies that PR builds do not have anti-tamper checks.
-
----
-
-##### ~~`npmignore`~~<sup>Optional</sup> <a name="npmignore" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.npmignore"></a>
-
-- *Deprecated:* - use `project.addPackageIgnore`
-
-```typescript
-public readonly npmignore: string[];
-```
-
-- *Type:* string[]
-
-Additional entries to .npmignore.
 
 ---
 
@@ -13518,21 +12740,6 @@ Automatically release to npm when new versions are introduced.
 
 ---
 
-##### ~~`releaseWorkflow`~~<sup>Optional</sup> <a name="releaseWorkflow" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.releaseWorkflow"></a>
-
-- *Deprecated:* see `release`.
-
-```typescript
-public readonly releaseWorkflow: boolean;
-```
-
-- *Type:* boolean
-- *Default:* true if not a subproject
-
-DEPRECATED: renamed to `release`.
-
----
-
 ##### `workflowBootstrapSteps`<sup>Optional</sup> <a name="workflowBootstrapSteps" id="@rocketleap/rocketleap-projen.RocketleapPlatformMinimalProjectOptions.property.workflowBootstrapSteps"></a>
 
 ```typescript
@@ -13594,7 +12801,6 @@ public readonly company: string;
 ```
 
 - *Type:* string
-- *Default:* no scope
 
 The owning company slug — used as the npm scope (e.g. `rocketleap`).
 
