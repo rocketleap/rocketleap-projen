@@ -129,6 +129,18 @@ describe('pr-main.yml', () => {
     const project = newProject();
     expect(() => addPrMainWorkflow(project, [])).toThrow('at least one entry');
   });
+
+  test('reduces CI spend: main-only, skip drafts, cancel superseded runs', () => {
+    const project = newProject();
+    addPrMainWorkflow(project, [{ environment: 'dev' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+    expect(pr).toMatch(/pull_request:[\s\S]*?branches:\s*\n\s*- main\b/);
+    expect(pr).not.toMatch(/- dev\b/);
+    expect(pr).toMatch(/types:[\s\S]*?- ready_for_review/);
+    expect(pr).toMatch(/build:[\s\S]*?if: github\.event\.pull_request\.draft == false/);
+    expect(pr).toMatch(/concurrency:[\s\S]*?group: pr-main-\$\{\{ github\.ref \}\}/);
+    expect(pr).toMatch(/concurrency:[\s\S]*?cancel-in-progress: true/);
+  });
 });
 
 describe('push-main.yml', () => {
