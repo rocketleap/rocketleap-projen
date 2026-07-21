@@ -91,7 +91,15 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     // default task and emits the correct `ts-node` step.
     new typescript.ProjenrcTs(this);
 
-    this.addDevDeps('ts-node', 'typescript', '@types/node');
+    // Pin ts-node/typescript/@types/node — without version constraints,
+    // projen writes `"*"` in package.json and yarn resolves to whatever
+    // is `latest`. That currently pulls TypeScript 7.x, which projen's
+    // typescript overlay can't patch (`ENOENT: /node_modules/typescript
+    // /lib/_tsc.js`), and it also pulls ts-node@latest which is
+    // incompatible with Node 24 (`TypeError: Cannot read properties of
+    // undefined (reading 'fileExists')`). The pinned versions below are
+    // the last known-good combo.
+    this.addDevDeps('ts-node@~10.9', 'typescript@~5.6', '@types/node@~22');
 
     addRocketleapLicense(this);
   }
