@@ -118,22 +118,6 @@ function pathsScript(): string {
   ].join('\n');
 }
 
-function unpackWorkspaceSteps(): Array<Record<string, unknown>> {
-  return [
-    {
-      name: 'Download build workspace',
-      uses: 'actions/download-artifact@v4',
-      with: { name: WORKSPACE_ARTIFACT, path: '.' },
-    },
-    ...bootstrapSteps(),
-    // Reinstall — the workspace artifact excludes `node_modules` because
-    // `upload-artifact`'s zip strips execute bits on native binaries
-    // (esbuild, swc, ...). Yarn's global cache (populated by setup-node's
-    // `cache: yarn`) makes this fast.
-    { run: 'yarn' },
-  ];
-}
-
 function accountAndRegionFromBinScript(): string {
   return [
     'set -euo pipefail',
@@ -266,7 +250,13 @@ export function addActionDeployWorkflow(project: Project): void {
         deploy: {
           'runs-on': 'ubuntu-latest',
           'steps': [
-            ...unpackWorkspaceSteps(),
+            {
+              name: 'Download build workspace',
+              uses: 'actions/download-artifact@v4',
+              with: { name: WORKSPACE_ARTIFACT, path: '.' },
+            },
+            ...bootstrapSteps(),
+            { run: 'yarn' },
             { name: 'Set paths', shell: 'bash', run: pathsScript() },
             { name: 'Resolve AWS AccountId and Region', shell: 'bash', run: accountAndRegionFromBinScript() },
             configureAwsStep(),
@@ -314,7 +304,13 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
         diff: {
           'runs-on': 'ubuntu-latest',
           'steps': [
-            ...unpackWorkspaceSteps(),
+            {
+              name: 'Download build workspace',
+              uses: 'actions/download-artifact@v4',
+              with: { name: WORKSPACE_ARTIFACT, path: '.' },
+            },
+            ...bootstrapSteps(),
+            { run: 'yarn' },
             { name: 'Set paths', shell: 'bash', run: pathsScript() },
             { name: 'Resolve AWS AccountId and Region', shell: 'bash', run: accountAndRegionFromBinScript() },
             configureAwsStep(),
