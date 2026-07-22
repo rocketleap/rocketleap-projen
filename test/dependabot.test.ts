@@ -5,7 +5,7 @@ test('Workload project auto-generates .github/dependabot.yml', () => {
   const project = new RocketleapWorkloadCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test', account: '111111111111', region: 'eu-west-1' }] },
   });
 
   const snapshot = Testing.synth(project);
@@ -18,7 +18,7 @@ test('Platform project does NOT auto-generate dependabot config', () => {
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test', account: '111111111111', region: 'eu-west-1' }] },
   });
 
   const snapshot = Testing.synth(project);

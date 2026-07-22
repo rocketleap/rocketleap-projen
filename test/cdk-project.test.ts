@@ -5,7 +5,7 @@ test('Platform project does not generate src/main.ts or test/main.test.ts', () =
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test', account: '111111111111', region: 'eu-west-1' }] },
   });
 
   const snapshot = Testing.synth(project);
@@ -18,7 +18,7 @@ test('Workload project does not generate src/main.ts or test/main.test.ts', () =
   const project = new RocketleapWorkloadCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test', account: '111111111111', region: 'eu-west-1' }] },
   });
 
   const snapshot = Testing.synth(project);
