@@ -9,9 +9,6 @@ import {
   addPushMainWorkflow,
 } from '../src/common/workflows';
 
-const ACC = '111111111111';
-const REG = 'eu-west-1';
-
 function newProject(): Project {
   return new Project({ name: 'test' });
 }
@@ -47,31 +44,27 @@ describe('action-build.yml', () => {
 });
 
 describe('action-deploy.yml', () => {
-  test('unpacks workspace, assumes CdkDeployRole (account+region inputs), synths, deploys', () => {
+  test('unpacks workspace, resolves account/region from bin, assumes CdkDeployRole, synths, deploys', () => {
     const project = newProject();
     addActionDeployWorkflow(project);
     const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
     expect(deploy).toContain('name: build-workspace');
     expect(deploy).toContain('tar -xzf build-workspace.tar.gz');
-    expect(deploy).toContain('role-to-assume: arn:aws:iam::${{ inputs.account }}:role/CdkDeployRole');
-    expect(deploy).toContain('aws-region: ${{ inputs.region }}');
-    // Synth runs AFTER credentials are configured.
+    expect(deploy).toContain('bin_file="bin/${{inputs.environment}}.ts"');
+    expect(deploy).toContain('bin_file="bin/${{inputs.environment}}/${{inputs.workload}}.ts"');
+    expect(deploy).toContain('role-to-assume: arn:aws:iam::${{ env.account_id }}:role/CdkDeployRole');
+    expect(deploy).toContain('aws-region: ${{ env.region }}');
+    // Order: unpack → resolve → configure creds → synth → deploy.
+    const resolveIdx = deploy.indexOf('Resolve AWS AccountId and Region');
     const credsIdx = deploy.indexOf('Configure AWS credentials');
     const synthIdx = deploy.indexOf('yarn synth');
     const deployIdx = deploy.indexOf('yarn run deploy:ci');
-    expect(credsIdx).toBeGreaterThan(-1);
+    expect(resolveIdx).toBeGreaterThan(-1);
+    expect(credsIdx).toBeGreaterThan(resolveIdx);
     expect(synthIdx).toBeGreaterThan(credsIdx);
     expect(deployIdx).toBeGreaterThan(synthIdx);
     // No reinstall — workspace already ships node_modules.
     expect(deploy).not.toContain('- run: yarn\n');
-  });
-
-  test('accepts account + region inputs', () => {
-    const project = newProject();
-    addActionDeployWorkflow(project);
-    const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
-    expect(deploy).toMatch(/account:\s*\n\s*type: string\s*\n\s*required: true/);
-    expect(deploy).toMatch(/region:\s*\n\s*type: string\s*\n\s*required: true/);
   });
 
   test("deploy job does NOT bind a GitHub Environment — the caller's gate job owns it", () => {
@@ -89,7 +82,8 @@ describe('action-diff.yml', () => {
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
     expect(diff).toContain('name: build-workspace');
     expect(diff).toContain('tar -xzf build-workspace.tar.gz');
-    expect(diff).toContain('role-to-assume: arn:aws:iam::${{ inputs.account }}:role/CdkDeployRole');
+    expect(diff).toContain('role-to-assume: arn:aws:iam::${{ env.account_id }}:role/CdkDeployRole');
+    expect(diff).toContain('Resolve AWS AccountId and Region');
     expect(diff).toContain('corymhall/cdk-diff-action@v2');
     expect(diff).toContain('failOnDestructiveChanges: "false"');
     expect(diff).toContain('noSynth: "true"');
@@ -112,10 +106,7 @@ describe('action-diff.yml', () => {
 describe('pr-main.yml', () => {
   test('build → per-stage diff (each diff needs build directly; no synth matrix)', () => {
     const project = newProject();
-    addPrMainWorkflow(project, [
-      { environment: 'dev', account: ACC, region: REG },
-      { environment: 'prodeu', workload: 'example-ecs', account: ACC, region: REG },
-    ]);
+    addPrMainWorkflow(project, [{ environment: 'dev' }, { environment: 'prodeu', workload: 'example-ecs' }]);
     const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
     // No shared synth job any more.
     expect(pr).not.toMatch(/^\s*synth:\s*$/m);
@@ -123,9 +114,6 @@ describe('pr-main.yml', () => {
     // Diffs depend directly on build.
     expect(pr).toMatch(/diff-dev-0:[\s\S]*?needs:\s*\n\s*- build\n/);
     expect(pr).toMatch(/diff-prodeu-example-ecs-1:[\s\S]*?needs:\s*\n\s*- build\n/);
-    // Diff jobs pass account + region through.
-    expect(pr).toContain(`account: "${ACC}"`);
-    expect(pr).toContain(`region: ${REG}`);
   });
 
   test('empty stages throws', () => {
@@ -135,7 +123,7 @@ describe('pr-main.yml', () => {
 
   test('cancels superseded runs via a per-ref concurrency group', () => {
     const project = newProject();
-    addPrMainWorkflow(project, [{ environment: 'dev', account: ACC, region: REG }]);
+    addPrMainWorkflow(project, [{ environment: 'dev' }]);
     const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
     expect(pr).toMatch(/concurrency:[\s\S]*?group: pr-main-\$\{\{ github\.ref \}\}/);
     expect(pr).toMatch(/concurrency:[\s\S]*?cancel-in-progress: true/);
@@ -146,10 +134,10 @@ describe('push-main.yml', () => {
   test('deploy chain of distinct environments — one gate per group; deploys sit behind their gate', () => {
     const project = newProject();
     addPushMainWorkflow(project, [
-      { environment: 'dev', account: ACC, region: REG },
-      { environment: 'staging', account: ACC, region: REG },
-      { environment: 'prodeu', account: ACC, region: REG },
-      { environment: 'produs', account: ACC, region: REG },
+      { environment: 'dev' },
+      { environment: 'staging' },
+      { environment: 'prodeu' },
+      { environment: 'produs' },
     ]);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
     // No shared synth job.
@@ -177,14 +165,14 @@ describe('push-main.yml', () => {
   test('consecutive same-environment stages deploy in parallel under one gate', () => {
     const project = newProject();
     addPushMainWorkflow(project, [
-      { environment: 'dev', workload: 'example-ecs', account: ACC, region: REG },
-      { environment: 'platform', workload: 'management', account: ACC, region: REG },
-      { environment: 'platform', workload: 'security', account: ACC, region: REG },
-      { environment: 'platform', workload: 'backup', account: ACC, region: REG },
-      { environment: 'platform', workload: 'observability', account: ACC, region: REG },
-      { environment: 'platform', workload: 'log-archive', account: ACC, region: REG },
-      { environment: 'prodeu', workload: 'example-ecs', account: ACC, region: REG },
-      { environment: 'produs', workload: 'example-ecs', account: ACC, region: REG },
+      { environment: 'dev', workload: 'example-ecs' },
+      { environment: 'platform', workload: 'management' },
+      { environment: 'platform', workload: 'security' },
+      { environment: 'platform', workload: 'backup' },
+      { environment: 'platform', workload: 'observability' },
+      { environment: 'platform', workload: 'log-archive' },
+      { environment: 'prodeu', workload: 'example-ecs' },
+      { environment: 'produs', workload: 'example-ecs' },
     ]);
     const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
 
@@ -216,7 +204,7 @@ describe('push-main.yml', () => {
 describe('addCdkPipelineWorkflows', () => {
   test('emits exactly five workflow files (no more action-synth.yml)', () => {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam', account: ACC, region: REG }] });
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-synth.yml']).toBeUndefined();
@@ -233,7 +221,7 @@ describe('addCdkPipelineWorkflows', () => {
   test('cdkDiff.failOnDestructiveChanges: true flows through', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
-      stages: [{ environment: 'iam', account: ACC, region: REG }],
+      stages: [{ environment: 'iam' }],
       cdkDiff: { failOnDestructiveChanges: true },
     });
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];

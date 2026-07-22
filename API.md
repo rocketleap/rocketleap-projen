@@ -5706,27 +5706,8 @@ const pipelineStage: PipelineStage = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.account">account</a></code> | <code>string</code> | AWS account this stage deploys into. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment AND the GitHub Environment name. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.region">region</a></code> | <code>string</code> | AWS region this stage deploys into. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
-
----
-
-##### `account`<sup>Required</sup> <a name="account" id="@rocketleap/rocketleap-projen.PipelineStage.property.account"></a>
-
-```typescript
-public readonly account: string;
-```
-
-- *Type:* string
-
-AWS account this stage deploys into.
-
-Used to assume `CdkDeployRole`
-before `yarn synth` so context lookups (AMI, hosted zone, availability
-zones) succeed in CI. Must match `stackProps.env.account` in
-`bin/<environment>[/<workload>].ts`.
 
 ---
 
@@ -5739,21 +5720,6 @@ public readonly environment: string;
 - *Type:* string
 
 The CDK app file segment AND the GitHub Environment name.
-
----
-
-##### `region`<sup>Required</sup> <a name="region" id="@rocketleap/rocketleap-projen.PipelineStage.property.region"></a>
-
-```typescript
-public readonly region: string;
-```
-
-- *Type:* string
-
-AWS region this stage deploys into.
-
-Used with `account` for the
-pre-synth role assumption. Must match `stackProps.env.region`.
 
 ---
 

@@ -21,18 +21,6 @@ export interface PipelineStage {
    * Optional workload name for multi-app projects.
    */
   readonly workload?: string;
-  /**
-   * AWS account this stage deploys into. Used to assume `CdkDeployRole`
-   * before `yarn synth` so context lookups (AMI, hosted zone, availability
-   * zones) succeed in CI. Must match `stackProps.env.account` in
-   * `bin/<environment>[/<workload>].ts`.
-   */
-  readonly account: string;
-  /**
-   * AWS region this stage deploys into. Used with `account` for the
-   * pre-synth role assumption. Must match `stackProps.env.region`.
-   */
-  readonly region: string;
 }
 
 /**
@@ -145,13 +133,36 @@ function unpackWorkspaceSteps(): Array<Record<string, unknown>> {
   ];
 }
 
+function accountAndRegionFromBinScript(): string {
+  return [
+    'set -euo pipefail',
+    'if [ "${{inputs.workload}}" == "" ]; then',
+    '  bin_file="bin/${{inputs.environment}}.ts"',
+    'else',
+    '  bin_file="bin/${{inputs.environment}}/${{inputs.workload}}.ts"',
+    'fi',
+    'if [ ! -f "$bin_file" ]; then',
+    '  echo "::error::$bin_file not found — cannot resolve AWS account/region for this stage."',
+    '  exit 1',
+    'fi',
+    'account=$(grep -oE "account: *[\'\\"][0-9]{12}[\'\\"]" "$bin_file" | head -1 | grep -oE \'[0-9]{12}\')',
+    'region=$(grep -oE "region: *[\'\\"][a-z0-9-]+[\'\\"]" "$bin_file" | head -1 | grep -oE "[\'\\"][a-z0-9-]+[\'\\"]" | tr -d "\'\\"")',
+    'if [ -z "$account" ] || [ -z "$region" ]; then',
+    "  echo \"::error::Could not parse stackProps.env.account/region from $bin_file. Expected literal strings like account: '123456789012', region: 'eu-west-1'.\"",
+    '  exit 1',
+    'fi',
+    'echo "account_id=$account" >> "$GITHUB_ENV"',
+    'echo "region=$region" >> "$GITHUB_ENV"',
+  ].join('\n');
+}
+
 function configureAwsStep(): Record<string, unknown> {
   return {
     name: 'Configure AWS credentials',
     uses: 'aws-actions/configure-aws-credentials@v4',
     with: {
-      'role-to-assume': 'arn:aws:iam::${{ inputs.account }}:role/CdkDeployRole',
-      'aws-region': '${{ inputs.region }}',
+      'role-to-assume': 'arn:aws:iam::${{ env.account_id }}:role/CdkDeployRole',
+      'aws-region': '${{ env.region }}',
     },
   };
 }
@@ -235,8 +246,9 @@ export function addActionBuildWorkflow(project: Project): void {
 }
 
 /**
- * Emits `action-deploy.yml`: unpack workspace → assume `CdkDeployRole`
- * (using `account`/`region` inputs) → `yarn synth` → `yarn deploy:ci`.
+ * Emits `action-deploy.yml`: unpack workspace → parse account/region from
+ * `bin/<environment>[/<workload>].ts` → assume `CdkDeployRole` in that
+ * account → `yarn synth` → `yarn deploy:ci`.
  *
  * Synth runs *after* AWS credentials are configured so CDK context
  * providers (AMI lookup, hosted zone, availability zones) succeed.
@@ -250,8 +262,6 @@ export function addActionDeployWorkflow(project: Project): void {
           inputs: {
             environment: { type: 'string', required: true },
             workload: { type: 'string', required: false },
-            account: { type: 'string', required: true },
-            region: { type: 'string', required: true },
           },
         },
       },
@@ -264,6 +274,7 @@ export function addActionDeployWorkflow(project: Project): void {
           'steps': [
             ...unpackWorkspaceSteps(),
             { name: 'Set paths', shell: 'bash', run: pathsScript() },
+            { name: 'Resolve AWS AccountId and Region', shell: 'bash', run: accountAndRegionFromBinScript() },
             configureAwsStep(),
             {
               name: 'Synth',
@@ -281,9 +292,10 @@ export function addActionDeployWorkflow(project: Project): void {
 }
 
 /**
- * Emits `action-diff.yml`: unpack workspace → assume `CdkDeployRole`
- * (using `account`/`region` inputs) → `yarn synth` →
- * `corymhall/cdk-diff-action@v2` with `noSynth: true`.
+ * Emits `action-diff.yml`: unpack workspace → parse account/region from
+ * `bin/<environment>[/<workload>].ts` → assume `CdkDeployRole` in that
+ * account → `yarn synth` → `corymhall/cdk-diff-action@v2` with
+ * `noSynth: true`.
  *
  * Synth runs *after* AWS credentials are configured so CDK context
  * providers succeed.
@@ -299,8 +311,6 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
             'job-name': { type: 'string', required: true },
             'environment': { type: 'string', required: true },
             'workload': { type: 'string', required: false },
-            'account': { type: 'string', required: true },
-            'region': { type: 'string', required: true },
           },
         },
       },
@@ -312,6 +322,7 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
           'steps': [
             ...unpackWorkspaceSteps(),
             { name: 'Set paths', shell: 'bash', run: pathsScript() },
+            { name: 'Resolve AWS AccountId and Region', shell: 'bash', run: accountAndRegionFromBinScript() },
             configureAwsStep(),
             {
               name: 'Synth',
@@ -336,11 +347,7 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
 }
 
 function deployJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
-  const withInputs: Record<string, unknown> = {
-    environment: stage.environment,
-    account: stage.account,
-    region: stage.region,
-  };
+  const withInputs: Record<string, unknown> = { environment: stage.environment };
   if (stage.workload) withInputs.workload = stage.workload;
   return {
     name: stage.workload ? `Deploy ${stage.environment} (${stage.workload})` : `Deploy ${stage.environment}`,
@@ -352,12 +359,7 @@ function deployJobFor(stage: PipelineStage, needs: string[]): Record<string, unk
 
 function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unknown> {
   const jobName = stage.workload ? `Diff ${stage.environment} (${stage.workload})` : `Diff ${stage.environment}`;
-  const withInputs: Record<string, unknown> = {
-    'job-name': jobName,
-    'environment': stage.environment,
-    'account': stage.account,
-    'region': stage.region,
-  };
+  const withInputs: Record<string, unknown> = { 'job-name': jobName, 'environment': stage.environment };
   if (stage.workload) withInputs.workload = stage.workload;
   return { name: jobName, needs, uses: './.github/workflows/action-diff.yml', with: withInputs };
 }

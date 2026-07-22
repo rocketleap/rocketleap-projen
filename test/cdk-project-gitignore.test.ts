@@ -6,7 +6,7 @@ import {
 } from '../src/cdk-project';
 
 const minimalPipeline = {
-  stages: [{ environment: 'dev', account: '111111111111', region: 'eu-west-1' }],
+  stages: [{ environment: 'dev' }],
 };
 
 describe('RocketleapWorkloadCdkProject .gitignore emission', () => {

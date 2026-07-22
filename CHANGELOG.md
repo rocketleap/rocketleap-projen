@@ -4,44 +4,13 @@
 
 ### Breaking changes
 
-#### `PipelineStage.account` and `PipelineStage.region` are now required
-
-Every stage passed to `pipeline.stages` must specify the AWS account and
-region it deploys into. These values are used to assume `CdkDeployRole`
-in the target account **before** `yarn synth` runs, so CDK context
-providers (AMI lookup, hosted zone, availability zones) succeed in CI.
-
-Before:
-
-```ts
-pipeline: {
-  stages: [
-    { environment: 'dev' },
-    { environment: 'prodeu' },
-  ],
-},
-```
-
-After:
-
-```ts
-pipeline: {
-  stages: [
-    { environment: 'dev',    account: '111111111111', region: 'eu-west-1' },
-    { environment: 'prodeu', account: '222222222222', region: 'eu-west-1' },
-  ],
-},
-```
-
-Values must match `stackProps.env.account` / `stackProps.env.region` in
-`bin/<environment>[/<workload>].ts`.
-
 #### Pipeline shape: synth folded into diff/deploy jobs
 
 `action-synth.yml` and the shared `synth` matrix job in `pr-main.yml` /
 `push-main.yml` are removed. Each `diff-<stage>` and `deploy-<stage>` job
-now unpacks the build workspace, assumes `CdkDeployRole`, and runs
-`yarn synth` itself. Consequences for consumers:
+now unpacks the build workspace, parses the AWS account/region from
+`bin/<environment>[/<workload>].ts`, assumes `CdkDeployRole` in that
+account, and runs `yarn synth` itself. Consequences for consumers:
 
 - CDK context lookups (`Vpc.fromLookup`, `LookupMachineImage`, etc.) that
   previously failed CI with "no credentials configured" now succeed —
@@ -49,6 +18,11 @@ now unpacks the build workspace, assumes `CdkDeployRole`, and runs
 - Diff / deploy job wall-time increases slightly (each job absorbs the
   synth step). The removed shared `synth` matrix job means one fewer
   runner per workflow, so total minutes go down for typical pipelines.
+- `bin/<environment>[/<workload>].ts` **must set literal
+  `stackProps.env.account: '<12 digits>'` and
+  `stackProps.env.region: '<region>'`** — the CI step greps these
+  literals to know which role to assume before synth. Values pulled from
+  a variable or from process.env break the parse.
 - Any `.projenrc.ts` / workflow file that referenced `action-synth.yml`
   directly must be updated.
 
