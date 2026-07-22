@@ -26,13 +26,6 @@ account, and runs `yarn synth` itself. Consequences for consumers:
 - Any `.projenrc.ts` / workflow file that referenced `action-synth.yml`
   directly must be updated.
 
-#### Build workspace tarball includes `node_modules`
-
-`action-build.yml` now packs the workspace with `tar -czf` before upload
-(preserving native binary execute bits) and includes `node_modules`.
-Downstream jobs untar and skip `yarn install` — ~15s saved per stage per
-run. `!node_modules` is no longer in the workspace's exclude list.
-
 ### Behaviour changes
 
 #### Rich CDK diff comments via `corymhall/cdk-diff-action`

@@ -5633,11 +5633,12 @@ CI just shows what would change.
 Pipeline workflow configuration for a Rocketleap CDK project.
 
 Emits a single `main` → prod pipeline: `build` uploads a workspace
-tarball (including `node_modules`) once, then per-stage diff/deploy
-jobs unpack that tarball, assume `CdkDeployRole` in the stage's
-account, and `yarn synth` inside the target account. `push-main.yml`
-deploys stages sequentially with consecutive same-environment stages
-grouped into a parallel fan-out under one GitHub Environment gate.
+artifact once (excluding `node_modules`), then per-stage diff/deploy
+jobs download the workspace, reinstall via the yarn cache, assume
+`CdkDeployRole` in the stage's account, and `yarn synth` inside the
+target account. `push-main.yml` deploys stages sequentially with
+consecutive same-environment stages grouped into a parallel fan-out
+under one GitHub Environment gate.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
 

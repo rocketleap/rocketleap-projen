@@ -27,11 +27,12 @@ export interface PipelineStage {
  * Pipeline workflow configuration for a Rocketleap CDK project.
  *
  * Emits a single `main` → prod pipeline: `build` uploads a workspace
- * tarball (including `node_modules`) once, then per-stage diff/deploy
- * jobs unpack that tarball, assume `CdkDeployRole` in the stage's
- * account, and `yarn synth` inside the target account. `push-main.yml`
- * deploys stages sequentially with consecutive same-environment stages
- * grouped into a parallel fan-out under one GitHub Environment gate.
+ * artifact once (excluding `node_modules`), then per-stage diff/deploy
+ * jobs download the workspace, reinstall via the yarn cache, assume
+ * `CdkDeployRole` in the stage's account, and `yarn synth` inside the
+ * target account. `push-main.yml` deploys stages sequentially with
+ * consecutive same-environment stages grouped into a parallel fan-out
+ * under one GitHub Environment gate.
  */
 export interface PipelineOptions {
   /**
@@ -124,12 +125,12 @@ function unpackWorkspaceSteps(): Array<Record<string, unknown>> {
       uses: 'actions/download-artifact@v4',
       with: { name: WORKSPACE_ARTIFACT, path: '.' },
     },
-    {
-      name: 'Unpack build workspace',
-      shell: 'bash',
-      run: ['set -euo pipefail', 'tar -xzf build-workspace.tar.gz', 'rm build-workspace.tar.gz'].join('\n'),
-    },
     ...bootstrapSteps(),
+    // Reinstall — the workspace artifact excludes `node_modules` because
+    // `upload-artifact`'s zip strips execute bits on native binaries
+    // (esbuild, swc, ...). Yarn's global cache (populated by setup-node's
+    // `cache: yarn`) makes this fast.
+    { run: 'yarn' },
   ];
 }
 
@@ -217,23 +218,16 @@ export function addActionBuildWorkflow(project: Project): void {
             { run: 'yarn build' },
             { run: 'yarn test:ci' },
             {
-              // Tar the workspace ourselves (including node_modules) so
-              // native binary execute bits are preserved — actions/upload-artifact's
-              // zip strips them, forcing every downstream job to reinstall.
-              // Downstream jobs untar and skip `yarn install` entirely.
-              name: 'Pack build workspace',
-              shell: 'bash',
-              run: [
-                'set -euo pipefail',
-                'tar --exclude=./.git --exclude=./cdk.out --exclude=./build-workspace.tar.gz -czf build-workspace.tar.gz .',
-              ].join('\n'),
-            },
-            {
+              // Exclude `node_modules` — actions/upload-artifact packs into
+              // a zip that loses the execute bit on native binaries (esbuild,
+              // swc, ...). Downstream jobs reinstall via the yarn cache
+              // instead, which is fast and preserves permissions correctly.
               name: 'Upload build workspace',
               uses: 'actions/upload-artifact@v4',
               with: {
                 'name': WORKSPACE_ARTIFACT,
-                'path': 'build-workspace.tar.gz',
+                'path': ['.', '!.git', '!cdk.out', '!node_modules'].join('\n'),
+                'include-hidden-files': 'true',
                 'retention-days': 1,
                 'if-no-files-found': 'error',
               },

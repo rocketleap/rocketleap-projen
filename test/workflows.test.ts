@@ -14,7 +14,7 @@ function newProject(): Project {
 }
 
 describe('action-build.yml', () => {
-  test('install → drift check → format/lint/tsc/test → tar+upload build-workspace', () => {
+  test('install → drift check → format/lint/tsc/test → upload build-workspace (excluding node_modules)', () => {
     const project = newProject();
     addActionBuildWorkflow(project);
     const build = synthSnapshot(project)['.github/workflows/action-build.yml'];
@@ -22,11 +22,10 @@ describe('action-build.yml', () => {
     expect(build).toContain('yarn test:ci');
     expect(build).toMatch(/node-version:\s*['"]?24['"]?/);
     expect(build).toContain('name: build-workspace');
-    // node_modules is now INCLUDED (tar preserves execute bits) so downstream
-    // jobs can skip `yarn install`. Only .git and cdk.out are excluded from the tar.
-    expect(build).toContain('build-workspace.tar.gz');
-    expect(build).toContain('--exclude=./.git');
-    expect(build).toContain('--exclude=./cdk.out');
+    // The node_modules exclusion is the whole reason diff/deploy reinstall.
+    expect(build).toContain('!node_modules');
+    expect(build).toContain('!.git');
+    expect(build).toContain('!cdk.out');
   });
 
   test('projen drift check runs after install and before compile', () => {
@@ -44,27 +43,29 @@ describe('action-build.yml', () => {
 });
 
 describe('action-deploy.yml', () => {
-  test('unpacks workspace, resolves account/region from bin, assumes CdkDeployRole, synths, deploys', () => {
+  test('downloads workspace, reinstalls, resolves account/region from bin, assumes CdkDeployRole, synths, deploys', () => {
     const project = newProject();
     addActionDeployWorkflow(project);
     const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
     expect(deploy).toContain('name: build-workspace');
-    expect(deploy).toContain('tar -xzf build-workspace.tar.gz');
+    // Reinstall preserves executable bits on native binaries that
+    // upload-artifact drops.
+    expect(deploy).toContain('- run: yarn\n');
     expect(deploy).toContain('bin_file="bin/${{inputs.environment}}.ts"');
     expect(deploy).toContain('bin_file="bin/${{inputs.environment}}/${{inputs.workload}}.ts"');
     expect(deploy).toContain('role-to-assume: arn:aws:iam::${{ env.account_id }}:role/CdkDeployRole');
     expect(deploy).toContain('aws-region: ${{ env.region }}');
-    // Order: unpack → resolve → configure creds → synth → deploy.
+    // Order: download → install → resolve → configure creds → synth → deploy.
+    const installIdx = deploy.indexOf('- run: yarn\n');
     const resolveIdx = deploy.indexOf('Resolve AWS AccountId and Region');
     const credsIdx = deploy.indexOf('Configure AWS credentials');
     const synthIdx = deploy.indexOf('yarn synth');
     const deployIdx = deploy.indexOf('yarn run deploy:ci');
-    expect(resolveIdx).toBeGreaterThan(-1);
+    expect(installIdx).toBeGreaterThan(-1);
+    expect(resolveIdx).toBeGreaterThan(installIdx);
     expect(credsIdx).toBeGreaterThan(resolveIdx);
     expect(synthIdx).toBeGreaterThan(credsIdx);
     expect(deployIdx).toBeGreaterThan(synthIdx);
-    // No reinstall — workspace already ships node_modules.
-    expect(deploy).not.toContain('- run: yarn\n');
   });
 
   test("deploy job does NOT bind a GitHub Environment — the caller's gate job owns it", () => {
@@ -76,12 +77,12 @@ describe('action-deploy.yml', () => {
 });
 
 describe('action-diff.yml', () => {
-  test('unpacks workspace, assumes CdkDeployRole, synths, diffs with noSynth: true', () => {
+  test('downloads workspace, reinstalls, assumes CdkDeployRole, synths, diffs with noSynth: true', () => {
     const project = newProject();
     addActionDiffWorkflow(project);
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
     expect(diff).toContain('name: build-workspace');
-    expect(diff).toContain('tar -xzf build-workspace.tar.gz');
+    expect(diff).toContain('- run: yarn\n');
     expect(diff).toContain('role-to-assume: arn:aws:iam::${{ env.account_id }}:role/CdkDeployRole');
     expect(diff).toContain('Resolve AWS AccountId and Region');
     expect(diff).toContain('corymhall/cdk-diff-action@v2');
