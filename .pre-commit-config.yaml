@@ -5,3 +5,4 @@ repos:
         name: Release
         entry: sh -c "npx projen release"
         language: system
+        pass_filenames: false
