@@ -4,6 +4,39 @@
 
 ### Behaviour changes
 
+#### `pass_filenames: false` on all pre-commit hooks
+
+Every hook in the generated `.pre-commit-config.yaml` (CDK + JSII) now sets
+`pass_filenames: false`. All hooks (`yarn-clean`, `yarn-package`, `projen`,
+`yarn-format`, `yarn-lint`, `yarn-build`, `yarn-test`, `release`) operate on
+the whole repo via their `yarn` script and ignore the filename arguments
+pre-commit would otherwise pass in.
+
+Without this flag, `pre-commit run --all-files` chunks the file list and
+spawns the same whole-repo hook multiple times in parallel — wasted CPU and,
+for write-hooks like `format:ci`, racing writers.
+
+Before:
+
+```yaml
+- id: yarn-lint
+  name: Lint
+  entry: sh -c "CI=true yarn lint:ci"
+  language: system
+```
+
+After:
+
+```yaml
+- id: yarn-lint
+  name: Lint
+  entry: sh -c "CI=true yarn lint:ci"
+  language: system
+  pass_filenames: false
+```
+
+No consumer action needed — `npx projen` regenerates `.pre-commit-config.yaml`.
+
 #### Rich CDK diff comments via `corymhall/cdk-diff-action`
 
 `action-diff.yml` no longer runs `yarn diff:ci` + `Tiryoh/gha-jobid-action`
