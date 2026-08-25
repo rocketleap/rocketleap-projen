@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Project } from 'projen';
 import { synthSnapshot } from 'projen/lib/util/synth';
 import {
@@ -8,6 +11,7 @@ import {
   addCdkPipelineWorkflows,
   addPrMainWorkflow,
   addPushMainWorkflow,
+  validatePipelineStagesAgainstBin,
 } from '../src/common/workflows';
 
 function newProject(): Project {
@@ -260,5 +264,87 @@ describe('addCdkPipelineWorkflows', () => {
   test('empty stages throws', () => {
     const project = newProject();
     expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow('pipeline.stages');
+  });
+});
+
+describe('validatePipelineStagesAgainstBin', () => {
+  function scaffold(files: string[]): string {
+    const dir = mkdtempSync(join(tmpdir(), 'rocketleap-projen-bin-'));
+    const binDir = join(dir, 'bin');
+    mkdirSync(binDir, { recursive: true });
+    for (const rel of files) {
+      const full = join(binDir, rel);
+      mkdirSync(join(full, '..'), { recursive: true });
+      writeFileSync(full, '// stub\n');
+    }
+    return binDir;
+  }
+
+  test('no bin dir is a no-op (fresh project pre-scaffold)', () => {
+    const missing = join(tmpdir(), `rocketleap-projen-bin-missing-${process.pid}-${Date.now()}`);
+    expect(() =>
+      validatePipelineStagesAgainstBin(missing, [{ environment: 'iam' }, { environment: 'dev', workload: 'api' }]),
+    ).not.toThrow();
+  });
+
+  test('all stages match all bin files: no throw', () => {
+    const binDir = scaffold(['iam.ts', 'dev/api.ts', 'dev/worker.ts']);
+    expect(() =>
+      validatePipelineStagesAgainstBin(binDir, [
+        { environment: 'iam' },
+        { environment: 'dev', workload: 'api' },
+        { environment: 'dev', workload: 'worker' },
+      ]),
+    ).not.toThrow();
+  });
+
+  test('bin file with no matching stage: reported as orphan', () => {
+    const binDir = scaffold(['iam.ts', 'dev/api.ts', 'dev/renovation.ts']);
+    expect(() =>
+      validatePipelineStagesAgainstBin(binDir, [{ environment: 'iam' }, { environment: 'dev', workload: 'api' }]),
+    ).toThrow(/bin\/dev\/renovation\.ts/);
+  });
+
+  test('stage with no matching bin file: reported as missing', () => {
+    const binDir = scaffold(['iam.ts']);
+    expect(() =>
+      validatePipelineStagesAgainstBin(binDir, [{ environment: 'iam' }, { environment: 'dev', workload: 'api' }]),
+    ).toThrow(/bin\/dev\/api\.ts/);
+  });
+
+  test('reports orphan bin files AND missing stage bin files together', () => {
+    const binDir = scaffold(['iam.ts', 'dev/renovation.ts']);
+    let err: Error | undefined;
+    try {
+      validatePipelineStagesAgainstBin(binDir, [{ environment: 'iam' }, { environment: 'dev', workload: 'api' }]);
+    } catch (e) {
+      err = e as Error;
+    }
+    expect(err).toBeDefined();
+    expect(err!.message).toContain('bin/dev/renovation.ts');
+    expect(err!.message).toContain('bin/dev/api.ts');
+    expect(err!.message).toContain('no matching stage');
+    expect(err!.message).toContain('no matching bin/ file');
+  });
+
+  test('non-.ts files and dotfiles under bin/ are ignored', () => {
+    const binDir = scaffold(['iam.ts', 'dev/api.ts', 'README.md', '.gitkeep', 'dev/.keep', 'dev/notes.md']);
+    expect(() =>
+      validatePipelineStagesAgainstBin(binDir, [{ environment: 'iam' }, { environment: 'dev', workload: 'api' }]),
+    ).not.toThrow();
+  });
+
+  test('addCdkPipelineWorkflows throws on drift when bin/ is present', () => {
+    const project = newProject();
+    const binDir = join(project.outdir, 'bin');
+    mkdirSync(join(binDir, 'dev'), { recursive: true });
+    writeFileSync(join(binDir, 'iam.ts'), '// stub\n');
+    writeFileSync(join(binDir, 'dev', 'renovation.ts'), '// stub\n');
+
+    expect(() =>
+      addCdkPipelineWorkflows(project, {
+        stages: [{ environment: 'iam' }],
+      }),
+    ).toThrow(/bin\/dev\/renovation\.ts/);
   });
 });
