@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+### Breaking changes
+
+#### Pipeline shape: synth folded into diff/deploy jobs
+
+`action-synth.yml` and the shared `synth` matrix job in `pr-main.yml` /
+`push-main.yml` are removed. Each `diff-<stage>` and `deploy-<stage>` job
+now unpacks the build workspace, parses the AWS account/region from
+`bin/<environment>[/<workload>].ts`, assumes `CdkDeployRole` in that
+account, and runs `yarn synth` itself. Consequences for consumers:
+
+- CDK context lookups (`Vpc.fromLookup`, `LookupMachineImage`, etc.) that
+  previously failed CI with "no credentials configured" now succeed —
+  synth runs inside the target account.
+- Diff / deploy job wall-time increases slightly (each job absorbs the
+  synth step). The removed shared `synth` matrix job means one fewer
+  runner per workflow, so total minutes go down for typical pipelines.
+- `bin/<environment>[/<workload>].ts` **must set literal
+  `stackProps.env.account: '<12 digits>'` and
+  `stackProps.env.region: '<region>'`** — the CI step greps these
+  literals to know which role to assume before synth. Values pulled from
+  a variable or from process.env break the parse.
+- Any `.projenrc.ts` / workflow file that referenced `action-synth.yml`
+  directly must be updated.
+
 ### Behaviour changes
 
 #### `pass_filenames: false` on all pre-commit hooks
