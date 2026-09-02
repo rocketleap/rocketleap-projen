@@ -1,5 +1,6 @@
 import { javascript, typescript } from 'projen';
 
+import { annotateGeneratedFiles } from './common/copilot-review';
 import { gitIgnore } from './common/git';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
@@ -102,5 +103,6 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     this.addDevDeps('ts-node@~10.9', 'typescript@~5.6', '@types/node@~22');
 
     addRocketleapLicense(this);
+    annotateGeneratedFiles(this);
   }
 }
