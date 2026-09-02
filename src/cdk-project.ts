@@ -9,6 +9,7 @@ import {
   LIBRARY_COMPILE_CONFIGURATION,
   SWC_CONFIGURATION,
 } from './common/compile';
+import { annotateGeneratedFiles } from './common/copilot-review';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { gitIgnore } from './common/git';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
@@ -80,6 +81,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, CDK_SCRIPTS);
     addCdkPipelineWorkflows(this, options.pipeline);
+    annotateGeneratedFiles(this);
 
     this.configureCdkJson();
 
@@ -194,6 +196,7 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
     configureEsLint(this.eslint!);
     createPreCommitConfig(this, CDK_PRE_COMMIT_HOOKS);
     configurePackageJson(this, LIBRARY_SCRIPTS);
+    annotateGeneratedFiles(this);
 
     this.package.addField('license', 'SEE LICENSE IN LICENSE.md');
     this.package.addField('main', 'dist/index.js');
