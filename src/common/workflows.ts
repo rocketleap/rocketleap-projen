@@ -322,11 +322,45 @@ export function addActionDeployWorkflow(project: Project): void {
               name: 'Deploy',
               run: 'yarn run deploy:ci "${{env.cdk_out_dir}}"',
             },
+            {
+              name: 'Detect failed StackSet instances',
+              shell: 'bash',
+              run: detectFailedStackSetInstancesScript(),
+            },
           ],
         },
       },
     },
   });
+}
+
+// Roadmap #203: PolicyStackSets now runs with failureTolerancePercentage: 100
+// so one broken target account cannot cancel a whole OU rollout. This post-deploy
+// scan surfaces per-instance failures that the tolerant operation would
+// otherwise hide.
+function detectFailedStackSetInstancesScript(): string {
+  return [
+    'set -uo pipefail',
+    "sets=$(aws cloudformation list-stack-sets --status ACTIVE --query 'Summaries[].StackSetName' --output text 2>/dev/null)",
+    'if [ $? -ne 0 ]; then',
+    '  echo "::notice::Skipping StackSet health scan (list-stack-sets not permitted on this account)."',
+    '  exit 0',
+    'fi',
+    'failed=""',
+    'for ss in $sets; do',
+    '  rows=$(aws cloudformation list-stack-instances --stack-set-name "$ss" \\',
+    "    --query 'Summaries[?StackInstanceStatus.DetailedStatus==`FAILED` || StackInstanceStatus.DetailedStatus==`CANCELLED`].[Account,Region,StatusReason]' \\",
+    '    --output text 2>/dev/null || true)',
+    '  if [ -n "$rows" ]; then',
+    '    failed+=$(echo "$rows" | awk -v ss="$ss" \'NF{print ss"\\t"$0}\')$\'\\n\'',
+    '  fi',
+    'done',
+    'if [ -n "$failed" ]; then',
+    '  echo "::error::Failed or cancelled StackSet instances detected:"',
+    '  echo "$failed"',
+    '  exit 1',
+    'fi',
+  ].join('\n');
 }
 
 /** Emits `action-diff.yml`: download stage cdk.out → `corymhall/cdk-diff-action@v2` with `noSynth: true`. */

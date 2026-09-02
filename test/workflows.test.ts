@@ -83,6 +83,36 @@ describe('action-deploy.yml', () => {
     // The GH Environment approval sits on push-main.yml's `gate-<env>` job.
     expect(deploy).not.toMatch(/^\s+environment: \$\{\{ inputs\.environment \}\}/m);
   });
+
+  // Roadmap #203: PolicyStackSets tolerate per-instance failures via
+  // failureTolerancePercentage: 100. To avoid silently ignoring real
+  // failures, every deploy scans StackSets on the target account and
+  // fails the job if any instance is FAILED or CANCELLED.
+  test('post-deploy step scans StackSet instances and fails on FAILED / CANCELLED', () => {
+    const project = newProject();
+    addActionDeployWorkflow(project);
+    const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
+    expect(deploy).toContain('Detect failed StackSet instances');
+    expect(deploy).toContain('list-stack-sets');
+    expect(deploy).toContain('list-stack-instances');
+    expect(deploy).toContain('DetailedStatus==`FAILED`');
+    expect(deploy).toContain('DetailedStatus==`CANCELLED`');
+    // Runs AFTER the deploy step so the deploy result is preserved even
+    // when the scan fails.
+    const deployIdx = deploy.indexOf('yarn run deploy:ci');
+    const scanIdx = deploy.indexOf('Detect failed StackSet instances');
+    expect(deployIdx).toBeGreaterThan(-1);
+    expect(scanIdx).toBeGreaterThan(deployIdx);
+  });
+
+  test('StackSet scan skips gracefully when the deploy role cannot list StackSets', () => {
+    const project = newProject();
+    addActionDeployWorkflow(project);
+    const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
+    // Most workload accounts do not grant cloudformation:ListStackSets
+    // to CdkDeployRole. The scan must not turn every deploy red there.
+    expect(deploy).toContain('Skipping StackSet health scan');
+  });
 });
 
 describe('action-diff.yml', () => {
