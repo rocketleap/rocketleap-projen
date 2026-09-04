@@ -3,7 +3,21 @@ export * from './cdk-project-options.generated';
 export * from './library-cdk-project-options.generated';
 export * from './minimal-project';
 export { addDependabotConfig } from './dependabot';
-export { addGitHubSettings, ROCKETLEAP_GITHUB_SETTINGS } from './common/github-settings';
+export {
+  addGitHubSettings,
+  ROCKETLEAP_GITHUB_SETTINGS,
+  GitHubSettingsOptions,
+  GitHubRepositorySettings,
+  GitHubLabel,
+  GitHubMilestone,
+  GitHubCollaborator,
+  GitHubTeam,
+  GitHubBranch,
+  GitHubBranchProtection,
+  GitHubRequiredPullRequestReviews,
+  GitHubRequiredStatusChecks,
+  GitHubAutolink,
+} from './common/github-settings';
 export { addRocketleapLicense } from './license';
 export * as format from './common/prettier';
 export * as lint from './common/eslint';

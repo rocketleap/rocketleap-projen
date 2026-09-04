@@ -5628,6 +5628,932 @@ CI just shows what would change.
 
 ---
 
+### GitHubAutolink <a name="GitHubAutolink" id="@rocketleap/rocketleap-projen.GitHubAutolink"></a>
+
+An autolink reference.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubAutolink.Initializer"></a>
+
+```typescript
+import { GitHubAutolink } from '@rocketleap/rocketleap-projen'
+
+const gitHubAutolink: GitHubAutolink = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubAutolink.property.keyPrefix">keyPrefix</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubAutolink.property.urlTemplate">urlTemplate</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubAutolink.property.isAlphanumeric">isAlphanumeric</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `keyPrefix`<sup>Required</sup> <a name="keyPrefix" id="@rocketleap/rocketleap-projen.GitHubAutolink.property.keyPrefix"></a>
+
+```typescript
+public readonly keyPrefix: string;
+```
+
+- *Type:* string
+
+---
+
+##### `urlTemplate`<sup>Required</sup> <a name="urlTemplate" id="@rocketleap/rocketleap-projen.GitHubAutolink.property.urlTemplate"></a>
+
+```typescript
+public readonly urlTemplate: string;
+```
+
+- *Type:* string
+
+---
+
+##### `isAlphanumeric`<sup>Optional</sup> <a name="isAlphanumeric" id="@rocketleap/rocketleap-projen.GitHubAutolink.property.isAlphanumeric"></a>
+
+```typescript
+public readonly isAlphanumeric: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubBranch <a name="GitHubBranch" id="@rocketleap/rocketleap-projen.GitHubBranch"></a>
+
+A protected branch.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubBranch.Initializer"></a>
+
+```typescript
+import { GitHubBranch } from '@rocketleap/rocketleap-projen'
+
+const gitHubBranch: GitHubBranch = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranch.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranch.property.protection">protection</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection">GitHubBranchProtection</a></code> | *No description.* |
+
+---
+
+##### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.GitHubBranch.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `protection`<sup>Optional</sup> <a name="protection" id="@rocketleap/rocketleap-projen.GitHubBranch.property.protection"></a>
+
+```typescript
+public readonly protection: GitHubBranchProtection;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection">GitHubBranchProtection</a>
+
+---
+
+### GitHubBranchProtection <a name="GitHubBranchProtection" id="@rocketleap/rocketleap-projen.GitHubBranchProtection"></a>
+
+Branch protection rule.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.Initializer"></a>
+
+```typescript
+import { GitHubBranchProtection } from '@rocketleap/rocketleap-projen'
+
+const gitHubBranchProtection: GitHubBranchProtection = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.allowDeletions">allowDeletions</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.allowForcePushes">allowForcePushes</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.allowForkSyncing">allowForkSyncing</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.blockCreations">blockCreations</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.enforceAdmins">enforceAdmins</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.lockBranch">lockBranch</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredConversationResolution">requiredConversationResolution</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredLinearHistory">requiredLinearHistory</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredPullRequestReviews">requiredPullRequestReviews</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews">GitHubRequiredPullRequestReviews</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredSignatures">requiredSignatures</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredStatusChecks">requiredStatusChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks">GitHubRequiredStatusChecks</a></code> | *No description.* |
+
+---
+
+##### `allowDeletions`<sup>Optional</sup> <a name="allowDeletions" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.allowDeletions"></a>
+
+```typescript
+public readonly allowDeletions: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `allowForcePushes`<sup>Optional</sup> <a name="allowForcePushes" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.allowForcePushes"></a>
+
+```typescript
+public readonly allowForcePushes: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `allowForkSyncing`<sup>Optional</sup> <a name="allowForkSyncing" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.allowForkSyncing"></a>
+
+```typescript
+public readonly allowForkSyncing: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `blockCreations`<sup>Optional</sup> <a name="blockCreations" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.blockCreations"></a>
+
+```typescript
+public readonly blockCreations: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `enforceAdmins`<sup>Optional</sup> <a name="enforceAdmins" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.enforceAdmins"></a>
+
+```typescript
+public readonly enforceAdmins: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `lockBranch`<sup>Optional</sup> <a name="lockBranch" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.lockBranch"></a>
+
+```typescript
+public readonly lockBranch: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredConversationResolution`<sup>Optional</sup> <a name="requiredConversationResolution" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredConversationResolution"></a>
+
+```typescript
+public readonly requiredConversationResolution: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredLinearHistory`<sup>Optional</sup> <a name="requiredLinearHistory" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredLinearHistory"></a>
+
+```typescript
+public readonly requiredLinearHistory: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredPullRequestReviews`<sup>Optional</sup> <a name="requiredPullRequestReviews" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredPullRequestReviews"></a>
+
+```typescript
+public readonly requiredPullRequestReviews: GitHubRequiredPullRequestReviews;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews">GitHubRequiredPullRequestReviews</a>
+
+---
+
+##### `requiredSignatures`<sup>Optional</sup> <a name="requiredSignatures" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredSignatures"></a>
+
+```typescript
+public readonly requiredSignatures: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredStatusChecks`<sup>Optional</sup> <a name="requiredStatusChecks" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.property.requiredStatusChecks"></a>
+
+```typescript
+public readonly requiredStatusChecks: GitHubRequiredStatusChecks;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks">GitHubRequiredStatusChecks</a>
+
+---
+
+### GitHubCollaborator <a name="GitHubCollaborator" id="@rocketleap/rocketleap-projen.GitHubCollaborator"></a>
+
+A repository collaborator managed by Probot Settings.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubCollaborator.Initializer"></a>
+
+```typescript
+import { GitHubCollaborator } from '@rocketleap/rocketleap-projen'
+
+const gitHubCollaborator: GitHubCollaborator = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubCollaborator.property.permission">permission</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubCollaborator.property.username">username</a></code> | <code>string</code> | *No description.* |
+
+---
+
+##### `permission`<sup>Required</sup> <a name="permission" id="@rocketleap/rocketleap-projen.GitHubCollaborator.property.permission"></a>
+
+```typescript
+public readonly permission: string;
+```
+
+- *Type:* string
+
+---
+
+##### `username`<sup>Required</sup> <a name="username" id="@rocketleap/rocketleap-projen.GitHubCollaborator.property.username"></a>
+
+```typescript
+public readonly username: string;
+```
+
+- *Type:* string
+
+---
+
+### GitHubLabel <a name="GitHubLabel" id="@rocketleap/rocketleap-projen.GitHubLabel"></a>
+
+A repository label managed by Probot Settings.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubLabel.Initializer"></a>
+
+```typescript
+import { GitHubLabel } from '@rocketleap/rocketleap-projen'
+
+const gitHubLabel: GitHubLabel = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubLabel.property.color">color</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubLabel.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubLabel.property.description">description</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubLabel.property.previously">previously</a></code> | <code>string</code> | Previous name — used to rename an existing label. |
+
+---
+
+##### `color`<sup>Required</sup> <a name="color" id="@rocketleap/rocketleap-projen.GitHubLabel.property.color"></a>
+
+```typescript
+public readonly color: string;
+```
+
+- *Type:* string
+
+---
+
+##### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.GitHubLabel.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `description`<sup>Optional</sup> <a name="description" id="@rocketleap/rocketleap-projen.GitHubLabel.property.description"></a>
+
+```typescript
+public readonly description: string;
+```
+
+- *Type:* string
+
+---
+
+##### `previously`<sup>Optional</sup> <a name="previously" id="@rocketleap/rocketleap-projen.GitHubLabel.property.previously"></a>
+
+```typescript
+public readonly previously: string;
+```
+
+- *Type:* string
+
+Previous name — used to rename an existing label.
+
+---
+
+### GitHubMilestone <a name="GitHubMilestone" id="@rocketleap/rocketleap-projen.GitHubMilestone"></a>
+
+A repository milestone managed by Probot Settings.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubMilestone.Initializer"></a>
+
+```typescript
+import { GitHubMilestone } from '@rocketleap/rocketleap-projen'
+
+const gitHubMilestone: GitHubMilestone = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubMilestone.property.title">title</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubMilestone.property.description">description</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubMilestone.property.dueOn">dueOn</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubMilestone.property.state">state</a></code> | <code>string</code> | *No description.* |
+
+---
+
+##### `title`<sup>Required</sup> <a name="title" id="@rocketleap/rocketleap-projen.GitHubMilestone.property.title"></a>
+
+```typescript
+public readonly title: string;
+```
+
+- *Type:* string
+
+---
+
+##### `description`<sup>Optional</sup> <a name="description" id="@rocketleap/rocketleap-projen.GitHubMilestone.property.description"></a>
+
+```typescript
+public readonly description: string;
+```
+
+- *Type:* string
+
+---
+
+##### `dueOn`<sup>Optional</sup> <a name="dueOn" id="@rocketleap/rocketleap-projen.GitHubMilestone.property.dueOn"></a>
+
+```typescript
+public readonly dueOn: string;
+```
+
+- *Type:* string
+
+---
+
+##### `state`<sup>Optional</sup> <a name="state" id="@rocketleap/rocketleap-projen.GitHubMilestone.property.state"></a>
+
+```typescript
+public readonly state: string;
+```
+
+- *Type:* string
+
+---
+
+### GitHubRepositorySettings <a name="GitHubRepositorySettings" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings"></a>
+
+Repository settings block of `.github/settings.yml`.
+
+Mirrors the GitHub `PATCH /repos/{owner}/{repo}` API fields the
+Probot Settings app forwards.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.Initializer"></a>
+
+```typescript
+import { GitHubRepositorySettings } from '@rocketleap/rocketleap-projen'
+
+const gitHubRepositorySettings: GitHubRepositorySettings = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowAutoMerge">allowAutoMerge</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowMergeCommit">allowMergeCommit</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowRebaseMerge">allowRebaseMerge</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowSquashMerge">allowSquashMerge</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowUpdateBranch">allowUpdateBranch</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.archived">archived</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.defaultBranch">defaultBranch</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.deleteBranchOnMerge">deleteBranchOnMerge</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.description">description</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasDownloads">hasDownloads</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasIssues">hasIssues</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasProjects">hasProjects</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasWiki">hasWiki</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.homepage">homepage</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.isTemplate">isTemplate</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.mergeCommitMessage">mergeCommitMessage</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.mergeCommitTitle">mergeCommitTitle</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.private">private</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.squashMergeCommitMessage">squashMergeCommitMessage</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.squashMergeCommitTitle">squashMergeCommitTitle</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.topics">topics</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.webCommitSignoffRequired">webCommitSignoffRequired</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `allowAutoMerge`<sup>Optional</sup> <a name="allowAutoMerge" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowAutoMerge"></a>
+
+```typescript
+public readonly allowAutoMerge: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `allowMergeCommit`<sup>Optional</sup> <a name="allowMergeCommit" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowMergeCommit"></a>
+
+```typescript
+public readonly allowMergeCommit: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `allowRebaseMerge`<sup>Optional</sup> <a name="allowRebaseMerge" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowRebaseMerge"></a>
+
+```typescript
+public readonly allowRebaseMerge: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `allowSquashMerge`<sup>Optional</sup> <a name="allowSquashMerge" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowSquashMerge"></a>
+
+```typescript
+public readonly allowSquashMerge: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `allowUpdateBranch`<sup>Optional</sup> <a name="allowUpdateBranch" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.allowUpdateBranch"></a>
+
+```typescript
+public readonly allowUpdateBranch: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `archived`<sup>Optional</sup> <a name="archived" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.archived"></a>
+
+```typescript
+public readonly archived: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `defaultBranch`<sup>Optional</sup> <a name="defaultBranch" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.defaultBranch"></a>
+
+```typescript
+public readonly defaultBranch: string;
+```
+
+- *Type:* string
+
+---
+
+##### `deleteBranchOnMerge`<sup>Optional</sup> <a name="deleteBranchOnMerge" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.deleteBranchOnMerge"></a>
+
+```typescript
+public readonly deleteBranchOnMerge: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `description`<sup>Optional</sup> <a name="description" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.description"></a>
+
+```typescript
+public readonly description: string;
+```
+
+- *Type:* string
+
+---
+
+##### `hasDownloads`<sup>Optional</sup> <a name="hasDownloads" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasDownloads"></a>
+
+```typescript
+public readonly hasDownloads: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `hasIssues`<sup>Optional</sup> <a name="hasIssues" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasIssues"></a>
+
+```typescript
+public readonly hasIssues: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `hasProjects`<sup>Optional</sup> <a name="hasProjects" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasProjects"></a>
+
+```typescript
+public readonly hasProjects: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `hasWiki`<sup>Optional</sup> <a name="hasWiki" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.hasWiki"></a>
+
+```typescript
+public readonly hasWiki: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `homepage`<sup>Optional</sup> <a name="homepage" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.homepage"></a>
+
+```typescript
+public readonly homepage: string;
+```
+
+- *Type:* string
+
+---
+
+##### `isTemplate`<sup>Optional</sup> <a name="isTemplate" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.isTemplate"></a>
+
+```typescript
+public readonly isTemplate: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `mergeCommitMessage`<sup>Optional</sup> <a name="mergeCommitMessage" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.mergeCommitMessage"></a>
+
+```typescript
+public readonly mergeCommitMessage: string;
+```
+
+- *Type:* string
+
+---
+
+##### `mergeCommitTitle`<sup>Optional</sup> <a name="mergeCommitTitle" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.mergeCommitTitle"></a>
+
+```typescript
+public readonly mergeCommitTitle: string;
+```
+
+- *Type:* string
+
+---
+
+##### `name`<sup>Optional</sup> <a name="name" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `private`<sup>Optional</sup> <a name="private" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.private"></a>
+
+```typescript
+public readonly private: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `squashMergeCommitMessage`<sup>Optional</sup> <a name="squashMergeCommitMessage" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.squashMergeCommitMessage"></a>
+
+```typescript
+public readonly squashMergeCommitMessage: string;
+```
+
+- *Type:* string
+
+---
+
+##### `squashMergeCommitTitle`<sup>Optional</sup> <a name="squashMergeCommitTitle" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.squashMergeCommitTitle"></a>
+
+```typescript
+public readonly squashMergeCommitTitle: string;
+```
+
+- *Type:* string
+
+---
+
+##### `topics`<sup>Optional</sup> <a name="topics" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.topics"></a>
+
+```typescript
+public readonly topics: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `webCommitSignoffRequired`<sup>Optional</sup> <a name="webCommitSignoffRequired" id="@rocketleap/rocketleap-projen.GitHubRepositorySettings.property.webCommitSignoffRequired"></a>
+
+```typescript
+public readonly webCommitSignoffRequired: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubRequiredPullRequestReviews <a name="GitHubRequiredPullRequestReviews" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews"></a>
+
+`required_pull_request_reviews` block of a branch protection rule.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.Initializer"></a>
+
+```typescript
+import { GitHubRequiredPullRequestReviews } from '@rocketleap/rocketleap-projen'
+
+const gitHubRequiredPullRequestReviews: GitHubRequiredPullRequestReviews = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.dismissStaleReviews">dismissStaleReviews</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.requireCodeOwnerReviews">requireCodeOwnerReviews</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.requiredApprovingReviewCount">requiredApprovingReviewCount</a></code> | <code>number</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.requireLastPushApproval">requireLastPushApproval</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `dismissStaleReviews`<sup>Optional</sup> <a name="dismissStaleReviews" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.dismissStaleReviews"></a>
+
+```typescript
+public readonly dismissStaleReviews: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requireCodeOwnerReviews`<sup>Optional</sup> <a name="requireCodeOwnerReviews" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.requireCodeOwnerReviews"></a>
+
+```typescript
+public readonly requireCodeOwnerReviews: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredApprovingReviewCount`<sup>Optional</sup> <a name="requiredApprovingReviewCount" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.requiredApprovingReviewCount"></a>
+
+```typescript
+public readonly requiredApprovingReviewCount: number;
+```
+
+- *Type:* number
+
+---
+
+##### `requireLastPushApproval`<sup>Optional</sup> <a name="requireLastPushApproval" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.property.requireLastPushApproval"></a>
+
+```typescript
+public readonly requireLastPushApproval: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubRequiredStatusChecks <a name="GitHubRequiredStatusChecks" id="@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks"></a>
+
+`required_status_checks` block of a branch protection rule.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks.Initializer"></a>
+
+```typescript
+import { GitHubRequiredStatusChecks } from '@rocketleap/rocketleap-projen'
+
+const gitHubRequiredStatusChecks: GitHubRequiredStatusChecks = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks.property.contexts">contexts</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks.property.strict">strict</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `contexts`<sup>Optional</sup> <a name="contexts" id="@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks.property.contexts"></a>
+
+```typescript
+public readonly contexts: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `strict`<sup>Optional</sup> <a name="strict" id="@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks.property.strict"></a>
+
+```typescript
+public readonly strict: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubSettingsOptions <a name="GitHubSettingsOptions" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions"></a>
+
+Options for {@link addGitHubSettings}.
+
+Every field is an optional
+pass-through into `.github/settings.yml`. When the whole options
+object is omitted, {@link ROCKETLEAP_GITHUB_SETTINGS} is written
+unchanged.
+
+For sections not modeled here (environments, rulesets, ...), call
+`addOverride(path, value)` on the returned {@link YamlFile}.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.Initializer"></a>
+
+```typescript
+import { GitHubSettingsOptions } from '@rocketleap/rocketleap-projen'
+
+const gitHubSettingsOptions: GitHubSettingsOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.autolinks">autolinks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubAutolink">GitHubAutolink</a>[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.branches">branches</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubBranch">GitHubBranch</a>[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.collaborators">collaborators</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubCollaborator">GitHubCollaborator</a>[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.labels">labels</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubLabel">GitHubLabel</a>[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.milestones">milestones</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubMilestone">GitHubMilestone</a>[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.repository">repository</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings">GitHubRepositorySettings</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.teams">teams</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubTeam">GitHubTeam</a>[]</code> | *No description.* |
+
+---
+
+##### `autolinks`<sup>Optional</sup> <a name="autolinks" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.autolinks"></a>
+
+```typescript
+public readonly autolinks: GitHubAutolink[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubAutolink">GitHubAutolink</a>[]
+
+---
+
+##### `branches`<sup>Optional</sup> <a name="branches" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.branches"></a>
+
+```typescript
+public readonly branches: GitHubBranch[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubBranch">GitHubBranch</a>[]
+
+---
+
+##### `collaborators`<sup>Optional</sup> <a name="collaborators" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.collaborators"></a>
+
+```typescript
+public readonly collaborators: GitHubCollaborator[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubCollaborator">GitHubCollaborator</a>[]
+
+---
+
+##### `labels`<sup>Optional</sup> <a name="labels" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.labels"></a>
+
+```typescript
+public readonly labels: GitHubLabel[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubLabel">GitHubLabel</a>[]
+
+---
+
+##### `milestones`<sup>Optional</sup> <a name="milestones" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.milestones"></a>
+
+```typescript
+public readonly milestones: GitHubMilestone[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubMilestone">GitHubMilestone</a>[]
+
+---
+
+##### `repository`<sup>Optional</sup> <a name="repository" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.repository"></a>
+
+```typescript
+public readonly repository: GitHubRepositorySettings;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings">GitHubRepositorySettings</a>
+
+---
+
+##### `teams`<sup>Optional</sup> <a name="teams" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.teams"></a>
+
+```typescript
+public readonly teams: GitHubTeam[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubTeam">GitHubTeam</a>[]
+
+---
+
+### GitHubTeam <a name="GitHubTeam" id="@rocketleap/rocketleap-projen.GitHubTeam"></a>
+
+A repository team managed by Probot Settings.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubTeam.Initializer"></a>
+
+```typescript
+import { GitHubTeam } from '@rocketleap/rocketleap-projen'
+
+const gitHubTeam: GitHubTeam = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubTeam.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubTeam.property.permission">permission</a></code> | <code>string</code> | *No description.* |
+
+---
+
+##### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.GitHubTeam.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `permission`<sup>Required</sup> <a name="permission" id="@rocketleap/rocketleap-projen.GitHubTeam.property.permission"></a>
+
+```typescript
+public readonly permission: string;
+```
+
+- *Type:* string
+
+---
+
 ### PipelineOptions <a name="PipelineOptions" id="@rocketleap/rocketleap-projen.PipelineOptions"></a>
 
 Pipeline workflow configuration for a Rocketleap CDK project.
