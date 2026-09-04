@@ -3,7 +3,7 @@ export * from './cdk-project-options.generated';
 export * from './library-cdk-project-options.generated';
 export * from './minimal-project';
 export { addDependabotConfig } from './dependabot';
-export { addGitHubSettings, GitHubSettingsOptions } from './common/github-settings';
+export { addGitHubSettings, ROCKETLEAP_GITHUB_SETTINGS } from './common/github-settings';
 export { addRocketleapLicense } from './license';
 export * as format from './common/prettier';
 export * as lint from './common/eslint';
