@@ -5682,7 +5682,7 @@ public readonly isAlphanumeric: boolean;
 
 ### GitHubBranch <a name="GitHubBranch" id="@rocketleap/rocketleap-projen.GitHubBranch"></a>
 
-A protected branch.
+A protected branch (classic branch protection).
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubBranch.Initializer"></a>
 
@@ -5723,7 +5723,11 @@ public readonly protection: GitHubBranchProtection;
 
 ### GitHubBranchProtection <a name="GitHubBranchProtection" id="@rocketleap/rocketleap-projen.GitHubBranchProtection"></a>
 
-Branch protection rule.
+Classic branch protection rule.
+
+Superseded by rulesets for new
+rocketleap repos; kept for callers that still want the classic
+mechanism.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubBranchProtection.Initializer"></a>
 
@@ -6307,7 +6311,7 @@ public readonly webCommitSignoffRequired: boolean;
 
 ### GitHubRequiredPullRequestReviews <a name="GitHubRequiredPullRequestReviews" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews"></a>
 
-`required_pull_request_reviews` block of a branch protection rule.
+`required_pull_request_reviews` block of a classic branch protection rule.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRequiredPullRequestReviews.Initializer"></a>
 
@@ -6370,7 +6374,7 @@ public readonly requireLastPushApproval: boolean;
 
 ### GitHubRequiredStatusChecks <a name="GitHubRequiredStatusChecks" id="@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks"></a>
 
-`required_status_checks` block of a branch protection rule.
+`required_status_checks` block of a classic branch protection rule.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRequiredStatusChecks.Initializer"></a>
 
@@ -6409,6 +6413,455 @@ public readonly strict: boolean;
 
 ---
 
+### GitHubRuleset <a name="GitHubRuleset" id="@rocketleap/rocketleap-projen.GitHubRuleset"></a>
+
+A GitHub ruleset.
+
+See
+https://docs.github.com/en/rest/repos/rules for the underlying API.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRuleset.Initializer"></a>
+
+```typescript
+import { GitHubRuleset } from '@rocketleap/rocketleap-projen'
+
+const gitHubRuleset: GitHubRuleset = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRuleset.property.enforcement">enforcement</a></code> | <code>string</code> | `active`, `evaluate`, or `disabled`. |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRuleset.property.name">name</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRuleset.property.target">target</a></code> | <code>string</code> | `branch` or `tag`. |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRuleset.property.conditions">conditions</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetConditions">GitHubRulesetConditions</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRuleset.property.rules">rules</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRule">GitHubRulesetRule</a>[]</code> | *No description.* |
+
+---
+
+##### `enforcement`<sup>Required</sup> <a name="enforcement" id="@rocketleap/rocketleap-projen.GitHubRuleset.property.enforcement"></a>
+
+```typescript
+public readonly enforcement: string;
+```
+
+- *Type:* string
+
+`active`, `evaluate`, or `disabled`.
+
+---
+
+##### `name`<sup>Required</sup> <a name="name" id="@rocketleap/rocketleap-projen.GitHubRuleset.property.name"></a>
+
+```typescript
+public readonly name: string;
+```
+
+- *Type:* string
+
+---
+
+##### `target`<sup>Required</sup> <a name="target" id="@rocketleap/rocketleap-projen.GitHubRuleset.property.target"></a>
+
+```typescript
+public readonly target: string;
+```
+
+- *Type:* string
+
+`branch` or `tag`.
+
+---
+
+##### `conditions`<sup>Optional</sup> <a name="conditions" id="@rocketleap/rocketleap-projen.GitHubRuleset.property.conditions"></a>
+
+```typescript
+public readonly conditions: GitHubRulesetConditions;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetConditions">GitHubRulesetConditions</a>
+
+---
+
+##### `rules`<sup>Optional</sup> <a name="rules" id="@rocketleap/rocketleap-projen.GitHubRuleset.property.rules"></a>
+
+```typescript
+public readonly rules: GitHubRulesetRule[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetRule">GitHubRulesetRule</a>[]
+
+---
+
+### GitHubRulesetConditions <a name="GitHubRulesetConditions" id="@rocketleap/rocketleap-projen.GitHubRulesetConditions"></a>
+
+Conditions restricting when a ruleset applies.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetConditions.Initializer"></a>
+
+```typescript
+import { GitHubRulesetConditions } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetConditions: GitHubRulesetConditions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetConditions.property.refName">refName</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions">GitHubRulesetRefNameConditions</a></code> | *No description.* |
+
+---
+
+##### `refName`<sup>Optional</sup> <a name="refName" id="@rocketleap/rocketleap-projen.GitHubRulesetConditions.property.refName"></a>
+
+```typescript
+public readonly refName: GitHubRulesetRefNameConditions;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions">GitHubRulesetRefNameConditions</a>
+
+---
+
+### GitHubRulesetCopilotCodeReviewParameters <a name="GitHubRulesetCopilotCodeReviewParameters" id="@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters"></a>
+
+`copilot_code_review` rule parameters.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters.Initializer"></a>
+
+```typescript
+import { GitHubRulesetCopilotCodeReviewParameters } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetCopilotCodeReviewParameters: GitHubRulesetCopilotCodeReviewParameters = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters.property.reviewDraftPullRequests">reviewDraftPullRequests</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters.property.reviewOnPush">reviewOnPush</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `reviewDraftPullRequests`<sup>Optional</sup> <a name="reviewDraftPullRequests" id="@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters.property.reviewDraftPullRequests"></a>
+
+```typescript
+public readonly reviewDraftPullRequests: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `reviewOnPush`<sup>Optional</sup> <a name="reviewOnPush" id="@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters.property.reviewOnPush"></a>
+
+```typescript
+public readonly reviewOnPush: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubRulesetPullRequestParameters <a name="GitHubRulesetPullRequestParameters" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters"></a>
+
+`pull_request` rule parameters.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.Initializer"></a>
+
+```typescript
+import { GitHubRulesetPullRequestParameters } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetPullRequestParameters: GitHubRulesetPullRequestParameters = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.allowedMergeMethods">allowedMergeMethods</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.dismissStaleReviewsOnPush">dismissStaleReviewsOnPush</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requireCodeOwnerReview">requireCodeOwnerReview</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requiredApprovingReviewCount">requiredApprovingReviewCount</a></code> | <code>number</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requiredReviewThreadResolution">requiredReviewThreadResolution</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requireExtraApprovalForUnattributedChanges">requireExtraApprovalForUnattributedChanges</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requireLastPushApproval">requireLastPushApproval</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `allowedMergeMethods`<sup>Optional</sup> <a name="allowedMergeMethods" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.allowedMergeMethods"></a>
+
+```typescript
+public readonly allowedMergeMethods: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `dismissStaleReviewsOnPush`<sup>Optional</sup> <a name="dismissStaleReviewsOnPush" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.dismissStaleReviewsOnPush"></a>
+
+```typescript
+public readonly dismissStaleReviewsOnPush: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requireCodeOwnerReview`<sup>Optional</sup> <a name="requireCodeOwnerReview" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requireCodeOwnerReview"></a>
+
+```typescript
+public readonly requireCodeOwnerReview: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredApprovingReviewCount`<sup>Optional</sup> <a name="requiredApprovingReviewCount" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requiredApprovingReviewCount"></a>
+
+```typescript
+public readonly requiredApprovingReviewCount: number;
+```
+
+- *Type:* number
+
+---
+
+##### `requiredReviewThreadResolution`<sup>Optional</sup> <a name="requiredReviewThreadResolution" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requiredReviewThreadResolution"></a>
+
+```typescript
+public readonly requiredReviewThreadResolution: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requireExtraApprovalForUnattributedChanges`<sup>Optional</sup> <a name="requireExtraApprovalForUnattributedChanges" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requireExtraApprovalForUnattributedChanges"></a>
+
+```typescript
+public readonly requireExtraApprovalForUnattributedChanges: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requireLastPushApproval`<sup>Optional</sup> <a name="requireLastPushApproval" id="@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters.property.requireLastPushApproval"></a>
+
+```typescript
+public readonly requireLastPushApproval: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubRulesetRefNameConditions <a name="GitHubRulesetRefNameConditions" id="@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions"></a>
+
+`conditions.ref_name` block of a ruleset.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions.Initializer"></a>
+
+```typescript
+import { GitHubRulesetRefNameConditions } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetRefNameConditions: GitHubRulesetRefNameConditions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions.property.exclude">exclude</a></code> | <code>string[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions.property.include">include</a></code> | <code>string[]</code> | *No description.* |
+
+---
+
+##### `exclude`<sup>Optional</sup> <a name="exclude" id="@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions.property.exclude"></a>
+
+```typescript
+public readonly exclude: string[];
+```
+
+- *Type:* string[]
+
+---
+
+##### `include`<sup>Optional</sup> <a name="include" id="@rocketleap/rocketleap-projen.GitHubRulesetRefNameConditions.property.include"></a>
+
+```typescript
+public readonly include: string[];
+```
+
+- *Type:* string[]
+
+---
+
+### GitHubRulesetRequiredStatusChecksParameters <a name="GitHubRulesetRequiredStatusChecksParameters" id="@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters"></a>
+
+`required_status_checks` rule parameters.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.Initializer"></a>
+
+```typescript
+import { GitHubRulesetRequiredStatusChecksParameters } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetRequiredStatusChecksParameters: GitHubRulesetRequiredStatusChecksParameters = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.property.doNotEnforceOnCreate">doNotEnforceOnCreate</a></code> | <code>boolean</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.property.requiredStatusChecks">requiredStatusChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck">GitHubRulesetStatusCheck</a>[]</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.property.strictRequiredStatusChecksPolicy">strictRequiredStatusChecksPolicy</a></code> | <code>boolean</code> | *No description.* |
+
+---
+
+##### `doNotEnforceOnCreate`<sup>Optional</sup> <a name="doNotEnforceOnCreate" id="@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.property.doNotEnforceOnCreate"></a>
+
+```typescript
+public readonly doNotEnforceOnCreate: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+##### `requiredStatusChecks`<sup>Optional</sup> <a name="requiredStatusChecks" id="@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.property.requiredStatusChecks"></a>
+
+```typescript
+public readonly requiredStatusChecks: GitHubRulesetStatusCheck[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck">GitHubRulesetStatusCheck</a>[]
+
+---
+
+##### `strictRequiredStatusChecksPolicy`<sup>Optional</sup> <a name="strictRequiredStatusChecksPolicy" id="@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters.property.strictRequiredStatusChecksPolicy"></a>
+
+```typescript
+public readonly strictRequiredStatusChecksPolicy: boolean;
+```
+
+- *Type:* boolean
+
+---
+
+### GitHubRulesetRule <a name="GitHubRulesetRule" id="@rocketleap/rocketleap-projen.GitHubRulesetRule"></a>
+
+A rule inside a GitHub ruleset.
+
+Populate the parameters block that
+matches `type`. Types without parameters (`deletion`,
+`non_fast_forward`, ...) use only `type`.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetRule.Initializer"></a>
+
+```typescript
+import { GitHubRulesetRule } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetRule: GitHubRulesetRule = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRule.property.type">type</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRule.property.copilotCodeReview">copilotCodeReview</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters">GitHubRulesetCopilotCodeReviewParameters</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRule.property.pullRequest">pullRequest</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters">GitHubRulesetPullRequestParameters</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRule.property.requiredStatusChecks">requiredStatusChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters">GitHubRulesetRequiredStatusChecksParameters</a></code> | *No description.* |
+
+---
+
+##### `type`<sup>Required</sup> <a name="type" id="@rocketleap/rocketleap-projen.GitHubRulesetRule.property.type"></a>
+
+```typescript
+public readonly type: string;
+```
+
+- *Type:* string
+
+---
+
+##### `copilotCodeReview`<sup>Optional</sup> <a name="copilotCodeReview" id="@rocketleap/rocketleap-projen.GitHubRulesetRule.property.copilotCodeReview"></a>
+
+```typescript
+public readonly copilotCodeReview: GitHubRulesetCopilotCodeReviewParameters;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetCopilotCodeReviewParameters">GitHubRulesetCopilotCodeReviewParameters</a>
+
+---
+
+##### `pullRequest`<sup>Optional</sup> <a name="pullRequest" id="@rocketleap/rocketleap-projen.GitHubRulesetRule.property.pullRequest"></a>
+
+```typescript
+public readonly pullRequest: GitHubRulesetPullRequestParameters;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetPullRequestParameters">GitHubRulesetPullRequestParameters</a>
+
+---
+
+##### `requiredStatusChecks`<sup>Optional</sup> <a name="requiredStatusChecks" id="@rocketleap/rocketleap-projen.GitHubRulesetRule.property.requiredStatusChecks"></a>
+
+```typescript
+public readonly requiredStatusChecks: GitHubRulesetRequiredStatusChecksParameters;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRulesetRequiredStatusChecksParameters">GitHubRulesetRequiredStatusChecksParameters</a>
+
+---
+
+### GitHubRulesetStatusCheck <a name="GitHubRulesetStatusCheck" id="@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck"></a>
+
+A single status check required by a `required_status_checks` rule.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck.Initializer"></a>
+
+```typescript
+import { GitHubRulesetStatusCheck } from '@rocketleap/rocketleap-projen'
+
+const gitHubRulesetStatusCheck: GitHubRulesetStatusCheck = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck.property.context">context</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck.property.integrationId">integrationId</a></code> | <code>number</code> | *No description.* |
+
+---
+
+##### `context`<sup>Required</sup> <a name="context" id="@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck.property.context"></a>
+
+```typescript
+public readonly context: string;
+```
+
+- *Type:* string
+
+---
+
+##### `integrationId`<sup>Optional</sup> <a name="integrationId" id="@rocketleap/rocketleap-projen.GitHubRulesetStatusCheck.property.integrationId"></a>
+
+```typescript
+public readonly integrationId: number;
+```
+
+- *Type:* number
+
+---
+
 ### GitHubSettingsOptions <a name="GitHubSettingsOptions" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions"></a>
 
 Options for {@link addGitHubSettings}.
@@ -6418,7 +6871,7 @@ pass-through into `.github/settings.yml`. When the whole options
 object is omitted, {@link ROCKETLEAP_GITHUB_SETTINGS} is written
 unchanged.
 
-For sections not modeled here (environments, rulesets, ...), call
+For sections not modeled here (environments, deploy keys, ...), call
 `addOverride(path, value)` on the returned {@link YamlFile}.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.Initializer"></a>
@@ -6439,6 +6892,7 @@ const gitHubSettingsOptions: GitHubSettingsOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.labels">labels</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubLabel">GitHubLabel</a>[]</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.milestones">milestones</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubMilestone">GitHubMilestone</a>[]</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.repository">repository</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings">GitHubRepositorySettings</a></code> | *No description.* |
+| <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.rulesets">rulesets</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubRuleset">GitHubRuleset</a>[]</code> | *No description.* |
 | <code><a href="#@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.teams">teams</a></code> | <code><a href="#@rocketleap/rocketleap-projen.GitHubTeam">GitHubTeam</a>[]</code> | *No description.* |
 
 ---
@@ -6500,6 +6954,16 @@ public readonly repository: GitHubRepositorySettings;
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRepositorySettings">GitHubRepositorySettings</a>
+
+---
+
+##### `rulesets`<sup>Optional</sup> <a name="rulesets" id="@rocketleap/rocketleap-projen.GitHubSettingsOptions.property.rulesets"></a>
+
+```typescript
+public readonly rulesets: GitHubRuleset[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.GitHubRuleset">GitHubRuleset</a>[]
 
 ---
 

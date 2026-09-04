@@ -72,7 +72,7 @@ export interface GitHubTeam {
 }
 
 /**
- * `required_pull_request_reviews` block of a branch protection rule.
+ * `required_pull_request_reviews` block of a classic branch protection rule.
  */
 export interface GitHubRequiredPullRequestReviews {
   readonly requiredApprovingReviewCount?: number;
@@ -82,7 +82,7 @@ export interface GitHubRequiredPullRequestReviews {
 }
 
 /**
- * `required_status_checks` block of a branch protection rule.
+ * `required_status_checks` block of a classic branch protection rule.
  */
 export interface GitHubRequiredStatusChecks {
   readonly strict?: boolean;
@@ -90,7 +90,9 @@ export interface GitHubRequiredStatusChecks {
 }
 
 /**
- * Branch protection rule.
+ * Classic branch protection rule. Superseded by rulesets for new
+ * rocketleap repos; kept for callers that still want the classic
+ * mechanism.
  */
 export interface GitHubBranchProtection {
   readonly requiredPullRequestReviews?: GitHubRequiredPullRequestReviews;
@@ -107,7 +109,7 @@ export interface GitHubBranchProtection {
 }
 
 /**
- * A protected branch.
+ * A protected branch (classic branch protection).
  */
 export interface GitHubBranch {
   readonly name: string;
@@ -124,12 +126,91 @@ export interface GitHubAutolink {
 }
 
 /**
+ * `pull_request` rule parameters.
+ */
+export interface GitHubRulesetPullRequestParameters {
+  readonly requiredApprovingReviewCount?: number;
+  readonly dismissStaleReviewsOnPush?: boolean;
+  readonly requireCodeOwnerReview?: boolean;
+  readonly requireLastPushApproval?: boolean;
+  readonly requiredReviewThreadResolution?: boolean;
+  readonly requireExtraApprovalForUnattributedChanges?: boolean;
+  readonly allowedMergeMethods?: string[];
+}
+
+/**
+ * A single status check required by a `required_status_checks` rule.
+ */
+export interface GitHubRulesetStatusCheck {
+  readonly context: string;
+  readonly integrationId?: number;
+}
+
+/**
+ * `required_status_checks` rule parameters.
+ */
+export interface GitHubRulesetRequiredStatusChecksParameters {
+  readonly strictRequiredStatusChecksPolicy?: boolean;
+  readonly doNotEnforceOnCreate?: boolean;
+  readonly requiredStatusChecks?: GitHubRulesetStatusCheck[];
+}
+
+/**
+ * `copilot_code_review` rule parameters.
+ */
+export interface GitHubRulesetCopilotCodeReviewParameters {
+  readonly reviewOnPush?: boolean;
+  readonly reviewDraftPullRequests?: boolean;
+}
+
+/**
+ * A rule inside a GitHub ruleset. Populate the parameters block that
+ * matches `type`. Types without parameters (`deletion`,
+ * `non_fast_forward`, ...) use only `type`.
+ */
+export interface GitHubRulesetRule {
+  readonly type: string;
+  readonly pullRequest?: GitHubRulesetPullRequestParameters;
+  readonly requiredStatusChecks?: GitHubRulesetRequiredStatusChecksParameters;
+  readonly copilotCodeReview?: GitHubRulesetCopilotCodeReviewParameters;
+}
+
+/**
+ * `conditions.ref_name` block of a ruleset.
+ */
+export interface GitHubRulesetRefNameConditions {
+  readonly include?: string[];
+  readonly exclude?: string[];
+}
+
+/**
+ * Conditions restricting when a ruleset applies.
+ */
+export interface GitHubRulesetConditions {
+  readonly refName?: GitHubRulesetRefNameConditions;
+}
+
+/**
+ * A GitHub ruleset. See
+ * https://docs.github.com/en/rest/repos/rules for the underlying API.
+ */
+export interface GitHubRuleset {
+  readonly name: string;
+  /** `branch` or `tag`. */
+  readonly target: string;
+  /** `active`, `evaluate`, or `disabled`. */
+  readonly enforcement: string;
+  readonly conditions?: GitHubRulesetConditions;
+  readonly rules?: GitHubRulesetRule[];
+}
+
+/**
  * Options for {@link addGitHubSettings}. Every field is an optional
  * pass-through into `.github/settings.yml`. When the whole options
  * object is omitted, {@link ROCKETLEAP_GITHUB_SETTINGS} is written
  * unchanged.
  *
- * For sections not modeled here (environments, rulesets, ...), call
+ * For sections not modeled here (environments, deploy keys, ...), call
  * `addOverride(path, value)` on the returned {@link YamlFile}.
  */
 export interface GitHubSettingsOptions {
@@ -140,63 +221,97 @@ export interface GitHubSettingsOptions {
   readonly teams?: GitHubTeam[];
   readonly branches?: GitHubBranch[];
   readonly autolinks?: GitHubAutolink[];
+  readonly rulesets?: GitHubRuleset[];
 }
 
 /**
  * The rocketleap default configuration written to `.github/settings.yml`
- * when {@link addGitHubSettings} is called without options.
+ * when {@link addGitHubSettings} is called without options. Mirrors the
+ * pattern applied to `-cdk` platform repos as of 2026-09.
  *
- * Conventions:
+ * Repository conventions:
  *
+ *  - default branch `dev`
+ *  - issues, projects, wiki off (bugs and features go to rocketleap/Roadmap)
  *  - squash-merge only, delete branch on merge, auto-merge allowed
- *  - `main` protected: PR review required, conversation resolution
- *    required, linear history required, no force push, no deletion
+ *  - squash commit title from `COMMIT_OR_PR_TITLE`, message from
+ *    `COMMIT_MESSAGES`
+ *
+ * Enforcement is a Ruleset (`Development`, active) targeting the default
+ * branch: PR required with squash-only merges, stale-review dismissal,
+ * thread resolution required, extra approval for unattributed changes,
+ * `Build / build` status check strict, deletion and force-push blocked,
+ * Copilot code review on the PR (not on push, not on drafts).
  */
 export const ROCKETLEAP_GITHUB_SETTINGS: GitHubSettingsOptions = {
   repository: {
-    defaultBranch: 'main',
-    hasIssues: true,
+    defaultBranch: 'dev',
+    hasIssues: false,
     hasProjects: false,
     hasWiki: false,
     allowSquashMerge: true,
     allowMergeCommit: false,
     allowRebaseMerge: false,
-    squashMergeCommitTitle: 'PR_TITLE',
-    squashMergeCommitMessage: 'PR_BODY',
+    squashMergeCommitTitle: 'COMMIT_OR_PR_TITLE',
+    squashMergeCommitMessage: 'COMMIT_MESSAGES',
     deleteBranchOnMerge: true,
     allowAutoMerge: true,
     allowUpdateBranch: true,
   },
-  branches: [
+  rulesets: [
     {
-      name: 'main',
-      protection: {
-        requiredPullRequestReviews: {
-          requiredApprovingReviewCount: 1,
-          dismissStaleReviews: true,
-          requireCodeOwnerReviews: false,
-        },
-        requiredConversationResolution: true,
-        requiredLinearHistory: true,
-        enforceAdmins: false,
-        allowForcePushes: false,
-        allowDeletions: false,
+      name: 'Development',
+      target: 'branch',
+      enforcement: 'active',
+      conditions: {
+        refName: { include: ['~DEFAULT_BRANCH'], exclude: [] },
       },
+      rules: [
+        { type: 'deletion' },
+        { type: 'non_fast_forward' },
+        {
+          type: 'pull_request',
+          pullRequest: {
+            requiredApprovingReviewCount: 0,
+            dismissStaleReviewsOnPush: true,
+            requireCodeOwnerReview: false,
+            requireLastPushApproval: false,
+            requiredReviewThreadResolution: true,
+            requireExtraApprovalForUnattributedChanges: true,
+            allowedMergeMethods: ['squash'],
+          },
+        },
+        {
+          type: 'required_status_checks',
+          requiredStatusChecks: {
+            strictRequiredStatusChecksPolicy: true,
+            doNotEnforceOnCreate: false,
+            requiredStatusChecks: [{ context: 'Build / build' }],
+          },
+        },
+        {
+          type: 'copilot_code_review',
+          copilotCodeReview: {
+            reviewOnPush: false,
+            reviewDraftPullRequests: false,
+          },
+        },
+      ],
     },
   ],
 };
 
 /**
  * Emits `.github/settings.yml` in the Probot Settings app format so
- * repository settings and default-branch protection are managed
- * declaratively in-repo. Requires the Probot Settings GitHub App to be
- * installed on the org; without it the file is inert.
+ * repository settings and branch rulesets are managed declaratively
+ * in-repo. Requires the Probot Settings GitHub App to be installed on
+ * the org; without it the file is inert.
  *
  * When called without options, writes {@link ROCKETLEAP_GITHUB_SETTINGS}.
  * Pass typed options to override the defaults, or use the returned
  * {@link YamlFile}'s `addOverride(path, value)` to pass through any
  * Probot Settings field not modeled by {@link GitHubSettingsOptions}
- * (environments, rulesets, ...).
+ * (environments, ...).
  *
  * The emitted file is marked `linguist-generated` so GitHub Copilot
  * code review skips it.
@@ -223,6 +338,7 @@ function toProbotSchema(options: GitHubSettingsOptions): Record<string, unknown>
       protection: b.protection ? branchProtectionToSnake(b.protection) : undefined,
     })),
     autolinks: options.autolinks?.map(camelToSnake),
+    rulesets: options.rulesets?.map(rulesetToSnake),
   });
 }
 
@@ -242,6 +358,47 @@ function branchProtectionToSnake(p: GitHubBranchProtection): Record<string, unkn
     lock_branch: p.lockBranch,
     allow_fork_syncing: p.allowForkSyncing,
     restrictions: null,
+  });
+}
+
+function rulesetToSnake(r: GitHubRuleset): Record<string, unknown> {
+  return prune({
+    name: r.name,
+    target: r.target,
+    enforcement: r.enforcement,
+    conditions: r.conditions ? conditionsToSnake(r.conditions) : undefined,
+    rules: r.rules?.map(ruleToSnake),
+  });
+}
+
+function conditionsToSnake(c: GitHubRulesetConditions): Record<string, unknown> {
+  return prune({
+    ref_name: c.refName ? camelToSnake(c.refName) : undefined,
+  });
+}
+
+function ruleToSnake(rule: GitHubRulesetRule): Record<string, unknown> {
+  const parameters = rule.pullRequest
+    ? camelToSnake(rule.pullRequest)
+    : rule.requiredStatusChecks
+      ? requiredStatusChecksParametersToSnake(rule.requiredStatusChecks)
+      : rule.copilotCodeReview
+        ? camelToSnake(rule.copilotCodeReview)
+        : undefined;
+
+  return prune({
+    type: rule.type,
+    parameters,
+  });
+}
+
+function requiredStatusChecksParametersToSnake(
+  p: GitHubRulesetRequiredStatusChecksParameters,
+): Record<string, unknown> {
+  return prune({
+    strict_required_status_checks_policy: p.strictRequiredStatusChecksPolicy,
+    do_not_enforce_on_create: p.doNotEnforceOnCreate,
+    required_status_checks: p.requiredStatusChecks?.map(camelToSnake),
   });
 }
 

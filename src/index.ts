@@ -17,6 +17,14 @@ export {
   GitHubRequiredPullRequestReviews,
   GitHubRequiredStatusChecks,
   GitHubAutolink,
+  GitHubRuleset,
+  GitHubRulesetConditions,
+  GitHubRulesetRefNameConditions,
+  GitHubRulesetRule,
+  GitHubRulesetPullRequestParameters,
+  GitHubRulesetRequiredStatusChecksParameters,
+  GitHubRulesetStatusCheck,
+  GitHubRulesetCopilotCodeReviewParameters,
 } from './common/github-settings';
 export { addRocketleapLicense } from './license';
 export * as format from './common/prettier';
