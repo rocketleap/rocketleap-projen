@@ -1210,6 +1210,12 @@ export interface RocketleapCdkProjectOptions {
    */
   readonly buildingBlocksVersion?: string;
   /**
+   * Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag.
+   * Valid values are 'strong' | 'weak' | 'both'. Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.
+   * @default 'both'
+   */
+  readonly crossStackReferences?: string;
+  /**
    * Configuration for the generated CDK pipeline GitHub Actions workflows.
    * Drives the matrix of (environment, workload) pairs used by pr-main.yml and push-main.yml, and optionally enables the GitOps production-promotion flow.
    */

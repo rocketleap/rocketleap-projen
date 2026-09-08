@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { awscdk, JsonPatch, SampleFile, typescript } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
-import { CDK_CONFIGURATION } from './common/cdk';
+import { createCdkConfiguration } from './common/cdk';
 import {
   COMPILE_CONFIGURATION,
   configureSwc,
@@ -66,7 +66,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...COMPILE_CONFIGURATION,
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
-      ...CDK_CONFIGURATION,
+      ...createCdkConfiguration(options.crossStackReferences),
       ...SWC_CONFIGURATION,
       gitignore: gitIgnore(options.gitignore),
     });
