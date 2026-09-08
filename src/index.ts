@@ -1,5 +1,6 @@
 export * from './cdk-project';
 export * from './cdk-project-options.generated';
+export * from './cross-stack-references';
 export * from './library-cdk-project-options.generated';
 export * from './minimal-project';
 export { addDependabotConfig } from './dependabot';

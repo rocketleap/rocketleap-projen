@@ -115,12 +115,12 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
   .add({
     name: 'crossStackReferences',
     optional: true,
-    type: { primitive: PrimitiveType.String },
+    type: { fqn: '@rocketleap/rocketleap-projen.CrossStackReferences' },
     docs: {
       summary: "Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag.",
       remarks:
-        "Valid values are 'strong' | 'weak' | 'both'. Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.",
-      default: "'both'",
+        'Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.',
+      default: 'CrossStackReferences.BOTH',
     },
   })
   .add({
