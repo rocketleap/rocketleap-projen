@@ -1,5 +1,11 @@
 import { CdkConfigCommonOptions, CdkFeatureFlags } from 'projen/lib/awscdk';
+import { CrossStackReferences } from '../cross-stack-references';
 
-export const CDK_CONFIGURATION: CdkConfigCommonOptions = {
-  featureFlags: CdkFeatureFlags.V2.fromLocalAwsCdkLib(),
-};
+export function createCdkConfiguration(crossStackReferences: CrossStackReferences): CdkConfigCommonOptions {
+  return {
+    featureFlags: CdkFeatureFlags.V2.fromLocalAwsCdkLib(),
+    context: {
+      '@aws-cdk/core:defaultCrossStackReferences': crossStackReferences,
+    },
+  };
+}

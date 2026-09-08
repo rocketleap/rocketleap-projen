@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { awscdk, JsonPatch, SampleFile, typescript } from 'projen';
 import { RocketleapCdkProjectOptions } from './cdk-project-options.generated';
-import { CDK_CONFIGURATION } from './common/cdk';
+import { createCdkConfiguration } from './common/cdk';
 import {
   COMPILE_CONFIGURATION,
   configureSwc,
@@ -16,6 +16,7 @@ import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { addCdkPipelineWorkflows } from './common/workflows';
 import { configureTaskPath, createYarnConfiguration } from './common/yarn';
+import { CrossStackReferences } from './cross-stack-references';
 import { addDependabotConfig } from './dependabot';
 import { RocketleapLibraryCdkProjectOptions } from './library-cdk-project-options.generated';
 import { addRocketleapLicense } from './license';
@@ -40,6 +41,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     const cdkVersion = options.cdkVersion ?? '2.248.0';
     const constructVersion = options.constructVersion ?? '10.5.0';
     const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.107.1';
+    const crossStackReferences = options.crossStackReferences ?? CrossStackReferences.BOTH;
 
     super({
       ...options,
@@ -66,7 +68,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...COMPILE_CONFIGURATION,
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
-      ...CDK_CONFIGURATION,
+      ...createCdkConfiguration(crossStackReferences),
       ...SWC_CONFIGURATION,
       gitignore: gitIgnore(options.gitignore),
     });

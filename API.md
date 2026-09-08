@@ -5798,6 +5798,7 @@ const rocketleapCdkProjectOptions: RocketleapCdkProjectOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.context">context</a></code> | <code>{[ key: string ]: any}</code> | Additional context to include in `cdk.json`. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.copyrightOwner">copyrightOwner</a></code> | <code>string</code> | License copyright owner. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.copyrightPeriod">copyrightPeriod</a></code> | <code>string</code> | The copyright years to put in the LICENSE file. |
+| <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.crossStackReferences">crossStackReferences</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CrossStackReferences">CrossStackReferences</a></code> | Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.deleteOrphanedLockFiles">deleteOrphanedLockFiles</a></code> | <code>boolean</code> | Automatically delete lockfiles from package managers that are not the active one. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.dependabot">dependabot</a></code> | <code>boolean</code> | Use dependabot to handle dependency upgrades. |
 | <code><a href="#@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.dependabotOptions">dependabotOptions</a></code> | <code>projen.github.DependabotOptions</code> | Options for dependabot. |
@@ -6607,6 +6608,21 @@ public readonly copyrightPeriod: string;
 - *Default:* current year
 
 The copyright years to put in the LICENSE file.
+
+---
+
+##### `crossStackReferences`<sup>Optional</sup> <a name="crossStackReferences" id="@rocketleap/rocketleap-projen.RocketleapCdkProjectOptions.property.crossStackReferences"></a>
+
+```typescript
+public readonly crossStackReferences: CrossStackReferences;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.CrossStackReferences">CrossStackReferences</a>
+- *Default:* CrossStackReferences.BOTH
+
+Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag.
+
+Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.
 
 ---
 
@@ -12819,4 +12835,43 @@ The project slug — used as the package name suffix (e.g. `aws-nuke-templates`)
 ---
 
 
+
+## Enums <a name="Enums" id="Enums"></a>
+
+### CrossStackReferences <a name="CrossStackReferences" id="@rocketleap/rocketleap-projen.CrossStackReferences"></a>
+
+Controls the CDK `@aws-cdk/core:defaultCrossStackReferences` context flag.
+
+Determines how cross-stack references are materialised in synthesized
+CloudFormation templates.
+
+#### Members <a name="Members" id="Members"></a>
+
+| **Name** | **Description** |
+| --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.CrossStackReferences.STRONG">STRONG</a></code> | Use CloudFormation exports (`Fn::ImportValue`) for cross-stack references. |
+| <code><a href="#@rocketleap/rocketleap-projen.CrossStackReferences.WEAK">WEAK</a></code> | Use `Fn::GetStackOutput` for cross-stack references. |
+| <code><a href="#@rocketleap/rocketleap-projen.CrossStackReferences.BOTH">BOTH</a></code> | Emit both strong and weak references. |
+
+---
+
+##### `STRONG` <a name="STRONG" id="@rocketleap/rocketleap-projen.CrossStackReferences.STRONG"></a>
+
+Use CloudFormation exports (`Fn::ImportValue`) for cross-stack references.
+
+---
+
+
+##### `WEAK` <a name="WEAK" id="@rocketleap/rocketleap-projen.CrossStackReferences.WEAK"></a>
+
+Use `Fn::GetStackOutput` for cross-stack references.
+
+---
+
+
+##### `BOTH` <a name="BOTH" id="@rocketleap/rocketleap-projen.CrossStackReferences.BOTH"></a>
+
+Emit both strong and weak references.
+
+---
 
