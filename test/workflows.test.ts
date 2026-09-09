@@ -83,6 +83,13 @@ describe('action-deploy.yml', () => {
     // The GH Environment approval sits on push-main.yml's `gate-<env>` job.
     expect(deploy).not.toMatch(/^\s+environment: \$\{\{ inputs\.environment \}\}/m);
   });
+
+  test('concurrency group is prefixed so stage=main does not collide with push-main workflow-level `main` group', () => {
+    const project = newProject();
+    addActionDeployWorkflow(project);
+    const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
+    expect(deploy).toContain('concurrency: deploy-${{inputs.environment}}${{inputs.workload}}');
+  });
 });
 
 describe('action-diff.yml', () => {
