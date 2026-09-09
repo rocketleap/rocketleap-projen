@@ -301,7 +301,7 @@ export function addActionDeployWorkflow(project: Project): void {
         },
       },
       env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' },
-      concurrency: '${{inputs.environment}}${{inputs.workload}}',
+      concurrency: 'deploy-${{inputs.environment}}${{inputs.workload}}',
       permissions: { ...PERMISSIONS_DEFAULT, 'id-token': 'write' },
       jobs: {
         deploy: {
