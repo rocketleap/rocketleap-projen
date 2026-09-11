@@ -1,6 +1,7 @@
 import { javascript, typescript } from 'projen';
 
 import { gitIgnore } from './common/git';
+import { addGitHubSettings } from './common/github-settings';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
 import { createYarnConfiguration } from './common/yarn';
 import { addRocketleapLicense } from './license';
@@ -102,5 +103,6 @@ export class RocketleapPlatformMinimalProject extends javascript.NodeProject {
     this.addDevDeps('ts-node@~10.9', 'typescript@~5.6', '@types/node@~22');
 
     addRocketleapLicense(this);
+    addGitHubSettings(this);
   }
 }
