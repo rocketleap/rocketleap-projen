@@ -38,7 +38,7 @@ test('caller `context` is merged into cdk.json alongside crossStackReferences', 
     },
   });
 
-  const cdkJson = Testing.synth(project)['cdk.json'] as Record<string, any>;
+  const cdkJson = Testing.synth(project)['cdk.json'] as Record<string, Record<string, unknown>>;
   expect(cdkJson.context['@aws-cdk/aws-lambda:useCdkManagedLogGroup']).toBe(false);
   expect(cdkJson.context.customKey).toBe('customValue');
   expect(cdkJson.context['@aws-cdk/core:defaultCrossStackReferences']).toBeDefined();
