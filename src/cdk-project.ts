@@ -68,7 +68,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
       ...COMPILE_CONFIGURATION,
       ...ESLINT_CONFIGURATION,
       ...PRETTIER_CONFIGURATION,
-      ...createCdkConfiguration(crossStackReferences),
+      ...createCdkConfiguration(crossStackReferences, options.context),
       ...SWC_CONFIGURATION,
       gitignore: gitIgnore(options.gitignore),
     });
