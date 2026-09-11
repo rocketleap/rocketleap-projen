@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { Project, YamlFile } from 'projen';
 
 /**
@@ -508,10 +510,70 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
   if (!options.stages || options.stages.length === 0) {
     throw new Error('pipeline.stages must contain at least one entry');
   }
+  validatePipelineStagesAgainstBin(join(project.outdir, 'bin'), options.stages);
   addActionBuildWorkflow(project);
   addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
   addPrMainWorkflow(project, options.stages);
   addPushMainWorkflow(project, options.stages);
+}
+
+function stageBinPath(stage: PipelineStage): string {
+  return stage.workload ? `bin/${stage.environment}/${stage.workload}.ts` : `bin/${stage.environment}.ts`;
+}
+
+function discoverBinFiles(binDir: string): string[] {
+  const files: string[] = [];
+  for (const entry of readdirSync(binDir)) {
+    if (entry.startsWith('.')) continue;
+    const full = join(binDir, entry);
+    const st = statSync(full);
+    if (st.isFile() && entry.endsWith('.ts')) {
+      files.push(`bin/${entry}`);
+      continue;
+    }
+    if (st.isDirectory()) {
+      for (const sub of readdirSync(full)) {
+        if (sub.startsWith('.') || !sub.endsWith('.ts')) continue;
+        const subFull = join(full, sub);
+        if (statSync(subFull).isFile()) {
+          files.push(`bin/${entry}/${sub}`);
+        }
+      }
+    }
+  }
+  return files;
+}
+
+/**
+ * Cross-check the declared `pipeline.stages` against files present under
+ * `bin/`. Throws when a stage references a missing `bin/` file or when a
+ * `bin/` file has no matching stage. Silently returns when `binDir` does
+ * not exist (fresh project pre-scaffold).
+ */
+export function validatePipelineStagesAgainstBin(binDir: string, stages: PipelineStage[]): void {
+  if (!existsSync(binDir)) return;
+
+  const declared = stages.map(stageBinPath);
+  const discovered = discoverBinFiles(binDir);
+
+  const declaredSet = new Set(declared);
+  const discoveredSet = new Set(discovered);
+
+  const missingBin = declared.filter((p) => !discoveredSet.has(p)).sort();
+  const orphanBin = discovered.filter((p) => !declaredSet.has(p)).sort();
+
+  if (missingBin.length === 0 && orphanBin.length === 0) return;
+
+  const lines: string[] = ['pipeline.stages does not match bin/ files:'];
+  if (orphanBin.length > 0) {
+    lines.push('  bin/ files with no matching stage in pipeline.stages:');
+    for (const p of orphanBin) lines.push(`    - ${p}`);
+  }
+  if (missingBin.length > 0) {
+    lines.push('  pipeline.stages entries with no matching bin/ file:');
+    for (const p of missingBin) lines.push(`    - ${p}`);
+  }
+  throw new Error(lines.join('\n'));
 }
