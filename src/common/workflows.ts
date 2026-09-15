@@ -449,9 +449,18 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
   if (!stages || stages.length === 0) {
     throw new Error('addPushMainWorkflow: stages must contain at least one entry');
   }
+  const mergedGuard =
+    "github.event_name != 'pull_request_target' || " +
+    '(github.event.pull_request.merged == true && ' +
+    "(github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'dev'))";
+
   const jobs: Record<string, unknown> = {
-    build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages, { failFast: false }),
+    build: {
+      name: 'Build',
+      if: mergedGuard,
+      uses: './.github/workflows/action-build.yml',
+    },
+    synth: { ...synthMatrixJob(stages, { failFast: false }), if: mergedGuard },
   };
 
   // Group consecutive stages by environment. Each group gets ONE gate
@@ -491,7 +500,11 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
   new YamlFile(project, '.github/workflows/push-main.yml', {
     obj: {
       name: 'Push: Main Branch',
-      on: { push: { branches: ['main', 'dev'] }, workflow_dispatch: {} },
+      on: {
+        push: { branches: ['main', 'dev'] },
+        pull_request_target: { types: ['closed'], branches: ['main', 'dev'] },
+        workflow_dispatch: {},
+      },
       permissions: PERMISSIONS_PUSH,
       concurrency: 'main',
       jobs,

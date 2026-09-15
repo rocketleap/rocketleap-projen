@@ -229,6 +229,22 @@ describe('push-main.yml', () => {
     expect(() => addPushMainWorkflow(project, [])).toThrow('at least one entry');
   });
 
+  test('triggers on push AND on pull_request_target closed so auto-merge deploys land', () => {
+    const project = newProject();
+    addPushMainWorkflow(project, [{ environment: 'dev' }]);
+    const push = synthSnapshot(project)['.github/workflows/push-main.yml'];
+
+    expect(push).toMatch(/on:[\s\S]*?push:[\s\S]*?branches:[\s\S]*?- main[\s\S]*?- dev/);
+    expect(push).toMatch(
+      /on:[\s\S]*?pull_request_target:[\s\S]*?types:[\s\S]*?- closed[\s\S]*?branches:[\s\S]*?- main[\s\S]*?- dev/,
+    );
+    expect(push).toMatch(/on:[\s\S]*?workflow_dispatch:/);
+
+    expect(push).toMatch(/build:[\s\S]*?if: github.event_name != 'pull_request_target'/);
+    expect(push).toMatch(/synth:[\s\S]*?if: github.event_name != 'pull_request_target'/);
+    expect(push).toMatch(/github\.event\.pull_request\.merged == true/);
+  });
+
   test('synth matrix is fail-fast: false on push so a broken stage still surfaces sibling breakage on main', () => {
     const project = newProject();
     addPushMainWorkflow(project, [{ environment: 'dev' }, { environment: 'prodeu' }]);
