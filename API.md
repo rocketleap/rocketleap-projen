@@ -5652,6 +5652,7 @@ const pipelineOptions: PipelineOptions = { ... }
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the `main` → prod pipeline promotes through. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.skipDrafts">skipDrafts</a></code> | <code>boolean</code> | Skip the PR CI pipeline while a pull request is in draft state. |
 
 ---
 
@@ -5677,6 +5678,28 @@ public readonly cdkDiff: CdkDiffOptions;
 - *Default:* failOnDestructiveChanges: false
 
 Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow.
+
+---
+
+##### `skipDrafts`<sup>Optional</sup> <a name="skipDrafts" id="@rocketleap/rocketleap-projen.PipelineOptions.property.skipDrafts"></a>
+
+```typescript
+public readonly skipDrafts: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Skip the PR CI pipeline while a pull request is in draft state.
+
+When `true`, the emitted `pr-main.yml` triggers only on `opened`,
+`reopened`, and `ready_for_review` (never on `synchronize`) and each
+job additionally guards on `github.event.pull_request.draft == false`.
+Iterate locally with `yarn diff` / `yarn deploy`; CI validates once
+when the PR flips to ready.
+
+When `false`, the historical behaviour applies: CI fires on every
+push to the PR branch regardless of draft state.
 
 ---
 

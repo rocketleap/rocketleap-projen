@@ -151,6 +151,27 @@ describe('pr-main.yml', () => {
     const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
     expect(pr).toMatch(/synth:[\s\S]*?strategy:[\s\S]*?fail-fast: true/);
   });
+
+  test('skipDrafts is on by default: no synchronize trigger, every job guards on draft == false', () => {
+    const project = newProject();
+    addPrMainWorkflow(project, [{ environment: 'dev' }]);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+
+    expect(pr).toMatch(/types:[\s\S]*?- opened[\s\S]*?- reopened[\s\S]*?- ready_for_review/);
+    expect(pr).not.toMatch(/- synchronize/);
+    expect(pr).toMatch(/build:[\s\S]*?if: github.event.pull_request.draft == false/);
+    expect(pr).toMatch(/synth:[\s\S]*?if: github.event.pull_request.draft == false/);
+    expect(pr).toMatch(/diff-dev-0:[\s\S]*?if: github.event.pull_request.draft == false/);
+  });
+
+  test('skipDrafts=false restores synchronize trigger and drops the draft guard', () => {
+    const project = newProject();
+    addPrMainWorkflow(project, [{ environment: 'dev' }], false);
+    const pr = synthSnapshot(project)['.github/workflows/pr-main.yml'];
+
+    expect(pr).not.toMatch(/types:/);
+    expect(pr).not.toMatch(/pull_request\.draft/);
+  });
 });
 
 describe('push-main.yml', () => {
