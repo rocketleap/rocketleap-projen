@@ -27,6 +27,23 @@ test('Workload project does not generate src/main.ts or test/main.test.ts', () =
   expect(snapshot['.projenrc.ts']).toBeDefined();
 });
 
+test('deploy/diff/destroy scripts accept multiple stack args after the stage', () => {
+  const project = new RocketleapPlatformCdkProject({
+    company: 'test',
+    project: 'test-cdk',
+    pipeline: { stages: [{ environment: 'test' }] },
+  });
+
+  const scripts = (Testing.synth(project)['package.json'] as unknown as { scripts: Record<string, string> }).scripts;
+
+  // Each script consumes the first arg as the stage, then forwards
+  // remaining args verbatim to cdk. The `shift; ... ${*:...}` pattern is
+  // the portable-shell way to do that in yarn scripts.
+  expect(scripts.deploy).toMatch(/STAGE="\$0"; shift; cdk deploy .*\$\{\*:---all\}/);
+  expect(scripts.diff).toMatch(/STAGE="\$0"; shift; cdk diff .*\$\{\*:-\}/);
+  expect(scripts.destroy).toMatch(/STAGE="\$0"; shift; cdk destroy --ci -f .*\$\{\*:---all\}/);
+});
+
 test('caller `context` is merged into cdk.json alongside crossStackReferences', () => {
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
