@@ -6,6 +6,7 @@ lib/
 node_modules/
 coverage/
 .yarn/
+.projen/
 package.json
 tsconfig.json
 tsconfig.dev.json
