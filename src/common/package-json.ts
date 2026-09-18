@@ -24,15 +24,13 @@ export const CDK_SCRIPTS = {
   'synth': 'cdk synth --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
   'list': 'cdk list --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
   'bootstrap': 'cdk bootstrap --output cdk.out/$0/ --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts";',
-  'diff':
-    'STAGE="$0"; shift; cdk diff --output "cdk.out/$STAGE/" -e --app "yarn ts-node --swc --prefer-ts-exts bin/$STAGE.ts" ${*:-};',
+  'diff': 'cdk diff --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:-};',
   'diff:ci': 'cdk diff --ci --app "yarn ts-node --swc --prefer-ts-exts $0";',
   'synth:ci': 'cdk synth --ci --app "yarn ts-node --swc --prefer-ts-exts $0" --quiet;',
   'deploy':
-    'STAGE="$0"; shift; cdk deploy --concurrency 10 --require-approval never --output "cdk.out/$STAGE/" -e --app "yarn ts-node --swc --prefer-ts-exts bin/$STAGE.ts" ${*:---all};',
+    'cdk deploy --concurrency 10 --require-approval never --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'deploy:ci': 'cdk deploy --concurrency 10 --ci --all --require-approval never --app "$0";',
-  'destroy':
-    'STAGE="$0"; shift; cdk destroy --ci -f --output "cdk.out/$STAGE/" -e --app "yarn ts-node --swc --prefer-ts-exts bin/$STAGE.ts" ${*:---all};',
+  'destroy': 'cdk destroy --output cdk.out/$0/ -e --app "yarn ts-node --swc --prefer-ts-exts bin/$0.ts" ${1:---all};',
   'destroy:ci': 'cdk destroy --ci -f --all --output cdk.out/$0/ --app  "yarn  ts-node --swc --prefer-ts-exts $0";',
 };
 
