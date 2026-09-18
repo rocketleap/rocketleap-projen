@@ -44,6 +44,21 @@ export interface PipelineOptions {
    * @default - failOnDestructiveChanges: false
    */
   readonly cdkDiff?: CdkDiffOptions;
+  /**
+   * Skip the PR CI pipeline while a pull request is in draft state.
+   *
+   * When `true`, the emitted `pr-main.yml` triggers only on `opened`,
+   * `reopened`, and `ready_for_review` (never on `synchronize`) and each
+   * job additionally guards on `github.event.pull_request.draft == false`.
+   * Iterate locally with `yarn diff` / `yarn deploy`; CI validates once
+   * when the PR flips to ready.
+   *
+   * When `false`, the historical behaviour applies: CI fires on every
+   * push to the PR branch regardless of draft state.
+   *
+   * @default true
+   */
+  readonly skipDrafts?: boolean;
 }
 
 /**
@@ -413,21 +428,36 @@ function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unkno
 }
 
 /** Emits `pr-main.yml`: `build` → `synth` (matrix over every stage) → per-stage `diff`. */
-export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): void {
+export function addPrMainWorkflow(project: Project, stages: PipelineStage[], skipDrafts: boolean = true): void {
   if (!stages || stages.length === 0) {
     throw new Error('addPrMainWorkflow: stages must contain at least one entry');
   }
+  const draftGuard = 'github.event.pull_request.draft == false';
   const jobs: Record<string, unknown> = {
-    build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages, { failFast: true }),
+    build: {
+      name: 'Build',
+      ...(skipDrafts ? { if: draftGuard } : {}),
+      uses: './.github/workflows/action-build.yml',
+    },
+    synth: {
+      ...synthMatrixJob(stages, { failFast: true }),
+      ...(skipDrafts ? { if: draftGuard } : {}),
+    },
   };
   stages.forEach((stage, index) => {
-    jobs[`diff-${stageSlug(stage)}-${index}`] = diffJobFor(stage, ['synth']);
+    jobs[`diff-${stageSlug(stage)}-${index}`] = {
+      ...diffJobFor(stage, ['synth']),
+      ...(skipDrafts ? { if: draftGuard } : {}),
+    };
   });
+  const pullRequestTrigger: Record<string, unknown> = { branches: ['main', 'dev'] };
+  if (skipDrafts) {
+    pullRequestTrigger.types = ['opened', 'reopened', 'ready_for_review'];
+  }
   new YamlFile(project, '.github/workflows/pr-main.yml', {
     obj: {
       name: 'PR: Main Branch',
-      on: { pull_request: { branches: ['main', 'dev'] } },
+      on: { pull_request: pullRequestTrigger },
       concurrency: {
         'group': 'pr-main-${{ github.ref }}',
         'cancel-in-progress': true,
@@ -512,6 +542,6 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
   addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
-  addPrMainWorkflow(project, options.stages);
+  addPrMainWorkflow(project, options.stages, options.skipDrafts ?? true);
   addPushMainWorkflow(project, options.stages);
 }
