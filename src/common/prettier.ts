@@ -24,6 +24,7 @@ export const PRETTIER_CONFIGURATION = {
         'coverage/',
         '.yarn/',
         // Projen-generated files
+        '.projen/',
         'package.json',
         'tsconfig.json',
         'tsconfig.dev.json',
