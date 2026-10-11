@@ -11,6 +11,7 @@ import {
 } from './common/compile';
 import { configureEsLint, ESLINT_CONFIGURATION } from './common/eslint';
 import { gitIgnore } from './common/git';
+import { configureModuleExports } from './common/module-exports';
 import { CDK_SCRIPTS, configurePackageJson, LIBRARY_SCRIPTS } from './common/package-json';
 import { CDK_PRE_COMMIT_HOOKS, createPreCommitConfig } from './common/pre-commit';
 import { PRETTIER_CONFIGURATION } from './common/prettier';
@@ -201,6 +202,7 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
     this.package.addField('main', 'dist/index.js');
     this.package.addField('types', 'dist/index.d.ts');
     this.package.addField('files', ['API.md', 'dist/']);
+    configureModuleExports(this);
     this.package.addField('publishConfig', {
       registry: 'https://npm.pkg.github.com/',
     });
