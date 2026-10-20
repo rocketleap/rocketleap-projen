@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### New features
+
+#### `pipeline.additionalChecks` — run repo-owned reusable workflows as pipeline gates
+
+The generated `pr-main.yml` and `push-main.yml` only ever contained the jobs
+this package emits, so a repo with a test suite the TypeScript `build` job
+cannot run had nowhere to put it. governance-cdk hit this: its hand-maintained
+workflows called `action-build-python.yml` to run the Python unit tests of the
+custom AWS Config rules, and adopting the generated pipeline silently dropped
+that call. The reusable workflow stayed in the repo, nothing invoked it, and
+regressions in the Python rules reached deploys with no test gate — in our repo
+and in every customer fork. See Roadmap#240.
+
+`additionalChecks` is the supported hook. Each entry becomes a job next to
+`build`, and `synth` gains a dependency on it, so a failure blocks the PR diff
+and every deploy behind it:
+
+```ts
+pipeline: {
+  stages: [{ environment: 'governance' }],
+  additionalChecks: [
+    { id: 'build-python', name: 'Build Python', workflow: 'action-build-python.yml' },
+  ],
+},
+```
+
+```yaml
+jobs:
+  build:
+    name: Build
+    uses: ./.github/workflows/action-build.yml
+  build-python:
+    name: Build Python
+    uses: ./.github/workflows/action-build-python.yml
+  synth:
+    needs:
+      - build
+      - build-python
+```
+
+The referenced workflow file is **not** generated — it lives in the consuming
+repository and must declare a `workflow_call` trigger with no required inputs.
+That keeps repo-specific test tooling in the repo that owns it while the call
+into the pipeline survives regeneration.
+
+Opt-in and backwards compatible: a project that declares no checks gets the
+byte-identical five-job pipeline it has today, including the plain
+`needs: build` scalar. No consumer action needed unless you want the hook.
+
 ### Behaviour changes
 
 #### `pass_filenames: false` on all pre-commit hooks

@@ -13,6 +13,7 @@ export * as actions from './common/actions';
 export {
   PipelineOptions,
   PipelineStage,
+  PipelineCheck,
   CdkDiffOptions,
   addCdkPipelineWorkflows,
   addActionBuildWorkflow,

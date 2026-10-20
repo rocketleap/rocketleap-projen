@@ -279,3 +279,70 @@ describe('addCdkPipelineWorkflows', () => {
     expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow('pipeline.stages');
   });
 });
+
+describe('pipeline.additionalChecks', () => {
+  const pythonCheck = { id: 'build-python', name: 'Build Python', workflow: 'action-build-python.yml' };
+
+  function synthBoth(checks = [pythonCheck]) {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'governance' }], additionalChecks: checks });
+    const snapshot = synthSnapshot(project);
+    return {
+      pr: snapshot['.github/workflows/pr-main.yml'],
+      push: snapshot['.github/workflows/push-main.yml'],
+    };
+  }
+
+  test('emits the check as a sibling of build in both entry workflows', () => {
+    const { pr, push } = synthBoth();
+    for (const workflow of [pr, push]) {
+      expect(workflow).toMatch(/^\s{2}build-python:\s*$/m);
+      expect(workflow).toMatch(/build-python:[\s\S]*?name: Build Python/);
+      expect(workflow).toMatch(/build-python:[\s\S]*?uses: \.\/\.github\/workflows\/action-build-python\.yml/);
+    }
+  });
+
+  test('synth gates on the check, so a Python failure blocks diff and every deploy', () => {
+    const { pr, push } = synthBoth();
+    for (const workflow of [pr, push]) {
+      expect(workflow).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python/);
+    }
+    // PR diff and push gate hang off synth, so the gate is transitive.
+    expect(pr).toMatch(/diff-governance-0:[\s\S]*?needs:\s*\n\s*- synth/);
+    expect(push).toMatch(/gate-governance-0:[\s\S]*?needs:\s*\n\s*- synth/);
+  });
+
+  test('the reusable workflow file itself is not generated — the repo owns it', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, {
+      stages: [{ environment: 'governance' }],
+      additionalChecks: [pythonCheck],
+    });
+    expect(synthSnapshot(project)['.github/workflows/action-build-python.yml']).toBeUndefined();
+  });
+
+  test('projects that declare no checks keep the plain `needs: build` string', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
+    const snapshot = synthSnapshot(project);
+    expect(snapshot['.github/workflows/pr-main.yml']).toMatch(/synth:[\s\S]*?needs: build/);
+    expect(snapshot['.github/workflows/push-main.yml']).toMatch(/synth:[\s\S]*?needs: build/);
+    expect(snapshot['.github/workflows/pr-main.yml']).not.toContain('build-python');
+  });
+
+  test('multiple checks all gate synth', () => {
+    const { pr } = synthBoth([pythonCheck, { id: 'contract', name: 'Contract', workflow: 'action-contract.yml' }]);
+    expect(pr).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python\s*\n\s*- contract/);
+  });
+
+  test('rejects reserved, duplicate and malformed ids', () => {
+    expect(() => synthBoth([{ ...pythonCheck, id: 'build' }])).toThrow('reserved job id');
+    expect(() => synthBoth([{ ...pythonCheck, id: 'synth' }])).toThrow('reserved job id');
+    expect(() => synthBoth([pythonCheck, pythonCheck])).toThrow('duplicate');
+    expect(() => synthBoth([{ ...pythonCheck, id: '1-python' }])).toThrow('not a valid GitHub Actions job id');
+  });
+
+  test('rejects a check that does not point at a workflow file', () => {
+    expect(() => synthBoth([{ ...pythonCheck, workflow: 'action-build-python' }])).toThrow('under .github/workflows/');
+  });
+});

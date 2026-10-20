@@ -24,6 +24,44 @@ export interface PipelineStage {
 }
 
 /**
+ * An extra reusable workflow run as a gate alongside `build` in both
+ * `pr-main.yml` and `push-main.yml`.
+ *
+ * The referenced workflow file is **not** generated — it lives in the
+ * consuming repository under `.github/workflows/` and must declare a
+ * `workflow_call` trigger with no required inputs. This is the supported
+ * hook for repo-specific test suites the TypeScript `build` job cannot
+ * run, such as the Python unit tests of governance-cdk's custom AWS
+ * Config rules.
+ *
+ * `synth` depends on every check, so a failing check blocks the PR diff
+ * and, on `main`/`dev`, every deploy behind it.
+ */
+export interface PipelineCheck {
+  /**
+   * GitHub Actions job id.
+   *
+   * This is the name branch protection matches on, so changing it on an
+   * existing repo means updating the required checks too.
+   *
+   * @example 'build-python'
+   */
+  readonly id: string;
+  /**
+   * Display name of the job.
+   *
+   * @example 'Build Python'
+   */
+  readonly name: string;
+  /**
+   * File name of the reusable workflow, relative to `.github/workflows/`.
+   *
+   * @example 'action-build-python.yml'
+   */
+  readonly workflow: string;
+}
+
+/**
  * Pipeline workflow configuration for a Rocketleap CDK project.
  *
  * Emits a single `main` → prod pipeline: `build` uploads a workspace
@@ -44,6 +82,16 @@ export interface PipelineOptions {
    * @default - failOnDestructiveChanges: false
    */
   readonly cdkDiff?: CdkDiffOptions;
+  /**
+   * Repo-specific reusable workflows to run next to `build`, gating
+   * `synth` and everything downstream of it.
+   *
+   * Opt-in: a project that declares none gets the unchanged five-job
+   * pipeline.
+   *
+   * @default - none
+   */
+  readonly additionalChecks?: PipelineCheck[];
 }
 
 /**
@@ -376,7 +424,10 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
   });
 }
 
-function synthMatrixJob(stages: PipelineStage[], opts: { failFast: boolean }): Record<string, unknown> {
+function synthMatrixJob(
+  stages: PipelineStage[],
+  opts: { failFast: boolean; checks: PipelineCheck[] },
+): Record<string, unknown> {
   const stageEntries = stages.map((stage) => {
     const entry: Record<string, string> = { environment: stage.environment };
     if (stage.workload) entry.workload = stage.workload;
@@ -384,7 +435,9 @@ function synthMatrixJob(stages: PipelineStage[], opts: { failFast: boolean }): R
   });
   return {
     name: "Synth ${{ matrix.stage.environment }}${{ matrix.stage.workload && format(' ({0})', matrix.stage.workload) || '' }}",
-    needs: 'build',
+    // Stays a plain string when there are no extra checks, so adding the
+    // option doesn't churn the generated YAML of every other repo.
+    needs: opts.checks.length === 0 ? 'build' : ['build', ...opts.checks.map((check) => check.id)],
     strategy: { 'fail-fast': opts.failFast, 'matrix': { stage: stageEntries } },
     uses: './.github/workflows/action-synth.yml',
     with: {
@@ -412,14 +465,43 @@ function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unkno
   return { name: jobName, needs, uses: './.github/workflows/action-diff.yml', with: withInputs };
 }
 
-/** Emits `pr-main.yml`: `build` → `synth` (matrix over every stage) → per-stage `diff`. */
-export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): void {
+const JOB_ID_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_-]*$/;
+
+/**
+ * Validates the opt-in checks and turns them into caller jobs keyed by job id.
+ *
+ * Reserved ids, duplicates and non-workflow file names are rejected here
+ * rather than emitting YAML GitHub refuses to run — a workflow file that
+ * never executes is exactly the silent failure mode this hook exists to close.
+ */
+function checkJobs(checks: PipelineCheck[]): Record<string, unknown> {
+  const jobs: Record<string, unknown> = {};
+  for (const check of checks) {
+    if (!JOB_ID_PATTERN.test(check.id)) {
+      throw new Error(`pipeline.additionalChecks: '${check.id}' is not a valid GitHub Actions job id`);
+    }
+    if (['build', 'synth'].includes(check.id) || check.id in jobs) {
+      throw new Error(`pipeline.additionalChecks: duplicate or reserved job id '${check.id}'`);
+    }
+    if (!check.workflow.endsWith('.yml') && !check.workflow.endsWith('.yaml')) {
+      throw new Error(
+        `pipeline.additionalChecks: '${check.workflow}' must be a workflow file name under .github/workflows/`,
+      );
+    }
+    jobs[check.id] = { name: check.name, uses: `./.github/workflows/${check.workflow}` };
+  }
+  return jobs;
+}
+
+/** Emits `pr-main.yml`: `build` + checks → `synth` (matrix over every stage) → per-stage `diff`. */
+export function addPrMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
   if (!stages || stages.length === 0) {
     throw new Error('addPrMainWorkflow: stages must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages, { failFast: true }),
+    ...checkJobs(checks),
+    synth: synthMatrixJob(stages, { failFast: true, checks }),
   };
   stages.forEach((stage, index) => {
     jobs[`diff-${stageSlug(stage)}-${index}`] = diffJobFor(stage, ['synth']);
@@ -445,13 +527,14 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[]): vo
  * running in parallel behind that single gate. Between-env promotion is
  * sequential: the next group's gate waits for the previous group's deploys.
  */
-export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): void {
+export function addPushMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
   if (!stages || stages.length === 0) {
     throw new Error('addPushMainWorkflow: stages must contain at least one entry');
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
-    synth: synthMatrixJob(stages, { failFast: false }),
+    ...checkJobs(checks),
+    synth: synthMatrixJob(stages, { failFast: false, checks }),
   };
 
   // Group consecutive stages by environment. Each group gets ONE gate
@@ -503,6 +586,9 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[]): 
  * Adds the six-file Rocketleap CDK pipeline: `action-build.yml`,
  * `action-synth.yml`, `action-deploy.yml`, `action-diff.yml`,
  * `pr-main.yml`, `push-main.yml`.
+ *
+ * `options.additionalChecks` wires repo-owned reusable workflows into the
+ * two generated entry points; those workflow files are not generated here.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {
@@ -512,6 +598,7 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
   addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
-  addPrMainWorkflow(project, options.stages);
-  addPushMainWorkflow(project, options.stages);
+  const checks = options.additionalChecks ?? [];
+  addPrMainWorkflow(project, options.stages, checks);
+  addPushMainWorkflow(project, options.stages, checks);
 }
