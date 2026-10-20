@@ -24,6 +24,10 @@ const project = new cdk.JsiiProject({
   projenrcTs: true,
   projenVersion: '^0.101.9',
 
+  // Pin the CI node version instead of inheriting `lts/*`, which silently
+  // moves to the next LTS line every October. See Roadmap#148.
+  workflowNodeVersion: '24',
+
   workflowBootstrapSteps: ACTIONS_CONFIGURATION.workflowBootstrapSteps,
 
   peerDeps: ['projen@^0.101.9', 'constructs@^10.5.0'],
