@@ -366,4 +366,54 @@ describe('pipeline.additionalChecks', () => {
     const { pr } = synthBoth();
     expect(pr).toMatch(/build-python:\s*\n\s*name: Build Python\s*\n\s*uses: [^\n]+\n\s{2}synth:/);
   });
+
+  const actionCheck: PipelineCheck = {
+    id: 'dependency-review',
+    name: 'Dependency Review',
+    uses: 'actions/dependency-review-action@v4',
+    runsOn: ['ubuntu-latest'],
+  };
+
+  test('runsOn turns the check into a job that runs the action as a step', () => {
+    const { pr, push } = synthBoth([actionCheck]);
+    for (const workflow of [pr, push]) {
+      expect(workflow).toMatch(/dependency-review:[\s\S]*?runs-on: ubuntu-latest/);
+      expect(workflow).toMatch(/dependency-review:[\s\S]*?steps:[\s\S]*?uses: actions\/dependency-review-action@v4/);
+      // Never a job-level `uses`: GitHub would read the action as a reusable workflow.
+      expect(workflow).not.toMatch(/dependency-review:\s*\n\s*name: [^\n]+\n\s*uses:/);
+      expect(workflow).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- dependency-review/);
+    }
+  });
+
+  test('an action check checks the repository out first', () => {
+    const { pr } = synthBoth([actionCheck]);
+    expect(pr).toMatch(/dependency-review:[\s\S]*?steps:\s*\n\s*- name: Checkout\s*\n\s*uses: actions\/checkout@v6/);
+  });
+
+  test('checkout: false drops the checkout step', () => {
+    const { pr } = synthBoth([{ ...actionCheck, checkout: false }]);
+    expect(pr).toMatch(/dependency-review:[\s\S]*?steps:\s*\n\s*- name: Dependency Review/);
+    expect(pr).not.toMatch(/dependency-review:[\s\S]*?Checkout/);
+  });
+
+  test('inputs are forwarded to the action step', () => {
+    const { pr } = synthBoth([{ ...actionCheck, with: { 'fail-on-severity': 'high' } }]);
+    expect(pr).toMatch(
+      /dependency-review:[\s\S]*?uses: actions\/dependency-review-action@v4\s*\n\s*with:\s*\n\s*fail-on-severity: high/,
+    );
+  });
+
+  test('several runner labels are emitted as a list for self-hosted runners', () => {
+    const { pr } = synthBoth([{ ...actionCheck, runsOn: ['self-hosted', 'linux', 'x64'] }]);
+    expect(pr).toMatch(/dependency-review:[\s\S]*?runs-on:\s*\n\s*- self-hosted\s*\n\s*- linux\s*\n\s*- x64/);
+  });
+
+  test('a reusable workflow and an action can gate synth side by side', () => {
+    const { pr, push } = synthBoth([pythonCheck, actionCheck]);
+    for (const workflow of [pr, push]) {
+      expect(workflow).toMatch(/build-python:[\s\S]*?uses: \.\/\.github\/workflows\/action-build-python\.yml/);
+      expect(workflow).toMatch(/dependency-review:[\s\S]*?runs-on: ubuntu-latest/);
+      expect(workflow).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python\s*\n\s*- dependency-review/);
+    }
+  });
 });
