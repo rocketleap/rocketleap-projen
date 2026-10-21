@@ -5592,7 +5592,7 @@ public readonly DEFAULT_TS_JEST_TRANFORM_PATTERN: string;
 
 ### CdkDiffOptions <a name="CdkDiffOptions" id="@rocketleap/rocketleap-projen.CdkDiffOptions"></a>
 
-Configuration for the `corymhall/cdk-diff-action@v2` step run inside the generated PR diff workflow (`pr-main.yml`).
+Configuration for the `corymhall/cdk-diff-action@v2` step run inside the generated PR diff workflows.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.CdkDiffOptions.Initializer"></a>
 
@@ -5741,11 +5741,13 @@ Inputs passed to the called workflow as the job's `with` block.
 
 Pipeline workflow configuration for a Rocketleap CDK project.
 
-Emits a single `main` → prod pipeline: `build` uploads a workspace
-artifact once, `synth` is a matrix job that fans out over every
-stage in parallel, and `push-main.yml` deploys stages sequentially
-with consecutive same-environment stages grouped into a parallel
-fan-out under one GitHub Environment gate.
+`build` uploads a workspace artifact once, `synth` is a matrix job that
+fans out over every stage in parallel, and the push workflow deploys
+stages sequentially with consecutive same-environment stages grouped into
+a parallel fan-out under one GitHub Environment gate.
+
+`promotionStrategy` chooses how many branch pairs that shape is
+generated for.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineOptions.Initializer"></a>
 
@@ -5759,9 +5761,11 @@ const pipelineOptions: PipelineOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the `main` → prod pipeline promotes through. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the pipeline promotes through. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.additionalChecks">additionalChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck">PipelineCheck</a>[]</code> | Extra GitHub Actions workflows to run next to `build`, gating `synth` and everything downstream of it. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.promotion">promotion</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions">PipelinePromotionOptions</a></code> | Target branch and production stages for `PromotionStrategy.PR`. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.promotionStrategy">promotionStrategy</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PromotionStrategy">PromotionStrategy</a></code> | How a change reaches production. |
 
 ---
 
@@ -5773,7 +5777,12 @@ public readonly stages: PipelineStage[];
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]
 
-Ordered list of stages the `main` → prod pipeline promotes through.
+Ordered list of stages the pipeline promotes through.
+
+Under `PromotionStrategy.DIRECT` this is the whole pipeline,
+pre-prod through prod. Under `PromotionStrategy.PR` it is only the
+pre-prod chain deployed from `promotion.sourceBranch`, and
+`promotion.productionStages` carries the rest.
 
 ---
 
@@ -5806,6 +5815,107 @@ public readonly cdkDiff: CdkDiffOptions;
 - *Default:* failOnDestructiveChanges: false
 
 Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow.
+
+---
+
+##### `promotion`<sup>Optional</sup> <a name="promotion" id="@rocketleap/rocketleap-projen.PipelineOptions.property.promotion"></a>
+
+```typescript
+public readonly promotion: PipelinePromotionOptions;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions">PipelinePromotionOptions</a>
+- *Default:* none; required when promotionStrategy is PR
+
+Target branch and production stages for `PromotionStrategy.PR`.
+
+Required with that strategy and rejected without it — both are synth-time
+errors rather than a pipeline that merges and then does the wrong thing.
+
+---
+
+##### `promotionStrategy`<sup>Optional</sup> <a name="promotionStrategy" id="@rocketleap/rocketleap-projen.PipelineOptions.property.promotionStrategy"></a>
+
+```typescript
+public readonly promotionStrategy: PromotionStrategy;
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PromotionStrategy">PromotionStrategy</a>
+- *Default:* PromotionStrategy.DIRECT
+
+How a change reaches production.
+
+Leaving this unset generates the same six files with the same contents a
+project gets today, so upgrading this package never rewrites a pipeline
+that did not ask for it. Setting `PromotionStrategy.PR` changes how
+the repo deploys, and needs the matching branches and branch protection
+to exist.
+
+---
+
+### PipelinePromotionOptions <a name="PipelinePromotionOptions" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions"></a>
+
+The target-branch half of `PromotionStrategy.PR`.
+
+Required with that strategy and rejected without it, so a project cannot
+half-configure promotion and silently get the single-branch shape.
+
+#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.Initializer"></a>
+
+```typescript
+import { PipelinePromotionOptions } from '@rocketleap/rocketleap-projen'
+
+const pipelinePromotionOptions: PipelinePromotionOptions = { ... }
+```
+
+#### Properties <a name="Properties" id="Properties"></a>
+
+| **Name** | **Type** | **Description** |
+| --- | --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.productionStages">productionStages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages deployed from `targetBranch` — the chain the promotion PR puts into production. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.sourceBranch">sourceBranch</a></code> | <code>string</code> | Branch the pre-prod `pipeline.stages` deploy from, and the branch the promotion PR promotes. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.targetBranch">targetBranch</a></code> | <code>string</code> | Branch `productionStages` deploy from, and the base of the promotion PR. |
+
+---
+
+##### `productionStages`<sup>Required</sup> <a name="productionStages" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.productionStages"></a>
+
+```typescript
+public readonly productionStages: PipelineStage[];
+```
+
+- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]
+
+Ordered list of stages deployed from `targetBranch` — the chain the promotion PR puts into production.
+
+Keep it disjoint from `pipeline.stages`: a stage named in both deploys
+twice, once from each branch.
+
+---
+
+##### `sourceBranch`<sup>Optional</sup> <a name="sourceBranch" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.sourceBranch"></a>
+
+```typescript
+public readonly sourceBranch: string;
+```
+
+- *Type:* string
+- *Default:* 'dev'
+
+Branch the pre-prod `pipeline.stages` deploy from, and the branch the promotion PR promotes.
+
+---
+
+##### `targetBranch`<sup>Optional</sup> <a name="targetBranch" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.targetBranch"></a>
+
+```typescript
+public readonly targetBranch: string;
+```
+
+- *Type:* string
+- *Default:* 'main'
+
+Branch `productionStages` deploy from, and the base of the promotion PR.
 
 ---
 
@@ -13001,6 +13111,50 @@ Use `Fn::GetStackOutput` for cross-stack references.
 ##### `BOTH` <a name="BOTH" id="@rocketleap/rocketleap-projen.CrossStackReferences.BOTH"></a>
 
 Emit both strong and weak references.
+
+---
+
+
+### PromotionStrategy <a name="PromotionStrategy" id="@rocketleap/rocketleap-projen.PromotionStrategy"></a>
+
+How a change reaches production.
+
+#### Members <a name="Members" id="Members"></a>
+
+| **Name** | **Description** |
+| --- | --- |
+| <code><a href="#@rocketleap/rocketleap-projen.PromotionStrategy.DIRECT">DIRECT</a></code> | One branch pair carries every stage. |
+| <code><a href="#@rocketleap/rocketleap-projen.PromotionStrategy.PR">PR</a></code> | Two branch pairs with a promotion pull request between them. |
+
+---
+
+##### `DIRECT` <a name="DIRECT" id="@rocketleap/rocketleap-projen.PromotionStrategy.DIRECT"></a>
+
+One branch pair carries every stage.
+
+`pr-main.yml` diffs all stages and
+`push-main.yml` deploys all of them, pre-prod through prod, behind the
+required reviewers configured on each stage's GitHub Environment.
+
+Fewest moving parts and the fastest path to prod. Nothing durable holds
+the production diff, so the only record of what was approved is the
+Environment approval on the deploy job.
+
+---
+
+
+##### `PR` <a name="PR" id="@rocketleap/rocketleap-projen.PromotionStrategy.PR"></a>
+
+Two branch pairs with a promotion pull request between them.
+
+Pre-prod
+stages deploy from the source branch; merging the promotion PR into the
+target branch is what deploys production.
+
+The promotion PR is the audit artefact: the production `cdk diff` is
+posted on it, and its review, description and merge are a durable record
+of who approved which production change. Pick this when a compliance
+narrative has to point at a reviewed diff.
 
 ---
 

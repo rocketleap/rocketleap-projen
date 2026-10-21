@@ -71,17 +71,82 @@ export interface PipelineCheck {
 }
 
 /**
+ * How a change reaches production.
+ */
+export enum PromotionStrategy {
+  /**
+   * One branch pair carries every stage. `pr-main.yml` diffs all stages and
+   * `push-main.yml` deploys all of them, pre-prod through prod, behind the
+   * required reviewers configured on each stage's GitHub Environment.
+   *
+   * Fewest moving parts and the fastest path to prod. Nothing durable holds
+   * the production diff, so the only record of what was approved is the
+   * Environment approval on the deploy job.
+   */
+  DIRECT = 'direct',
+  /**
+   * Two branch pairs with a promotion pull request between them. Pre-prod
+   * stages deploy from the source branch; merging the promotion PR into the
+   * target branch is what deploys production.
+   *
+   * The promotion PR is the audit artefact: the production `cdk diff` is
+   * posted on it, and its review, description and merge are a durable record
+   * of who approved which production change. Pick this when a compliance
+   * narrative has to point at a reviewed diff.
+   */
+  PR = 'pr',
+}
+
+/**
+ * The target-branch half of `PromotionStrategy.PR`.
+ *
+ * Required with that strategy and rejected without it, so a project cannot
+ * half-configure promotion and silently get the single-branch shape.
+ */
+export interface PipelinePromotionOptions {
+  /**
+   * Ordered list of stages deployed from `targetBranch` — the chain the
+   * promotion PR puts into production.
+   *
+   * Keep it disjoint from `pipeline.stages`: a stage named in both deploys
+   * twice, once from each branch.
+   */
+  readonly productionStages: PipelineStage[];
+  /**
+   * Branch the pre-prod `pipeline.stages` deploy from, and the branch the
+   * promotion PR promotes.
+   *
+   * @default 'dev'
+   */
+  readonly sourceBranch?: string;
+  /**
+   * Branch `productionStages` deploy from, and the base of the
+   * promotion PR.
+   *
+   * @default 'main'
+   */
+  readonly targetBranch?: string;
+}
+
+/**
  * Pipeline workflow configuration for a Rocketleap CDK project.
  *
- * Emits a single `main` → prod pipeline: `build` uploads a workspace
- * artifact once, `synth` is a matrix job that fans out over every
- * stage in parallel, and `push-main.yml` deploys stages sequentially
- * with consecutive same-environment stages grouped into a parallel
- * fan-out under one GitHub Environment gate.
+ * `build` uploads a workspace artifact once, `synth` is a matrix job that
+ * fans out over every stage in parallel, and the push workflow deploys
+ * stages sequentially with consecutive same-environment stages grouped into
+ * a parallel fan-out under one GitHub Environment gate.
+ *
+ * `promotionStrategy` chooses how many branch pairs that shape is
+ * generated for.
  */
 export interface PipelineOptions {
   /**
-   * Ordered list of stages the `main` → prod pipeline promotes through.
+   * Ordered list of stages the pipeline promotes through.
+   *
+   * Under `PromotionStrategy.DIRECT` this is the whole pipeline,
+   * pre-prod through prod. Under `PromotionStrategy.PR` it is only the
+   * pre-prod chain deployed from `promotion.sourceBranch`, and
+   * `promotion.productionStages` carries the rest.
    */
   readonly stages: PipelineStage[];
   /**
@@ -102,11 +167,32 @@ export interface PipelineOptions {
    * @default - none
    */
   readonly additionalChecks?: PipelineCheck[];
+  /**
+   * How a change reaches production.
+   *
+   * Leaving this unset generates the same six files with the same contents a
+   * project gets today, so upgrading this package never rewrites a pipeline
+   * that did not ask for it. Setting `PromotionStrategy.PR` changes how
+   * the repo deploys, and needs the matching branches and branch protection
+   * to exist.
+   *
+   * @default PromotionStrategy.DIRECT
+   */
+  readonly promotionStrategy?: PromotionStrategy;
+  /**
+   * Target branch and production stages for `PromotionStrategy.PR`.
+   *
+   * Required with that strategy and rejected without it — both are synth-time
+   * errors rather than a pipeline that merges and then does the wrong thing.
+   *
+   * @default - none; required when promotionStrategy is PR
+   */
+  readonly promotion?: PipelinePromotionOptions;
 }
 
 /**
  * Configuration for the `corymhall/cdk-diff-action@v2` step run inside the
- * generated PR diff workflow (`pr-main.yml`).
+ * generated PR diff workflows.
  */
 export interface CdkDiffOptions {
   /**
@@ -486,10 +572,34 @@ function checkJobs(checks: PipelineCheck[]): Record<string, unknown> {
   return jobs;
 }
 
-/** Emits `pr-main.yml`: `build` + checks → `synth` (matrix over every stage) → per-stage `diff`. */
-export function addPrMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
+/**
+ * One (branch, file name, stages) triple. Both promotion strategies are the
+ * same two generators below applied to one or two of these, so the PR shape
+ * adds no second code path for anything downstream of `build`.
+ */
+interface PipelineEntryPoint {
+  /** File name and workflow title segment: `pr-<slug>.yml`, `PR: <Slug> Branch`. */
+  readonly slug: string;
+  /** Branches the generated workflow triggers on. */
+  readonly branches: string[];
+  /** Stages this entry point synths, diffs and deploys. */
+  readonly stages: PipelineStage[];
+}
+
+/** Branch names reach file names and job ids, where only this character set is valid. */
+function branchSlug(branch: string): string {
+  return branch.replace(/[^a-zA-Z0-9_-]/g, '-');
+}
+
+function titleCase(slug: string): string {
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
+/** Emits `pr-<slug>.yml`: `build` + checks → `synth` (matrix over every stage) → per-stage `diff`. */
+function addPrWorkflow(project: Project, entry: PipelineEntryPoint, checks: PipelineCheck[]): void {
+  const stages = entry.stages;
   if (!stages || stages.length === 0) {
-    throw new Error('addPrMainWorkflow: stages must contain at least one entry');
+    throw new Error(`pr-${entry.slug}.yml: stages must contain at least one entry`);
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
@@ -499,12 +609,12 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[], che
   stages.forEach((stage, index) => {
     jobs[`diff-${stageSlug(stage)}-${index}`] = diffJobFor(stage, ['synth']);
   });
-  new YamlFile(project, '.github/workflows/pr-main.yml', {
+  new YamlFile(project, `.github/workflows/pr-${entry.slug}.yml`, {
     obj: {
-      name: 'PR: Main Branch',
-      on: { pull_request: { branches: ['main', 'dev'] } },
+      name: `PR: ${titleCase(entry.slug)} Branch`,
+      on: { pull_request: { branches: entry.branches } },
       concurrency: {
-        'group': 'pr-main-${{ github.ref }}',
+        'group': `pr-${entry.slug}-\${{ github.ref }}`,
         'cancel-in-progress': true,
       },
       permissions: PERMISSIONS_PR,
@@ -514,15 +624,33 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[], che
 }
 
 /**
- * Emits `push-main.yml`: `build` → `synth` (matrix over every stage) → for each
+ * Emits `pr-main.yml` for the single-branch pipeline: `build` + checks →
+ * `synth` (matrix over every stage) → per-stage `diff`. Triggers on pull
+ * requests into `main` and `dev`.
+ */
+export function addPrMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
+  addPrWorkflow(project, { slug: 'main', branches: ['main', 'dev'], stages }, checks);
+}
+
+/**
+ * Emits `push-<slug>.yml`: `build` → `synth` (matrix over every stage) → for each
  * consecutive same-`environment` group, one `gate-<env>-<idx>` job that owns
  * the GitHub Environment approval, followed by every deploy in the group
  * running in parallel behind that single gate. Between-env promotion is
  * sequential: the next group's gate waits for the previous group's deploys.
+ *
+ * `promoteTo` appends a `promote` job that opens the promotion PR once every
+ * deploy in the last group has succeeded.
  */
-export function addPushMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
+function addPushWorkflow(
+  project: Project,
+  entry: PipelineEntryPoint,
+  checks: PipelineCheck[],
+  promoteTo?: string,
+): void {
+  const stages = entry.stages;
   if (!stages || stages.length === 0) {
-    throw new Error('addPushMainWorkflow: stages must contain at least one entry');
+    throw new Error(`push-${entry.slug}.yml: stages must contain at least one entry`);
   }
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
@@ -564,35 +692,195 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[], c
     currentGroupDeploys.push(deployId);
   });
 
-  new YamlFile(project, '.github/workflows/push-main.yml', {
+  if (promoteTo) {
+    jobs.promote = {
+      name: `Create ${promoteTo} promotion PR`,
+      needs: currentGroupDeploys,
+      uses: './.github/workflows/action-promote-pr.yml',
+      with: {
+        'target-branch': promoteTo,
+        'source-branch': '${{ github.ref_name }}',
+      },
+    };
+  }
+
+  new YamlFile(project, `.github/workflows/push-${entry.slug}.yml`, {
     obj: {
-      name: 'Push: Main Branch',
-      on: { push: { branches: ['main', 'dev'] }, workflow_dispatch: {} },
+      name: `Push: ${titleCase(entry.slug)} Branch`,
+      on: { push: { branches: entry.branches }, workflow_dispatch: {} },
       permissions: PERMISSIONS_PUSH,
-      concurrency: 'main',
+      concurrency: entry.slug,
       jobs,
     },
   });
 }
 
 /**
- * Adds the six-file Rocketleap CDK pipeline: `action-build.yml`,
- * `action-synth.yml`, `action-deploy.yml`, `action-diff.yml`,
- * `pr-main.yml`, `push-main.yml`.
+ * Emits `push-main.yml` for the single-branch pipeline: `build` → `synth`
+ * (matrix over every stage) → for each consecutive same-`environment` group,
+ * one `gate-<env>-<idx>` job that owns the GitHub Environment approval,
+ * followed by every deploy in the group running in parallel behind that
+ * single gate. Between-env promotion is sequential: the next group's gate
+ * waits for the previous group's deploys. Triggers on pushes to `main` and
+ * `dev`.
+ */
+export function addPushMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
+  addPushWorkflow(project, { slug: 'main', branches: ['main', 'dev'], stages }, checks);
+}
+
+/**
+ * Emits `action-promote-pr.yml`: a reusable workflow that opens, or updates,
+ * the pull request promoting `source-branch` onto `target-branch`.
+ *
+ * Only generated under `PromotionStrategy.PR`.
+ */
+export function addActionPromotePrWorkflow(project: Project): void {
+  new YamlFile(project, '.github/workflows/action-promote-pr.yml', {
+    obj: {
+      name: 'Action: Create Promotion PR',
+      on: {
+        workflow_call: {
+          inputs: {
+            'target-branch': {
+              description: 'Branch the promotion PR targets, and the base it is opened against.',
+              required: true,
+              type: 'string',
+            },
+            'source-branch': {
+              description: 'Branch whose state is promoted.',
+              required: true,
+              type: 'string',
+            },
+          },
+          outputs: {
+            'pr-number': {
+              description: 'Number of the promotion pull request that was opened or updated.',
+              value: '${{ jobs.pr.outputs.pr-number }}',
+            },
+          },
+        },
+      },
+      env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' },
+      permissions: {
+        'pull-requests': 'write',
+        'contents': 'write',
+      },
+      jobs: {
+        pr: {
+          'outputs': { 'pr-number': '${{ steps.cpr.outputs.pull-request-number }}' },
+          'runs-on': 'ubuntu-latest',
+          'steps': [
+            {
+              // fetch-depth: 0 — the promotion branch is reset onto another
+              // branch's tip and then pushed. From a shallow clone that push
+              // fails with "shallow update not allowed".
+              name: 'Checkout',
+              uses: 'actions/checkout@v6',
+              with: {
+                'ref': '${{ inputs.target-branch }}',
+                'fetch-depth': 0,
+              },
+            },
+            {
+              name: 'Reset onto the promoted branch',
+              run: [
+                'git fetch origin ${{ inputs.source-branch }}',
+                'git reset --hard origin/${{ inputs.source-branch }}',
+              ].join('\n'),
+            },
+            {
+              // Fixed branch name, so later pushes to the source branch update
+              // the one open promotion PR instead of opening another.
+              name: 'Create promotion PR',
+              id: 'cpr',
+              uses: 'peter-evans/create-pull-request@v8',
+              with: {
+                title: 'Promote ${{ inputs.source-branch }} to ${{ inputs.target-branch }}',
+                base: '${{ inputs.target-branch }}',
+                branch: 'promote-${{ inputs.source-branch }}-to-${{ inputs.target-branch }}',
+                body: [
+                  'Opened by `push-${{ inputs.source-branch }}.yml` once every `${{ inputs.source-branch }}` stage had deployed.',
+                  '',
+                  'Merging this deploys the production stages from `${{ inputs.target-branch }}`.',
+                  'The production `cdk diff` is posted on this PR by `pr-${{ inputs.target-branch }}.yml`.',
+                ].join('\n'),
+                labels: 'promotion-pr',
+              },
+            },
+          ],
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Adds the Rocketleap CDK pipeline GitHub Actions workflows.
+ *
+ * Under `PromotionStrategy.DIRECT`, the default, that is six files:
+ * `action-build.yml`, `action-synth.yml`, `action-deploy.yml`,
+ * `action-diff.yml`, `pr-main.yml`, `push-main.yml`.
+ *
+ * Under `PromotionStrategy.PR` it is nine: the same four reusable
+ * `action-*` workflows, `action-promote-pr.yml`, and a PR/push pair for each
+ * of the source and target branches.
  *
  * `options.additionalChecks` wires extra workflows — local or published
- * elsewhere — into the two generated entry points as gates on `synth`.
- * Those workflows are not generated here.
+ * elsewhere — into every generated entry point as gates on `synth`. Those
+ * workflows are not generated here.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {
     throw new Error('pipeline.stages must contain at least one entry');
   }
+  const strategy = options.promotionStrategy ?? PromotionStrategy.DIRECT;
+  if (strategy === PromotionStrategy.DIRECT && options.promotion) {
+    throw new Error(
+      "pipeline.promotion only applies to promotionStrategy: PromotionStrategy.PR — set that strategy or drop the 'promotion' field",
+    );
+  }
+  if (strategy === PromotionStrategy.PR && !options.promotion) {
+    throw new Error(
+      'promotionStrategy: PromotionStrategy.PR requires pipeline.promotion, naming the production stages to deploy from the target branch',
+    );
+  }
+
   addActionBuildWorkflow(project);
   addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
   const checks = options.additionalChecks ?? [];
-  addPrMainWorkflow(project, options.stages, checks);
-  addPushMainWorkflow(project, options.stages, checks);
+
+  if (!options.promotion) {
+    addPrMainWorkflow(project, options.stages, checks);
+    addPushMainWorkflow(project, options.stages, checks);
+    return;
+  }
+
+  const productionStages = options.promotion.productionStages;
+  if (!productionStages || productionStages.length === 0) {
+    throw new Error('pipeline.promotion.productionStages must contain at least one entry');
+  }
+  const sourceBranch = options.promotion.sourceBranch ?? 'dev';
+  const targetBranch = options.promotion.targetBranch ?? 'main';
+  if (sourceBranch === targetBranch) {
+    throw new Error(`pipeline.promotion.sourceBranch and targetBranch must differ — both are '${sourceBranch}'`);
+  }
+
+  const source: PipelineEntryPoint = {
+    slug: branchSlug(sourceBranch),
+    branches: [sourceBranch],
+    stages: options.stages,
+  };
+  const target: PipelineEntryPoint = {
+    slug: branchSlug(targetBranch),
+    branches: [targetBranch],
+    stages: productionStages,
+  };
+
+  addActionPromotePrWorkflow(project);
+  addPrWorkflow(project, source, checks);
+  addPushWorkflow(project, source, checks, targetBranch);
+  addPrWorkflow(project, target, checks);
+  addPushWorkflow(project, target, checks);
 }
