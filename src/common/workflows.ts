@@ -27,15 +27,23 @@ export interface PipelineStage {
  * An extra GitHub Actions job run as a gate alongside `build` in both
  * `pr-main.yml` and `push-main.yml`.
  *
- * The referenced workflow is **not** generated. It can live in the
- * consuming repository, in another repository, or be an internally
- * published reusable workflow — whatever a job-level `uses` accepts is
- * passed through verbatim. This is the supported hook for checks the
- * TypeScript `build` job cannot run, such as the Python unit tests of
- * governance-cdk's custom AWS Config rules.
+ * Nothing referenced here is generated. `uses` is passed through verbatim
+ * and covers both of the things GitHub can run:
  *
- * `synth` depends on every check, so a failing check blocks the PR diff
- * and, on `main`/`dev`, every deploy behind it.
+ * - a **reusable workflow** — in this repo, in another repository, or
+ *   internally published — called as a job-level `uses`. This is the
+ *   default shape.
+ * - a **GitHub Action**, marketplace or private, by also setting
+ *   `runsOn`. GitHub only accepts an action at step level, so the
+ *   check becomes a generated job that runs it as its step.
+ *
+ * Either way `with` is forwarded as given, so inputs reach the
+ * called workflow or the action without this interface knowing them.
+ *
+ * This is the supported hook for checks the TypeScript `build` job cannot
+ * run, such as the Python unit tests of governance-cdk's custom AWS Config
+ * rules. `synth` depends on every check, so a failing check blocks the PR
+ * diff and, on `main`/`dev`, every deploy behind it.
  */
 export interface PipelineCheck {
   /**
@@ -54,16 +62,40 @@ export interface PipelineCheck {
    */
   readonly name: string;
   /**
-   * Job-level `uses` reference, emitted as given.
+   * What to run, emitted as given.
    *
-   * A workflow in this repo is a `./.github/workflows/` path; anything
-   * published elsewhere is `owner/repo/.github/workflows/file.yml@ref`.
+   * A reusable workflow in this repo is a `./.github/workflows/` path;
+   * one published elsewhere is `owner/repo/.github/workflows/file.yml@ref`.
+   * An action is `owner/repo@ref`, and needs `runsOn` set.
    *
    * @example './.github/workflows/action-build-python.yml'
    */
   readonly uses: string;
   /**
-   * Inputs passed to the called workflow as the job's `with` block.
+   * Runner labels for the generated job, which turns this check into a
+   * GitHub Action run as a step rather than a reusable workflow call.
+   *
+   * Set it for any action — marketplace or private — because GitHub
+   * accepts an action only at step level. A single label is emitted as a
+   * scalar, several as the list form for self-hosted runner labels.
+   *
+   * @default - unset; `uses` is called as a reusable workflow
+   * @example ['ubuntu-latest']
+   */
+  readonly runsOn?: string[];
+  /**
+   * Check the repository out before running the action.
+   *
+   * Most actions inspect the working tree and need this; set it to `false`
+   * for one that does not. Ignored by a reusable workflow call, which
+   * owns its own steps.
+   *
+   * @default true
+   */
+  readonly checkout?: boolean;
+  /**
+   * Inputs forwarded as the `with` block of the called workflow, or of
+   * the action's step.
    *
    * @default - no inputs
    */
@@ -157,9 +189,10 @@ export interface PipelineOptions {
    */
   readonly cdkDiff?: CdkDiffOptions;
   /**
-   * Extra GitHub Actions workflows to run next to `build`, gating `synth`
-   * and everything downstream of it. They can live in this repo or be
-   * published elsewhere, and take inputs generically.
+   * Extra checks to run next to `build`, gating `synth` and everything
+   * downstream of it. Each one is a reusable workflow — in this repo or
+   * published elsewhere — or a GitHub Action, and takes inputs
+   * generically.
    *
    * Opt-in: a project that declares none gets the unchanged five-job
    * pipeline.
@@ -561,15 +594,31 @@ function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unkno
   return { name: jobName, needs, uses: './.github/workflows/action-diff.yml', with: withInputs };
 }
 
-/** Turns the opt-in checks into caller jobs keyed by job id. */
+/** Turns the opt-in checks into jobs keyed by job id. */
 function checkJobs(checks: PipelineCheck[]): Record<string, unknown> {
   const jobs: Record<string, unknown> = {};
   for (const check of checks) {
-    const job: Record<string, unknown> = { name: check.name, uses: check.uses };
-    if (check.with) job.with = check.with;
-    jobs[check.id] = job;
+    jobs[check.id] = check.runsOn ? actionCheckJob(check, check.runsOn) : workflowCheckJob(check);
   }
   return jobs;
+}
+
+/** A check calling a reusable workflow: job-level `uses`. */
+function workflowCheckJob(check: PipelineCheck): Record<string, unknown> {
+  const job: Record<string, unknown> = { name: check.name, uses: check.uses };
+  if (check.with) job.with = check.with;
+  return job;
+}
+
+/** A check running a GitHub Action: generated job body with the action as its step. */
+function actionCheckJob(check: PipelineCheck, runsOn: string[]): Record<string, unknown> {
+  const step: Record<string, unknown> = { name: check.name, uses: check.uses };
+  if (check.with) step.with = check.with;
+  return {
+    'name': check.name,
+    'runs-on': runsOn.length === 1 ? runsOn[0] : runsOn,
+    'steps': check.checkout === false ? [step] : [checkoutStep(), step],
+  };
 }
 
 /**
@@ -825,9 +874,9 @@ export function addActionPromotePrWorkflow(project: Project): void {
  * `action-*` workflows, `action-promote-pr.yml`, and a PR/push pair for each
  * of the source and target branches.
  *
- * `options.additionalChecks` wires extra workflows — local or published
- * elsewhere — into every generated entry point as gates on `synth`. Those
- * workflows are not generated here.
+ * `options.additionalChecks` wires extra reusable workflows — local or
+ * published elsewhere — and GitHub Actions into every generated entry point
+ * as gates on `synth`. Nothing they reference is generated here.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {
