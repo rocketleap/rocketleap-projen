@@ -124,6 +124,47 @@ export interface CdkDiffOptions {
 
 const WORKSPACE_ARTIFACT = 'build-workspace';
 
+/**
+ * Node version the generated workflows run on.
+ *
+ * Declared explicitly rather than left to `lts/*` or the runner default:
+ * GitHub-hosted runners flipped the default from Node 20 to Node 24 for
+ * actions that don't declare one, and the runner warns on every run until
+ * the deprecation completes. Pinning here means a bump is one edit that
+ * reaches every repo on the next `npx projen`.
+ *
+ * @see https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+ */
+const NODE_VERSION = '24';
+
+/**
+ * Every third-party action the generated pipeline references, pinned in one
+ * place.
+ *
+ * All of these resolve to an `action.yml` with `runs.using: node24`, which
+ * is what keeps the Node 20 deprecation warning out of CI. Before bumping
+ * or adding an entry, check the target tag's `runs.using` — a `node20`
+ * action reintroduces the warning for every repo and every customer fork.
+ *
+ * Do NOT work around a `node20` action with
+ * `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true`; that hides the countdown
+ * instead of ending it.
+ */
+const ACTIONS = {
+  /** node24 since v5. */
+  checkout: 'actions/checkout@v6',
+  /** node24 since v5. */
+  setupNode: 'actions/setup-node@v6',
+  /** node24 since v6; v4 is node20. */
+  uploadArtifact: 'actions/upload-artifact@v7',
+  /** node24 since v7; v4 is node20. */
+  downloadArtifact: 'actions/download-artifact@v8',
+  /** node24 since v6; v4 is node20. */
+  configureAwsCredentials: 'aws-actions/configure-aws-credentials@v6',
+  /** node24 since v2. */
+  cdkDiff: 'corymhall/cdk-diff-action@v2',
+} as const;
+
 const PERMISSIONS_DEFAULT = {
   actions: 'write',
   contents: 'read',
@@ -153,9 +194,9 @@ function bootstrapSteps(): Array<Record<string, unknown>> {
       run: 'corepack enable',
     },
     {
-      uses: 'actions/setup-node@v6',
+      uses: ACTIONS.setupNode,
       with: {
-        'node-version': '24',
+        'node-version': NODE_VERSION,
         'cache': 'yarn',
       },
     },
@@ -199,7 +240,7 @@ function accountAndRegionFromManifestScript(): string {
 function configureAwsStep(): Record<string, unknown> {
   return {
     name: 'Configure AWS credentials',
-    uses: 'aws-actions/configure-aws-credentials@v4',
+    uses: ACTIONS.configureAwsCredentials,
     with: {
       'role-to-assume': 'arn:aws:iam::${{env.account_id}}:role/CdkDeployRole',
       'aws-region': '${{ env.region }}',
@@ -210,7 +251,7 @@ function configureAwsStep(): Record<string, unknown> {
 function checkoutStep(): Record<string, unknown> {
   return {
     name: 'Checkout',
-    uses: 'actions/checkout@v6',
+    uses: ACTIONS.checkout,
     with: {
       ref: '${{ github.event.pull_request.head.ref || github.ref }}',
       repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
@@ -248,7 +289,7 @@ export function addActionBuildWorkflow(project: Project): void {
           'steps': [
             {
               name: 'Checkout',
-              uses: 'actions/checkout@v6',
+              uses: ACTIONS.checkout,
               with: {
                 ref: '${{ inputs.ref || github.event.pull_request.head.ref || github.ref }}',
                 repository: '${{ github.event.pull_request.head.repo.full_name || github.repository }}',
@@ -273,7 +314,7 @@ export function addActionBuildWorkflow(project: Project): void {
               // swc, ...). The synth job reinstalls via the yarn cache
               // instead, which is fast and preserves permissions correctly.
               name: 'Upload build workspace',
-              uses: 'actions/upload-artifact@v4',
+              uses: ACTIONS.uploadArtifact,
               with: {
                 'name': WORKSPACE_ARTIFACT,
                 'path': ['.', '!.git', '!cdk.out', '!node_modules'].join('\n'),
@@ -318,7 +359,7 @@ export function addActionSynthWorkflow(project: Project): void {
           'steps': [
             {
               name: 'Download build workspace',
-              uses: 'actions/download-artifact@v4',
+              uses: ACTIONS.downloadArtifact,
               with: { name: WORKSPACE_ARTIFACT, path: '.' },
             },
             ...bootstrapSteps(),
@@ -330,7 +371,7 @@ export function addActionSynthWorkflow(project: Project): void {
             },
             {
               name: 'Upload cdk.out',
-              uses: 'actions/upload-artifact@v4',
+              uses: ACTIONS.uploadArtifact,
               with: {
                 'name': '${{ env.artifact_name }}',
                 'path': '${{ env.cdk_out_dir }}',
@@ -371,7 +412,7 @@ export function addActionDeployWorkflow(project: Project): void {
             { name: 'Set paths', shell: 'bash', run: pathsScript() },
             {
               name: 'Download cdk.out',
-              uses: 'actions/download-artifact@v4',
+              uses: ACTIONS.downloadArtifact,
               with: { name: '${{ env.artifact_name }}', path: '${{ env.cdk_out_dir }}' },
             },
             { name: 'Set AWS AccountId and Region', shell: 'bash', run: accountAndRegionFromManifestScript() },
@@ -411,14 +452,14 @@ export function addActionDiffWorkflow(project: Project, options?: CdkDiffOptions
             { name: 'Set paths', shell: 'bash', run: pathsScript() },
             {
               name: 'Download cdk.out',
-              uses: 'actions/download-artifact@v4',
+              uses: ACTIONS.downloadArtifact,
               with: { name: '${{ env.artifact_name }}', path: '${{ env.cdk_out_dir }}' },
             },
             { name: 'Set AWS AccountId and Region', shell: 'bash', run: accountAndRegionFromManifestScript() },
             configureAwsStep(),
             {
               name: 'Diff',
-              uses: 'corymhall/cdk-diff-action@v2',
+              uses: ACTIONS.cdkDiff,
               with: {
                 githubToken: '${{ secrets.GITHUB_TOKEN }}',
                 title: '${{ inputs.job-name }}',

@@ -69,7 +69,7 @@ describe('action-deploy.yml', () => {
     const project = newProject();
     addActionDeployWorkflow(project);
     const deploy = synthSnapshot(project)['.github/workflows/action-deploy.yml'];
-    expect(deploy).toContain('actions/download-artifact@v4');
+    expect(deploy).toContain('actions/download-artifact@v8');
     expect(deploy).toContain('name: ${{ env.artifact_name }}');
     expect(deploy).toContain('role/CdkDeployRole');
     expect(deploy).toContain('yarn run deploy:ci "${{env.cdk_out_dir}}"');
@@ -98,7 +98,7 @@ describe('action-diff.yml', () => {
     const project = newProject();
     addActionDiffWorkflow(project);
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
-    expect(diff).toContain('actions/download-artifact@v4');
+    expect(diff).toContain('actions/download-artifact@v8');
     expect(diff).toContain('name: ${{ env.artifact_name }}');
     expect(diff).toContain('corymhall/cdk-diff-action@v2');
     expect(diff).toContain('failOnDestructiveChanges: "false"');
@@ -114,6 +114,69 @@ describe('action-diff.yml', () => {
     addActionDiffWorkflow(project, { failOnDestructiveChanges: true });
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
     expect(diff).toContain('failOnDestructiveChanges: "true"');
+  });
+});
+
+describe('node 24 runtime (Roadmap#148)', () => {
+  /**
+   * Last tag of each action whose `action.yml` still declares
+   * `runs.using: node20`. Any of these in a generated workflow brings back
+   * the runner's Node 20 deprecation warning for every repo and every
+   * customer fork, so they are banned outright rather than reviewed.
+   */
+  const NODE20_PINS = [
+    'actions/checkout@v4',
+    'actions/setup-node@v4',
+    'actions/upload-artifact@v4',
+    'actions/upload-artifact@v5',
+    'actions/download-artifact@v4',
+    'actions/download-artifact@v5',
+    'actions/download-artifact@v6',
+    'aws-actions/configure-aws-credentials@v4',
+    'aws-actions/configure-aws-credentials@v5',
+  ];
+
+  const GENERATED = [
+    '.github/workflows/action-build.yml',
+    '.github/workflows/action-synth.yml',
+    '.github/workflows/action-deploy.yml',
+    '.github/workflows/action-diff.yml',
+    '.github/workflows/pr-main.yml',
+    '.github/workflows/push-main.yml',
+  ];
+
+  function fullPipeline(): Record<string, string> {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'dev' }, { environment: 'prodeu' }] });
+    return synthSnapshot(project);
+  }
+
+  test.each(GENERATED)('%s pins no action that still runs on node20', (file) => {
+    const content = fullPipeline()[file];
+    expect(content).toBeDefined();
+    for (const pin of NODE20_PINS) {
+      // `@v4` must not match `@v4x`; the generated YAML always ends the pin
+      // at a newline or quote, so an exact substring check is sufficient.
+      expect(content).not.toContain(pin);
+    }
+  });
+
+  test('every job that sets up node pins setup-node and declares the version explicitly', () => {
+    const snapshot = fullPipeline();
+    // action-diff.yml runs only the (self-contained, node24) diff action.
+    for (const file of GENERATED.filter((f) => f !== '.github/workflows/action-diff.yml')) {
+      const content = snapshot[file];
+      if (!content.includes('actions/setup-node')) continue;
+      expect(content).toContain('actions/setup-node@v6');
+      expect(content).toMatch(/node-version:\s*['"]?24['"]?/);
+    }
+  });
+
+  test('never reaches for the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION escape hatch', () => {
+    const snapshot = fullPipeline();
+    for (const file of GENERATED) {
+      expect(snapshot[file]).not.toContain('ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION');
+    }
   });
 });
 
