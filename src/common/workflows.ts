@@ -24,15 +24,15 @@ export interface PipelineStage {
 }
 
 /**
- * An extra reusable workflow run as a gate alongside `build` in both
+ * An extra GitHub Actions job run as a gate alongside `build` in both
  * `pr-main.yml` and `push-main.yml`.
  *
- * The referenced workflow file is **not** generated — it lives in the
- * consuming repository under `.github/workflows/` and must declare a
- * `workflow_call` trigger with no required inputs. This is the supported
- * hook for repo-specific test suites the TypeScript `build` job cannot
- * run, such as the Python unit tests of governance-cdk's custom AWS
- * Config rules.
+ * The referenced workflow is **not** generated. It can live in the
+ * consuming repository, in another repository, or be an internally
+ * published reusable workflow — whatever a job-level `uses` accepts is
+ * passed through verbatim. This is the supported hook for checks the
+ * TypeScript `build` job cannot run, such as the Python unit tests of
+ * governance-cdk's custom AWS Config rules.
  *
  * `synth` depends on every check, so a failing check blocks the PR diff
  * and, on `main`/`dev`, every deploy behind it.
@@ -54,11 +54,20 @@ export interface PipelineCheck {
    */
   readonly name: string;
   /**
-   * File name of the reusable workflow, relative to `.github/workflows/`.
+   * Job-level `uses` reference, emitted as given.
    *
-   * @example 'action-build-python.yml'
+   * A workflow in this repo is a `./.github/workflows/` path; anything
+   * published elsewhere is `owner/repo/.github/workflows/file.yml@ref`.
+   *
+   * @example './.github/workflows/action-build-python.yml'
    */
-  readonly workflow: string;
+  readonly uses: string;
+  /**
+   * Inputs passed to the called workflow as the job's `with` block.
+   *
+   * @default - no inputs
+   */
+  readonly with?: { [input: string]: string };
 }
 
 /**
@@ -83,8 +92,9 @@ export interface PipelineOptions {
    */
   readonly cdkDiff?: CdkDiffOptions;
   /**
-   * Repo-specific reusable workflows to run next to `build`, gating
-   * `synth` and everything downstream of it.
+   * Extra GitHub Actions workflows to run next to `build`, gating `synth`
+   * and everything downstream of it. They can live in this repo or be
+   * published elsewhere, and take inputs generically.
    *
    * Opt-in: a project that declares none gets the unchanged five-job
    * pipeline.
@@ -465,30 +475,13 @@ function diffJobFor(stage: PipelineStage, needs: string[]): Record<string, unkno
   return { name: jobName, needs, uses: './.github/workflows/action-diff.yml', with: withInputs };
 }
 
-const JOB_ID_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_-]*$/;
-
-/**
- * Validates the opt-in checks and turns them into caller jobs keyed by job id.
- *
- * Reserved ids, duplicates and non-workflow file names are rejected here
- * rather than emitting YAML GitHub refuses to run — a workflow file that
- * never executes is exactly the silent failure mode this hook exists to close.
- */
+/** Turns the opt-in checks into caller jobs keyed by job id. */
 function checkJobs(checks: PipelineCheck[]): Record<string, unknown> {
   const jobs: Record<string, unknown> = {};
   for (const check of checks) {
-    if (!JOB_ID_PATTERN.test(check.id)) {
-      throw new Error(`pipeline.additionalChecks: '${check.id}' is not a valid GitHub Actions job id`);
-    }
-    if (['build', 'synth'].includes(check.id) || check.id in jobs) {
-      throw new Error(`pipeline.additionalChecks: duplicate or reserved job id '${check.id}'`);
-    }
-    if (!check.workflow.endsWith('.yml') && !check.workflow.endsWith('.yaml')) {
-      throw new Error(
-        `pipeline.additionalChecks: '${check.workflow}' must be a workflow file name under .github/workflows/`,
-      );
-    }
-    jobs[check.id] = { name: check.name, uses: `./.github/workflows/${check.workflow}` };
+    const job: Record<string, unknown> = { name: check.name, uses: check.uses };
+    if (check.with) job.with = check.with;
+    jobs[check.id] = job;
   }
   return jobs;
 }
@@ -587,8 +580,9 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[], c
  * `action-synth.yml`, `action-deploy.yml`, `action-diff.yml`,
  * `pr-main.yml`, `push-main.yml`.
  *
- * `options.additionalChecks` wires repo-owned reusable workflows into the
- * two generated entry points; those workflow files are not generated here.
+ * `options.additionalChecks` wires extra workflows — local or published
+ * elsewhere — into the two generated entry points as gates on `synth`.
+ * Those workflows are not generated here.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {

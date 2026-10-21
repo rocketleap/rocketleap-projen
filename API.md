@@ -5630,14 +5630,14 @@ CI just shows what would change.
 
 ### PipelineCheck <a name="PipelineCheck" id="@rocketleap/rocketleap-projen.PipelineCheck"></a>
 
-An extra reusable workflow run as a gate alongside `build` in both `pr-main.yml` and `push-main.yml`.
+An extra GitHub Actions job run as a gate alongside `build` in both `pr-main.yml` and `push-main.yml`.
 
-The referenced workflow file is **not** generated — it lives in the
-consuming repository under `.github/workflows/` and must declare a
-`workflow_call` trigger with no required inputs. This is the supported
-hook for repo-specific test suites the TypeScript `build` job cannot
-run, such as the Python unit tests of governance-cdk's custom AWS
-Config rules.
+The referenced workflow is **not** generated. It can live in the
+consuming repository, in another repository, or be an internally
+published reusable workflow — whatever a job-level `uses` accepts is
+passed through verbatim. This is the supported hook for checks the
+TypeScript `build` job cannot run, such as the Python unit tests of
+governance-cdk's custom AWS Config rules.
 
 `synth` depends on every check, so a failing check blocks the PR diff
 and, on `main`/`dev`, every deploy behind it.
@@ -5656,7 +5656,8 @@ const pipelineCheck: PipelineCheck = { ... }
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck.property.id">id</a></code> | <code>string</code> | GitHub Actions job id. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck.property.name">name</a></code> | <code>string</code> | Display name of the job. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck.property.workflow">workflow</a></code> | <code>string</code> | File name of the reusable workflow, relative to `.github/workflows/`. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck.property.uses">uses</a></code> | <code>string</code> | Job-level `uses` reference, emitted as given. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck.property.with">with</a></code> | <code>{[ key: string ]: string}</code> | Inputs passed to the called workflow as the job's `with` block. |
 
 ---
 
@@ -5701,24 +5702,40 @@ Display name of the job.
 ```
 
 
-##### `workflow`<sup>Required</sup> <a name="workflow" id="@rocketleap/rocketleap-projen.PipelineCheck.property.workflow"></a>
+##### `uses`<sup>Required</sup> <a name="uses" id="@rocketleap/rocketleap-projen.PipelineCheck.property.uses"></a>
 
 ```typescript
-public readonly workflow: string;
+public readonly uses: string;
 ```
 
 - *Type:* string
 
-File name of the reusable workflow, relative to `.github/workflows/`.
+Job-level `uses` reference, emitted as given.
+
+A workflow in this repo is a `./.github/workflows/` path; anything
+published elsewhere is `owner/repo/.github/workflows/file.yml@ref`.
 
 ---
 
 *Example*
 
 ```typescript
-'action-build-python.yml'
+'./.github/workflows/action-build-python.yml'
 ```
 
+
+##### `with`<sup>Optional</sup> <a name="with" id="@rocketleap/rocketleap-projen.PipelineCheck.property.with"></a>
+
+```typescript
+public readonly with: {[ key: string ]: string};
+```
+
+- *Type:* {[ key: string ]: string}
+- *Default:* no inputs
+
+Inputs passed to the called workflow as the job's `with` block.
+
+---
 
 ### PipelineOptions <a name="PipelineOptions" id="@rocketleap/rocketleap-projen.PipelineOptions"></a>
 
@@ -5743,7 +5760,7 @@ const pipelineOptions: PipelineOptions = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the `main` → prod pipeline promotes through. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.additionalChecks">additionalChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck">PipelineCheck</a>[]</code> | Repo-specific reusable workflows to run next to `build`, gating `synth` and everything downstream of it. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.additionalChecks">additionalChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck">PipelineCheck</a>[]</code> | Extra GitHub Actions workflows to run next to `build`, gating `synth` and everything downstream of it. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow. |
 
 ---
@@ -5769,7 +5786,10 @@ public readonly additionalChecks: PipelineCheck[];
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineCheck">PipelineCheck</a>[]
 - *Default:* none
 
-Repo-specific reusable workflows to run next to `build`, gating `synth` and everything downstream of it.
+Extra GitHub Actions workflows to run next to `build`, gating `synth` and everything downstream of it.
+
+They can live in this repo or be
+published elsewhere, and take inputs generically.
 
 Opt-in: a project that declares none gets the unchanged five-job
 pipeline.

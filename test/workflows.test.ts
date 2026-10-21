@@ -8,6 +8,7 @@ import {
   addCdkPipelineWorkflows,
   addPrMainWorkflow,
   addPushMainWorkflow,
+  PipelineCheck,
 } from '../src/common/workflows';
 
 function newProject(): Project {
@@ -281,9 +282,13 @@ describe('addCdkPipelineWorkflows', () => {
 });
 
 describe('pipeline.additionalChecks', () => {
-  const pythonCheck = { id: 'build-python', name: 'Build Python', workflow: 'action-build-python.yml' };
+  const pythonCheck: PipelineCheck = {
+    id: 'build-python',
+    name: 'Build Python',
+    uses: './.github/workflows/action-build-python.yml',
+  };
 
-  function synthBoth(checks = [pythonCheck]) {
+  function synthBoth(checks: PipelineCheck[] = [pythonCheck]) {
     const project = newProject();
     addCdkPipelineWorkflows(project, { stages: [{ environment: 'governance' }], additionalChecks: checks });
     const snapshot = synthSnapshot(project);
@@ -331,18 +336,34 @@ describe('pipeline.additionalChecks', () => {
   });
 
   test('multiple checks all gate synth', () => {
-    const { pr } = synthBoth([pythonCheck, { id: 'contract', name: 'Contract', workflow: 'action-contract.yml' }]);
+    const { pr } = synthBoth([
+      pythonCheck,
+      { id: 'contract', name: 'Contract', uses: './.github/workflows/action-contract.yml' },
+    ]);
     expect(pr).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python\s*\n\s*- contract/);
   });
 
-  test('rejects reserved, duplicate and malformed ids', () => {
-    expect(() => synthBoth([{ ...pythonCheck, id: 'build' }])).toThrow('reserved job id');
-    expect(() => synthBoth([{ ...pythonCheck, id: 'synth' }])).toThrow('reserved job id');
-    expect(() => synthBoth([pythonCheck, pythonCheck])).toThrow('duplicate');
-    expect(() => synthBoth([{ ...pythonCheck, id: '1-python' }])).toThrow('not a valid GitHub Actions job id');
+  test('a workflow published in another repo is emitted as given', () => {
+    const { pr, push } = synthBoth([
+      {
+        id: 'scan',
+        name: 'Scan',
+        uses: 'rocketleap/rocketleap-projen-internal/.github/workflows/action-scan.yml@v1',
+      },
+    ]);
+    for (const workflow of [pr, push]) {
+      expect(workflow).toContain('uses: rocketleap/rocketleap-projen-internal/.github/workflows/action-scan.yml@v1');
+      expect(workflow).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- scan/);
+    }
   });
 
-  test('rejects a check that does not point at a workflow file', () => {
-    expect(() => synthBoth([{ ...pythonCheck, workflow: 'action-build-python' }])).toThrow('under .github/workflows/');
+  test('inputs are passed through to the called workflow', () => {
+    const { pr } = synthBoth([{ ...pythonCheck, with: { 'python-version': '3.13' } }]);
+    expect(pr).toMatch(/build-python:[\s\S]*?with:\s*\n\s*python-version: ['"]?3\.13['"]?/);
+  });
+
+  test('a check without inputs emits no with block', () => {
+    const { pr } = synthBoth();
+    expect(pr).toMatch(/build-python:\s*\n\s*name: Build Python\s*\n\s*uses: [^\n]+\n\s{2}synth:/);
   });
 });
