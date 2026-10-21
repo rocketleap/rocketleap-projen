@@ -8,6 +8,7 @@ import {
   addCdkPipelineWorkflows,
   addPrMainWorkflow,
   addPushMainWorkflow,
+  PipelineCheck,
 } from '../src/common/workflows';
 
 function newProject(): Project {
@@ -277,5 +278,92 @@ describe('addCdkPipelineWorkflows', () => {
   test('empty stages throws', () => {
     const project = newProject();
     expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow('pipeline.stages');
+  });
+});
+
+describe('pipeline.additionalChecks', () => {
+  const pythonCheck: PipelineCheck = {
+    id: 'build-python',
+    name: 'Build Python',
+    uses: './.github/workflows/action-build-python.yml',
+  };
+
+  function synthBoth(checks: PipelineCheck[] = [pythonCheck]) {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'governance' }], additionalChecks: checks });
+    const snapshot = synthSnapshot(project);
+    return {
+      pr: snapshot['.github/workflows/pr-main.yml'],
+      push: snapshot['.github/workflows/push-main.yml'],
+    };
+  }
+
+  test('emits the check as a sibling of build in both entry workflows', () => {
+    const { pr, push } = synthBoth();
+    for (const workflow of [pr, push]) {
+      expect(workflow).toMatch(/^\s{2}build-python:\s*$/m);
+      expect(workflow).toMatch(/build-python:[\s\S]*?name: Build Python/);
+      expect(workflow).toMatch(/build-python:[\s\S]*?uses: \.\/\.github\/workflows\/action-build-python\.yml/);
+    }
+  });
+
+  test('synth gates on the check, so a Python failure blocks diff and every deploy', () => {
+    const { pr, push } = synthBoth();
+    for (const workflow of [pr, push]) {
+      expect(workflow).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python/);
+    }
+    // PR diff and push gate hang off synth, so the gate is transitive.
+    expect(pr).toMatch(/diff-governance-0:[\s\S]*?needs:\s*\n\s*- synth/);
+    expect(push).toMatch(/gate-governance-0:[\s\S]*?needs:\s*\n\s*- synth/);
+  });
+
+  test('the reusable workflow file itself is not generated — the repo owns it', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, {
+      stages: [{ environment: 'governance' }],
+      additionalChecks: [pythonCheck],
+    });
+    expect(synthSnapshot(project)['.github/workflows/action-build-python.yml']).toBeUndefined();
+  });
+
+  test('projects that declare no checks keep the plain `needs: build` string', () => {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
+    const snapshot = synthSnapshot(project);
+    expect(snapshot['.github/workflows/pr-main.yml']).toMatch(/synth:[\s\S]*?needs: build/);
+    expect(snapshot['.github/workflows/push-main.yml']).toMatch(/synth:[\s\S]*?needs: build/);
+    expect(snapshot['.github/workflows/pr-main.yml']).not.toContain('build-python');
+  });
+
+  test('multiple checks all gate synth', () => {
+    const { pr } = synthBoth([
+      pythonCheck,
+      { id: 'contract', name: 'Contract', uses: './.github/workflows/action-contract.yml' },
+    ]);
+    expect(pr).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python\s*\n\s*- contract/);
+  });
+
+  test('a workflow published in another repo is emitted as given', () => {
+    const { pr, push } = synthBoth([
+      {
+        id: 'scan',
+        name: 'Scan',
+        uses: 'rocketleap/rocketleap-projen-internal/.github/workflows/action-scan.yml@v1',
+      },
+    ]);
+    for (const workflow of [pr, push]) {
+      expect(workflow).toContain('uses: rocketleap/rocketleap-projen-internal/.github/workflows/action-scan.yml@v1');
+      expect(workflow).toMatch(/synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- scan/);
+    }
+  });
+
+  test('inputs are passed through to the called workflow', () => {
+    const { pr } = synthBoth([{ ...pythonCheck, with: { 'python-version': '3.13' } }]);
+    expect(pr).toMatch(/build-python:[\s\S]*?with:\s*\n\s*python-version: ['"]?3\.13['"]?/);
+  });
+
+  test('a check without inputs emits no with block', () => {
+    const { pr } = synthBoth();
+    expect(pr).toMatch(/build-python:\s*\n\s*name: Build Python\s*\n\s*uses: [^\n]+\n\s{2}synth:/);
   });
 });
