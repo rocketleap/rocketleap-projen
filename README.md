@@ -214,6 +214,8 @@ Removes deployed stacks. Destructive.
 
 Every project sets `pipeline` on the project options. The generator emits six reusable GitHub Actions workflows (`action-build.yml`, `action-synth.yml`, `action-deploy.yml`, `action-diff.yml`, `pr-main.yml`, `push-main.yml`) that carry a deployment from PR through push-to-`main`.
 
+`promotionStrategy` picks between that shape and a two-branch shape with a promotion PR in front of production — see [`promotionStrategy`](#promotionstrategy--how-a-change-reaches-production) below.
+
 ```typescript
 pipeline: {
   stages: [
@@ -246,6 +248,53 @@ pipeline: {
 | --- | --- | --- | --- |
 | `failOnDestructiveChanges` | `boolean` (optional) | `false` | Fail the diff workflow when destructive changes are detected. The default surfaces destructive changes in the rich PR comment for reviewer attention without blocking the workflow — the required-reviewer gate on the corresponding GitHub Environment is what blocks the deploy. Set to `true` to make destructive changes a hard fail on PR CI. |
 
+### `promotionStrategy` — how a change reaches production
+
+`pipeline.promotionStrategy` chooses between two pipeline shapes. Both are generated from the same jobs; the difference is how many branches they are spread over.
+
+| Value | Shape |
+| --- | --- |
+| `PromotionStrategy.DIRECT` (default) | One branch pair carries every stage. `pr-main.yml` diffs all stages and `push-main.yml` deploys all of them, pre-prod through prod, behind the required reviewers on each stage's GitHub Environment. Fewest moving parts and the fastest path to prod. |
+| `PromotionStrategy.PR` | Two branch pairs with a promotion PR between them. Pre-prod stages deploy from the source branch; `push-<source>.yml` then opens the PR onto the target branch, and merging it deploys production. |
+
+Leaving `promotionStrategy` unset generates exactly the files and contents described above, so upgrading this package never rewrites a pipeline that did not ask for it.
+
+#### PR promotion
+
+```typescript
+pipeline: {
+  // Deployed from `dev`.
+  stages: [{ environment: 'dev' }, { environment: 'staging' }],
+  promotionStrategy: PromotionStrategy.PR,
+  promotion: {
+    // Deployed from `main`, once the promotion PR is merged.
+    productionStages: [{ environment: 'prodeu' }, { environment: 'produs' }],
+  },
+}
+```
+
+`promotion` is a `PipelinePromotionOptions`:
+
+| Field | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `productionStages` | `PipelineStage[]` | — | Ordered stages deployed from `targetBranch`. Keep it disjoint from `stages`: a stage named in both deploys twice, once from each branch. |
+| `sourceBranch` | `string` (optional) | `'dev'` | Branch `stages` deploy from, and the branch the promotion PR promotes. |
+| `targetBranch` | `string` (optional) | `'main'` | Branch `productionStages` deploy from, and the base of the promotion PR. |
+
+`promotion` is required with `PromotionStrategy.PR` and rejected without it. Both are synth-time errors, so a half-configured promotion fails `npx projen` rather than merging and then deploying the wrong stages.
+
+What a change goes through:
+
+1. **PR into `dev`** — `pr-dev.yml` diffs the pre-prod stages.
+2. **Merge to `dev`** — `push-dev.yml` deploys the pre-prod stages behind their Environment gates.
+3. **Promotion PR opens itself** — once every pre-prod stage has deployed, `push-dev.yml` calls `action-promote-pr.yml`, which opens (or updates) `promote-dev-to-main` → `main`.
+4. **The promotion PR is the gate** — `pr-main.yml` posts the production `cdk diff` on it. The review, the diff and the merge are the durable record of who approved which production change, which is what `DIRECT` has no artefact for.
+5. **Merge to `main`** — `push-main.yml` deploys `productionStages`, still behind their Environment gates.
+
+Branch names reach the generated file names, so `sourceBranch: 'acceptance'` emits `pr-acceptance.yml` / `push-acceptance.yml`. A name containing characters GitHub allows in a branch but not in a job id (`release/prod`) is slugified for the file name only; the trigger keeps the real branch name.
+
+Adopting this in an existing repo is not just a projen change — the source branch has to exist, and branch protection on the target branch is what makes the promotion PR a real gate rather than a formality.
+
 ## Generated GitHub Actions workflows
 
 | File | Purpose |
@@ -256,3 +305,9 @@ pipeline: {
 | `action-diff.yml` | Reusable. Downloads the stage's cdk.out artifact, runs `corymhall/cdk-diff-action@v2` with `noSynth: true` and posts a rich diff comment on the PR. |
 | `pr-main.yml` | On PR to `main`/`dev`: `build` → `synth` (matrix over every stage, parallel) → per-stage `diff` (each waits on `synth`). |
 | `push-main.yml` | On push to `main`/`dev`: `build` → `synth` (matrix) → deploy chain grouped by `environment`. Consecutive same-env stages deploy in parallel under one gate; between-env promotion is sequential. |
+
+Under `PromotionStrategy.PR` the two entry points above are generated once per branch — `pr-<source>.yml` / `push-<source>.yml` triggering on the source branch alone and `pr-<target>.yml` / `push-<target>.yml` on the target branch alone — plus one more reusable workflow:
+
+| File | Purpose |
+| --- | --- |
+| `action-promote-pr.yml` | Reusable. Resets `promote-<source>-to-<target>` onto the source branch and opens, or updates, the promotion PR against the target branch via `peter-evans/create-pull-request`. Called by `push-<source>.yml` after every source-branch stage has deployed. |
