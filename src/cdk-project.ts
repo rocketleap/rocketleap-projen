@@ -40,7 +40,7 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     const project = options.project;
     const cdkVersion = options.cdkVersion ?? '2.261.0';
     const constructVersion = options.constructVersion ?? '10.6.0';
-    const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.109.0';
+    const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.110.0';
     const crossStackReferences = options.crossStackReferences ?? CrossStackReferences.BOTH;
 
     super({
