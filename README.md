@@ -290,7 +290,7 @@ The branches are fixed: pushes and pull requests to `main` and `dev` run the sou
 
 What a change goes through:
 
-1. **PR into `main` or `dev`**: `pr-main.yml` diffs the pre-prod stages.
+1. **PR into `main` or `dev`**: `pr-main.yml` diffs every stage, the promoted ones included, so reviewers see the production diff before the change lands. The promotion PR later diffs the promoted stages again against the current production state.
 2. **Merge to `main` or `dev`**: `push-main.yml` deploys the pre-prod stages behind their Environment gates.
 3. **Promotion PR opens itself**: once every pre-prod stage has deployed, `push-main.yml` calls `action-promote-pr.yml`, which opens a new promotion PR from a timestamped `promote-<branch>-to-production-<timestamp>` branch onto `production`, where `<branch>` is the pushed `main` or `dev`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`.
 4. **The promotion PR is the gate**: `pr-production.yml` posts the production `cdk diff` on it. The review, the diff and the merge are the durable record of who approved which production change, which is what `DIRECT` has no artefact for.
@@ -348,7 +348,7 @@ Under `PromotionStrategy.PR`, the default, the generator emits nine files: the f
 | File | Purpose |
 | --- | --- |
 | `action-promote-pr.yml` | Reusable. Opens a new promotion PR against `production` from a timestamped `promote-<branch>-to-production-<timestamp>` branch reset onto the pushed `main` or `dev`, via `peter-evans/create-pull-request`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`. Called by `push-main.yml` after every unpromoted stage has deployed. |
-| `pr-main.yml` / `pr-production.yml` | On PR to `main`/`dev` or to `production`: `build` → `synth` (matrix over that entry point's stages) → per-stage `diff`. `pr-production.yml` posts the production diff on the promotion PR. With no unpromoted stages, `pr-main.yml` is `build` and the additional checks only. |
+| `pr-main.yml` / `pr-production.yml` | On PR to `main`/`dev` or to `production`: `build` → `synth` (matrix over the stages it diffs) → per-stage `diff`. `pr-main.yml` diffs every stage, promoted ones included; `pr-production.yml` diffs the stages marked `promotion: true` and posts the production diff on the promotion PR. |
 | `push-main.yml` | On push to `main`/`dev`: `build` → `synth` → deploy chain for the stages without `promotion` → `promote`. With no unpromoted stages, `build` → `promote`. |
 | `push-production.yml` | On push to `production`: `build` → `synth` → deploy chain for the stages marked `promotion: true`. |
 

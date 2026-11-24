@@ -836,6 +836,10 @@ jobs:
         stage:
           - environment: dev
           - environment: staging
+          - environment: platform
+            workload: management
+          - environment: prodeu
+          - environment: produs
     uses: ./.github/workflows/action-synth.yml
     with:
       environment: \${{ matrix.stage.environment }}
@@ -856,6 +860,31 @@ jobs:
     with:
       job-name: Diff staging
       environment: staging
+  diff-platform-management-2:
+    name: Diff platform (management)
+    needs:
+      - synth
+    uses: ./.github/workflows/action-diff.yml
+    with:
+      job-name: Diff platform (management)
+      environment: platform
+      workload: management
+  diff-prodeu-3:
+    name: Diff prodeu
+    needs:
+      - synth
+    uses: ./.github/workflows/action-diff.yml
+    with:
+      job-name: Diff prodeu
+      environment: prodeu
+  diff-produs-4:
+    name: Diff produs
+    needs:
+      - synth
+    uses: ./.github/workflows/action-diff.yml
+    with:
+      job-name: Diff produs
+      environment: produs
 "
 `;
 

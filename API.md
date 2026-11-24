@@ -5946,9 +5946,10 @@ public readonly promotion: boolean;
 
 Deploy this stage only after the promotion pull request onto `production` is merged.
 
-Under `PromotionStrategy.PR`, the default, stages without it deploy from
-`main` and `dev` and stages with it deploy from `production`, each set in
-its listed order. At least one stage must set it. Rejected under
+Under `PromotionStrategy.PR`, the default, pull requests into `main` or
+`dev` diff every stage. Stages without it deploy from `main` and `dev`
+and stages with it deploy from `production`, each set in its listed
+order. At least one stage must set it. Rejected under
 `PromotionStrategy.DIRECT`.
 
 ---
@@ -13143,10 +13144,10 @@ records no approval and production deploys unreviewed.
 
 Two branch pairs with a promotion pull request between them.
 
-Stages
-without `promotion` deploy from pushes to `main` or `dev`, each of which
-opens a promotion PR onto `production`; merging it deploys the stages
-marked `promotion: true`. The branches are fixed.
+Pull requests into `main` or `dev` diff every stage, promoted ones
+included. Stages without `promotion` deploy from pushes to `main` or
+`dev`, each of which opens a promotion PR onto `production`; merging it
+deploys the stages marked `promotion: true`. The branches are fixed.
 
 The promotion PR is the audit artefact: the production `cdk diff` is
 posted on it, and its review, description and merge are a durable record

@@ -26,9 +26,10 @@ export interface PipelineStage {
    * Deploy this stage only after the promotion pull request onto
    * `production` is merged.
    *
-   * Under `PromotionStrategy.PR`, the default, stages without it deploy from
-   * `main` and `dev` and stages with it deploy from `production`, each set in
-   * its listed order. At least one stage must set it. Rejected under
+   * Under `PromotionStrategy.PR`, the default, pull requests into `main` or
+   * `dev` diff every stage. Stages without it deploy from `main` and `dev`
+   * and stages with it deploy from `production`, each set in its listed
+   * order. At least one stage must set it. Rejected under
    * `PromotionStrategy.DIRECT`.
    *
    * @default false
@@ -134,10 +135,11 @@ export enum PromotionStrategy {
    */
   DIRECT = 'direct',
   /**
-   * Two branch pairs with a promotion pull request between them. Stages
-   * without `promotion` deploy from pushes to `main` or `dev`, each of which
-   * opens a promotion PR onto `production`; merging it deploys the stages
-   * marked `promotion: true`. The branches are fixed.
+   * Two branch pairs with a promotion pull request between them.
+   * Pull requests into `main` or `dev` diff every stage, promoted ones
+   * included. Stages without `promotion` deploy from pushes to `main` or
+   * `dev`, each of which opens a promotion PR onto `production`; merging it
+   * deploys the stages marked `promotion: true`. The branches are fixed.
    *
    * The promotion PR is the audit artefact: the production `cdk diff` is
    * posted on it, and its review, description and merge are a durable record
@@ -616,6 +618,12 @@ interface PipelineEntryPoint {
   readonly branches: string[];
   /** Stages this entry point synths, diffs and deploys. May be empty for the source branch. */
   readonly stages: PipelineStage[];
+  /**
+   * Stages the PR workflow synths and diffs.
+   *
+   * @default - `stages`
+   */
+  readonly diffStages?: PipelineStage[];
 }
 
 function titleCase(slug: string): string {
@@ -627,7 +635,7 @@ function titleCase(slug: string): string {
  * With no stages it is `build` + checks only.
  */
 function addPrWorkflow(project: Project, entry: PipelineEntryPoint, checks: PipelineCheck[]): void {
-  const stages = entry.stages ?? [];
+  const stages = entry.diffStages ?? entry.stages ?? [];
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
     ...checkJobs(checks),
@@ -941,9 +949,10 @@ function addDirectPipelineWorkflows(project: Project, options: PipelineOptions):
 }
 
 /**
- * `PromotionStrategy.PR`: pushes to `main` or `dev` deploy the stages without
- * `promotion` and open a promotion pull request onto `production`, which deploys
- * the stages marked `promotion: true`. Each set keeps its listed order.
+ * `PromotionStrategy.PR`: pull requests into `main` or `dev` diff every stage.
+ * Pushes to `main` or `dev` deploy only the stages without `promotion` and open
+ * a promotion pull request onto `production`, which deploys the stages marked
+ * `promotion: true`. Each set keeps its listed order.
  * Emits nine files: the four actions, `action-promote-pr.yml`, and a pr/push pair per entry point.
  */
 function addPrPipelineWorkflows(project: Project, options: PipelineOptions): void {
@@ -960,7 +969,12 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
   addActionWorkflows(project, options);
   addActionPromotePrWorkflow(project);
 
-  const source: PipelineEntryPoint = { slug: 'main', branches: ['main', 'dev'], stages: unpromoted };
+  const source: PipelineEntryPoint = {
+    slug: 'main',
+    branches: ['main', 'dev'],
+    stages: unpromoted,
+    diffStages: options.stages,
+  };
   const target: PipelineEntryPoint = { slug: 'production', branches: ['production'], stages: promoted };
   addPrWorkflow(project, source, checks);
   addPushWorkflow(project, source, checks, 'production');
