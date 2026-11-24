@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`addCdkPipelineWorkflows a stages-only config without promotion throws the migration message 1`] = `
-"pipeline.promotion is required.
-rocketleap-projen defaults to PromotionStrategy.PR: pipeline.stages deploy from promotion.sourceBranch (default 'dev'), then a promotion pull request onto promotion.targetBranch (default 'main') carries the production cdk diff, and merging it deploys pipeline.promotion.productionStages.
-To migrate, move the production stages out of pipeline.stages into pipeline.promotion.productionStages. Never list a stage in both.
+"At least one pipeline stage must set promotion: true.
+rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from the source branch (default 'dev'), then a promotion pull request onto the target branch (default 'main') carries the production cdk diff, and merging it deploys the stages marked promotion: true.
+To migrate, add promotion: true to every production stage, for example { environment: 'prodeu', promotion: true }.
 Repos with a single stage, or that want the single-branch pipeline, set promotionStrategy: PromotionStrategy.DIRECT. Its GitHub Environment gates only block on GitHub Enterprise."
 `;
 

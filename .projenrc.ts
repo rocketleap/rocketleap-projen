@@ -129,7 +129,7 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
     docs: {
       summary: 'Configuration for the generated CDK pipeline GitHub Actions workflows.',
       remarks:
-        'Stages, promotion strategy and promotion branches for the generated pipeline workflows. Defaults to PromotionStrategy.PR: pipeline.stages deploy from the source branch and pipeline.promotion.productionStages deploy from the target branch once the promotion pull request is merged. Set PromotionStrategy.DIRECT for the single-branch pipeline.',
+        'Ordered stages for the generated pipeline workflows. Defaults to PromotionStrategy.PR: stages deploy from the source branch, stages marked promotion: true deploy from the target branch once the promotion pull request is merged. Set PromotionStrategy.DIRECT for the single-branch pipeline.',
     },
   });
 

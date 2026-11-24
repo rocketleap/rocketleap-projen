@@ -216,28 +216,25 @@ Every project sets `pipeline` on the project options. By default (`PromotionStra
 
 ```typescript
 pipeline: {
-  // Deployed from `dev`.
-  stages: [{ environment: 'dev' }, { environment: 'staging' }],
-  promotion: {
-    // Deployed from `main`, once the promotion PR is merged.
-    productionStages: [
-      { environment: 'platform', workload: 'management' },
-      { environment: 'platform', workload: 'security' },
-      { environment: 'prodeu' },
-      { environment: 'produs' },
-    ],
-  },
-}
+  stages: [
+    { environment: 'dev' },
+    { environment: 'staging' },
+    { environment: 'prodeu', promotion: true },
+    { environment: 'produs', promotion: true },
+  ],
+},
 ```
 
-Each entry is a `PipelineStage`, `{ environment: string, workload?: string }`, mapping to the CDK app file `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`. A stage never appears in both `stages` and `promotion.productionStages`.
+Each entry is a `PipelineStage`, `{ environment: string, workload?: string, promotion?: boolean }`, mapping to the CDK app file `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`. `promotion: true` marks a stage that deploys only after the promotion PR is merged. At least one stage must set it.
 
-- `push-<source>.yml` (`push-dev.yml`) deploys `stages` on every push to the source branch, then opens or updates the promotion PR onto the target branch.
-- `push-<target>.yml` (`push-main.yml`) deploys `promotion.productionStages` when the promotion PR is merged into the target branch.
+- `push-<source>.yml` (`push-dev.yml`) deploys the stages without `promotion` on every push to the source branch, then opens or updates the promotion PR onto the target branch.
+- `push-<target>.yml` (`push-main.yml`) deploys the stages marked `promotion: true` when the promotion PR is merged into the target branch.
+
+Promoted stages deploy in their listed order after the unpromoted ones, whatever their position in `stages`. A pipeline with only promoted stages is valid: `push-<source>.yml` then runs `build` and opens the promotion PR straight away.
 
 `promotionStrategy: PromotionStrategy.DIRECT` keeps the single-branch shape with six files instead; see [`promotionStrategy`](#promotionstrategy--how-a-change-reaches-production) below.
 
-Each push workflow deploys its stages sequentially in the order listed. Every deploy job sets `environment: <environment>` at the job level; configure required reviewers on the corresponding GitHub Environment in repo settings to gate that tier. Consecutive same-`environment` stages deploy in parallel under one gate (e.g. the two `platform/*` stages above fan out under a single `platform` gate); between-env promotion stays sequential.
+Each push workflow deploys its stages sequentially in the order listed. Every deploy job sets `environment: <environment>` at the job level; configure required reviewers on the corresponding GitHub Environment in repo settings to gate that tier. Consecutive same-`environment` stages deploy in parallel under one gate (e.g. `{ environment: 'platform', workload: 'management', promotion: true }` followed by `{ environment: 'platform', workload: 'security', promotion: true }` fan out under a single `platform` gate); between-env promotion stays sequential.
 
 ### `cdkDiff` — customize the `corymhall/cdk-diff-action` step
 
@@ -260,7 +257,7 @@ pipeline: {
 
 | Value | Shape |
 | --- | --- |
-| `PromotionStrategy.PR` (default) | Two branch pairs with a promotion PR between them. Pre-prod stages deploy from the source branch; `push-<source>.yml` then opens the PR onto the target branch, and merging it deploys production. |
+| `PromotionStrategy.PR` (default) | Two branch pairs with a promotion PR between them. Stages without `promotion` deploy from the source branch; `push-<source>.yml` then opens the PR onto the target branch, and merging it deploys the stages marked `promotion: true`. |
 | `PromotionStrategy.DIRECT` | One branch pair carries every stage. `pr-main.yml` diffs all stages and `push-main.yml` deploys all of them, pre-prod through prod, behind the required reviewers on each stage's GitHub Environment. Fewest moving parts and the fastest path to prod. |
 
 Which one fits depends on the GitHub plan:
@@ -276,24 +273,25 @@ Which one fits depends on the GitHub plan:
 
 ```typescript
 pipeline: {
-  // Deployed from `dev`.
-  stages: [{ environment: 'dev' }, { environment: 'staging' }],
-  promotion: {
+  stages: [
+    // Deployed from `dev`.
+    { environment: 'dev' },
+    { environment: 'staging' },
     // Deployed from `main`, once the promotion PR is merged.
-    productionStages: [{ environment: 'prodeu' }, { environment: 'produs' }],
-  },
-}
+    { environment: 'prodeu', promotion: true },
+    { environment: 'produs', promotion: true },
+  ],
+},
 ```
 
-`promotion` is a `PipelinePromotionOptions`:
+The optional `pipeline.promotion` is a `PipelinePromotionOptions` that overrides the branches:
 
 | Field | Type | Default | Purpose |
 | --- | --- | --- | --- |
-| `productionStages` | `PipelineStage[]` | — | Ordered stages deployed from `targetBranch`. Keep it disjoint from `stages`: a stage named in both deploys twice, once from each branch. |
-| `sourceBranch` | `string` (optional) | `'dev'` | Branch `stages` deploy from, and the branch the promotion PR promotes. |
-| `targetBranch` | `string` (optional) | `'main'` | Branch `productionStages` deploy from, and the base of the promotion PR. |
+| `sourceBranch` | `string` (optional) | `'dev'` | Branch the stages without `promotion` deploy from, and the branch the promotion PR promotes. |
+| `targetBranch` | `string` (optional) | `'main'` | Branch the stages marked `promotion: true` deploy from, and the base of the promotion PR. |
 
-`promotion` is required with `PromotionStrategy.PR`, the default, and rejected with `PromotionStrategy.DIRECT`. Both are synth-time errors, so a half-configured promotion fails `npx projen` rather than merging and then deploying the wrong stages.
+`PromotionStrategy.PR`, the default, needs at least one stage marked `promotion: true`. `PromotionStrategy.DIRECT` rejects both `promotion: true` on a stage and the `pipeline.promotion` branch overrides. All three are synth-time errors, so a half-configured promotion fails `npx projen` rather than merging and then deploying the wrong stages.
 
 What a change goes through:
 
@@ -301,19 +299,19 @@ What a change goes through:
 2. **Merge to `dev`** — `push-dev.yml` deploys the pre-prod stages behind their Environment gates.
 3. **Promotion PR opens itself** — once every pre-prod stage has deployed, `push-dev.yml` calls `action-promote-pr.yml`, which opens (or updates) `promote-dev-to-main` → `main`.
 4. **The promotion PR is the gate** — `pr-main.yml` posts the production `cdk diff` on it. The review, the diff and the merge are the durable record of who approved which production change, which is what `DIRECT` has no artefact for.
-5. **Merge to `main`** — `push-main.yml` deploys `productionStages`, still behind their Environment gates.
+5. **Merge to `main`**: `push-main.yml` deploys the stages marked `promotion: true` in their listed order, still behind their Environment gates.
 
 Branch names reach the generated file names, so `sourceBranch: 'acceptance'` emits `pr-acceptance.yml` / `push-acceptance.yml`. A name containing characters GitHub allows in a branch but not in a job id (`release/prod`) is slugified for the file name only; the trigger keeps the real branch name.
 
 Adopting this in an existing repo is not just a projen change — the source branch has to exist, and branch protection on the target branch is what makes the promotion PR a real gate rather than a formality.
 
-`promote` needs the last pre-production deploys, so a failed pre-production deploy does not open the promotion PR. Remove a stage from `pipeline.stages` when its account is torn down, and re-run `push-<source>.yml` via `workflow_dispatch` after a transient failure.
+`promote` needs the last pre-production deploys, so a failed pre-production deploy does not open the promotion PR. With no unpromoted stages it needs `build` and the additional checks instead. Remove a stage from `pipeline.stages` when its account is torn down, and re-run `push-<source>.yml` via `workflow_dispatch` after a transient failure.
 
 #### Migrating an existing pipeline
 
-A pipeline that only sets `pipeline.stages` fails `npx projen` with `pipeline.promotion is required.` Pick one of the following. A stage never appears in both `stages` and `promotion.productionStages`.
+A pipeline with no stage marked `promotion: true` fails `npx projen` with `At least one pipeline stage must set promotion: true.` Pick one of the following.
 
-Multi-stage repo: split the chain into the pre-production `stages` and the `productionStages`.
+Multi-stage repo: add `promotion: true` to every production stage.
 
 ```typescript
 // Before
@@ -323,10 +321,12 @@ pipeline: {
 
 // After
 pipeline: {
-  stages: [{ environment: 'dev' }, { environment: 'staging' }],
-  promotion: {
-    productionStages: [{ environment: 'prodeu' }, { environment: 'produs' }],
-  },
+  stages: [
+    { environment: 'dev' },
+    { environment: 'staging' },
+    { environment: 'prodeu', promotion: true },
+    { environment: 'produs', promotion: true },
+  ],
 }
 ```
 
@@ -349,11 +349,8 @@ Repo without a `dev` branch: create `dev` from `main`, make it the default branc
 
 ```typescript
 pipeline: {
-  stages: [{ environment: 'dev' }, { environment: 'staging' }],
-  promotion: {
-    sourceBranch: 'develop',
-    productionStages: [{ environment: 'prodeu' }],
-  },
+  stages: [{ environment: 'dev' }, { environment: 'staging' }, { environment: 'prodeu', promotion: true }],
+  promotion: { sourceBranch: 'develop' },
 }
 ```
 
@@ -364,9 +361,9 @@ Under `PromotionStrategy.PR`, the default, the generator emits nine files: the f
 | File | Purpose |
 | --- | --- |
 | `action-promote-pr.yml` | Reusable. Resets `promote-<source>-to-<target>` onto the source branch and opens, or updates, the promotion PR against the target branch via `peter-evans/create-pull-request`. Called by `push-<source>.yml` after every source-branch stage has deployed. |
-| `pr-<source>.yml` / `pr-<target>.yml` | On PR to that branch: `build` → `synth` (matrix over that branch's stages) → per-stage `diff`. `pr-<target>.yml` posts the production diff on the promotion PR. |
-| `push-<source>.yml` | On push to the source branch: `build` → `synth` → deploy chain for `stages` → `promote`. |
-| `push-<target>.yml` | On push to the target branch: `build` → `synth` → deploy chain for `promotion.productionStages`. |
+| `pr-<source>.yml` / `pr-<target>.yml` | On PR to that branch: `build` → `synth` (matrix over that branch's stages) → per-stage `diff`. `pr-<target>.yml` posts the production diff on the promotion PR. With no unpromoted stages, `pr-<source>.yml` is `build` and the additional checks only. |
+| `push-<source>.yml` | On push to the source branch: `build` → `synth` → deploy chain for the stages without `promotion` → `promote`. With no unpromoted stages, `build` → `promote`. |
+| `push-<target>.yml` | On push to the target branch: `build` → `synth` → deploy chain for the stages marked `promotion: true`. |
 
 Under `PromotionStrategy.DIRECT` it emits six files:
 

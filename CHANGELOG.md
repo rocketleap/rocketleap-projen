@@ -2,9 +2,9 @@
 
 ## 1.21.0:
 
-### Move production stages into pipeline.promotion.productionStages
+### Mark production stages with promotion: true
 
-The promotion pull request is now the default pipeline. Pushes to `dev` deploy `pipeline.stages`, then a promotion pull request onto `main` carries the production `cdk diff`, and merging it deploys `pipeline.promotion.productionStages`. A `pipeline: { stages: [...] }` without `promotion` fails `npx projen` with a migration message. Repos that want to keep the single-branch pipeline set `promotionStrategy: PromotionStrategy.DIRECT`.
+The promotion pull request is now the default pipeline. Pushes to the source branch (`dev` by default) deploy the stages without `promotion`, then a promotion pull request onto the target branch (`main` by default) carries the production `cdk diff`, and merging it deploys the stages marked `promotion: true` in their listed order. A pipeline without any `promotion: true` stage fails `npx projen` with a migration message. Repos that want to keep the single-branch pipeline set `promotionStrategy: PromotionStrategy.DIRECT`.
 
 Before:
 
@@ -23,16 +23,28 @@ After:
 
 ```ts
 pipeline: {
-  stages: [{ environment: 'dev' }, { environment: 'staging' }],
-  promotion: {
-    productionStages: [{ environment: 'prodeu' }, { environment: 'produs' }],
-  },
+  stages: [
+    { environment: 'dev' },
+    { environment: 'staging' },
+    { environment: 'prodeu', promotion: true },
+    { environment: 'produs', promotion: true },
+  ],
 },
 ```
 
-A stage must never appear in both `stages` and `productionStages`.
+Repos whose branches are `main` and `production` instead of `dev` and `main` add `promotion` with the branch names. `pipeline.promotion` is optional and only holds `sourceBranch` (default `dev`) and `targetBranch` (default `main`).
 
-Single-stage repos, or repos that keep the single-branch pipeline, add `promotionStrategy` instead of `promotion`. Import `PromotionStrategy` from `@rocketleap/rocketleap-projen`. Its GitHub Environment gates only block on GitHub Enterprise; on Free and Team plans production deploys unreviewed.
+```ts
+pipeline: {
+  stages: [
+    { environment: 'dev' },
+    { environment: 'prod', promotion: true },
+  ],
+  promotion: { sourceBranch: 'main', targetBranch: 'production' },
+},
+```
+
+Single-stage repos, or repos that keep the single-branch pipeline, add `promotionStrategy` instead of marking a stage with `promotion: true`. Import `PromotionStrategy` from `@rocketleap/rocketleap-projen`. Its GitHub Environment gates only block on GitHub Enterprise; on Free and Team plans production deploys unreviewed.
 
 ```ts
 pipeline: {
@@ -43,9 +55,9 @@ pipeline: {
 
 **Customer action:**
 
-- Create `dev` from `main` if it does not exist and make it the default branch of the repository.
-- Require a review on `main` so the promotion pull request is a real gate.
-- Run `npx projen` and commit the new `pr-dev.yml`, `push-dev.yml` and `action-promote-pr.yml` workflows.
+- Create the source branch (`dev` by default) from the target branch if it does not exist and make it the default branch of the repository.
+- Require a review on the target branch (`main` by default) so the promotion pull request is a real gate.
+- Run `npx projen` and commit the new `pr-<source>.yml`, `push-<source>.yml`, `pr-<target>.yml`, `push-<target>.yml` and `action-promote-pr.yml` workflows.
 
 ## 1.3.0:
 

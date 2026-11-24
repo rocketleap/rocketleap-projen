@@ -6,7 +6,7 @@ test('Platform project does not generate src/main.ts or test/main.test.ts', () =
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }], promotion: { productionStages: [{ environment: 'prod' }] } },
+    pipeline: { stages: [{ environment: 'test' }, { environment: 'prod', promotion: true }] },
   });
 
   const snapshot = Testing.synth(project);
@@ -19,7 +19,7 @@ test('Workload project does not generate src/main.ts or test/main.test.ts', () =
   const project = new RocketleapWorkloadCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }], promotion: { productionStages: [{ environment: 'prod' }] } },
+    pipeline: { stages: [{ environment: 'test' }, { environment: 'prod', promotion: true }] },
   });
 
   const snapshot = Testing.synth(project);
@@ -32,7 +32,7 @@ test('caller `context` is merged into cdk.json alongside crossStackReferences', 
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }], promotion: { productionStages: [{ environment: 'prod' }] } },
+    pipeline: { stages: [{ environment: 'test' }, { environment: 'prod', promotion: true }] },
     context: {
       '@aws-cdk/aws-lambda:useCdkManagedLogGroup': false,
       'customKey': 'customValue',
