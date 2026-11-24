@@ -1,90 +1,69 @@
 # Changelog
 
-## Unreleased
+## 1.21.0:
 
-### Behaviour changes
+### Mark production stages with promotion: true
 
-#### `pass_filenames: false` on all pre-commit hooks
-
-Every hook in the generated `.pre-commit-config.yaml` (CDK + JSII) now sets
-`pass_filenames: false`. All hooks (`yarn-clean`, `yarn-package`, `projen`,
-`yarn-format`, `yarn-lint`, `yarn-build`, `yarn-test`, `release`) operate on
-the whole repo via their `yarn` script and ignore the filename arguments
-pre-commit would otherwise pass in.
-
-Without this flag, `pre-commit run --all-files` chunks the file list and
-spawns the same whole-repo hook multiple times in parallel — wasted CPU and,
-for write-hooks like `format:ci`, racing writers.
+The promotion pull request is now the default pipeline. Pushes to the source branch (`main` by default) deploy the stages without `promotion`, then a promotion pull request onto the target branch (`production` by default) carries the production `cdk diff`, and merging it deploys the stages marked `promotion: true` in their listed order. A pipeline without any `promotion: true` stage fails `npx projen` with a migration message. Repos that want to keep the single-branch pipeline set `promotionStrategy: PromotionStrategy.DIRECT`.
 
 Before:
 
-```yaml
-- id: yarn-lint
-  name: Lint
-  entry: sh -c "CI=true yarn lint:ci"
-  language: system
+```ts
+pipeline: {
+  stages: [
+    { environment: 'dev' },
+    { environment: 'staging' },
+    { environment: 'prodeu' },
+    { environment: 'produs' },
+  ],
+},
 ```
 
 After:
 
-```yaml
-- id: yarn-lint
-  name: Lint
-  entry: sh -c "CI=true yarn lint:ci"
-  language: system
-  pass_filenames: false
+```ts
+pipeline: {
+  stages: [
+    { environment: 'dev' },
+    { environment: 'staging' },
+    { environment: 'prodeu', promotion: true },
+    { environment: 'produs', promotion: true },
+  ],
+},
 ```
 
-No consumer action needed — `npx projen` regenerates `.pre-commit-config.yaml`.
+Repos whose branches are `dev` and `main` instead of `main` and `production` add `promotion` with the branch names. `pipeline.promotion` is optional and only holds `sourceBranch` (default `main`) and `targetBranch` (default `production`).
 
-#### Rich CDK diff comments via `corymhall/cdk-diff-action`
+```ts
+pipeline: {
+  stages: [
+    { environment: 'dev' },
+    { environment: 'prod', promotion: true },
+  ],
+  promotion: { sourceBranch: 'dev', targetBranch: 'main' },
+},
+```
 
-`action-diff.yml` no longer runs `yarn diff:ci` + `Tiryoh/gha-jobid-action`
-+ a bash `gh pr comment` step that posted a link into the job log. It now
-synthesizes the CDK app (`yarn synth:ci`) and hands the `cdk.out` directory
-to [`corymhall/cdk-diff-action@v2`](https://github.com/marketplace/actions/cdk-diff-action),
-which posts a rich inline diff as a PR comment per CDK Stage and updates
-the same comment on each commit (no comment spam).
+Single-stage repos, or repos that keep the single-branch pipeline, add `promotionStrategy` instead of marking a stage with `promotion: true`. Import `PromotionStrategy` from `@rocketleap/rocketleap-projen`. Its GitHub Environment gates only block on GitHub Enterprise; on Free and Team plans production deploys unreviewed.
 
-Visible consequences for consumers:
+```ts
+pipeline: {
+  stages: [{ environment: 'iam' }],
+  promotionStrategy: PromotionStrategy.DIRECT,
+},
+```
 
-- **Destructive changes are surfaced in the PR comment but do not fail the
-  diff workflow by default.** rocketleap-projen passes
-  `failOnDestructiveChanges: "false"` to the action; reviewers see what
-  would be destroyed/replaced in the rich comment and decide. To opt into
-  the action's hard-fail behavior, set on `PipelineOptions`:
+**Customer action:**
 
-  ```ts
-  pipeline: {
-    deployMain: [{ environment: 'iam' }],
-    cdkDiff: { failOnDestructiveChanges: true },
-  }
-  ```
-- **`pr-number` input on `action-diff.yml` is removed.** Only consumers that
-  call the reusable workflow directly should notice.
-- **New `pr-production.yml` workflow** emitted when `pipeline.deployProduction`
-  is set. It triggers on PRs to `production` (i.e. the auto-opened promote
-  PR) and runs the same `build` + `diff` shape as `pr-main.yml`, using the
-  `diffProduction` matrix (or `deployProduction` as fallback). Previously the
-  prod diff was a `production-diff` job inside `push-main.yml` that posted
-  via the bash flow.
-- **`production-diff` job removed from `push-main.yml`.** The promote-PR
-  diff comment is now posted by `pr-production.yml` instead.
-- **New `synth:ci` script** added to `CDK_SCRIPTS`. Mirrors `diff:ci`; takes
-  a positional bin file path and synthesizes into `cdk.out`.
+- Create `production` from `main` if it does not exist. `main` stays the default branch of the repository.
+- Require a review on `production` so the promotion pull request is a real gate.
+- Run `npx projen` and commit the new `pr-main.yml`, `push-main.yml`, `pr-production.yml`, `push-production.yml` and `action-promote-pr.yml` workflows.
 
-No `PipelineOptions` API changes — same field names and shapes as 1.3.0.
+## 1.3.0:
 
-### Breaking changes
+### Require pipeline on PlatformCdkProject and WorkloadCdkProject
 
-#### `pipeline` is now required on `RocketleapPlatformCdkProject` / `RocketleapWorkloadCdkProject`
-
-`rocketleap-projen` now generates the standard CDK pipeline GitHub Actions
-workflows (`action-build.yml`, `action-deploy.yml`, `action-diff.yml`,
-`pr-main.yml`, `push-main.yml`, and — when GitOps production promotion is
-enabled — `action-promote-pr.yml` + `push-production.yml`). To do that it
-needs to know which environments and workloads the pipeline targets, so the
-new `pipeline` field on `RocketleapCdkProjectOptions` is **required**.
+`rocketleap-projen` generates the CDK pipeline GitHub Actions workflows. The `pipeline` field is required so it knows which stages the pipeline targets.
 
 Before:
 
@@ -95,52 +74,18 @@ const project = new PlatformCdkProject({
 });
 ```
 
-After (simple, single-environment project — e.g. `iam-cdk`, `root-cdk`):
+After:
 
 ```ts
 const project = new PlatformCdkProject({
   company: 'rocketleap',
   project: 'iam-cdk',
   pipeline: {
-    deployMain: [{ environment: 'iam' }],
+    stages: [{ environment: 'iam' }],
   },
 });
 ```
 
-After (multi-workload project with separate PR diff target and GitOps
-production promotion — e.g. `platform-cdk`):
+**Customer action:**
 
-```ts
-const project = new PlatformCdkProject({
-  company: 'rocketleap',
-  project: 'platform-cdk',
-  pipeline: {
-    // Deployed by push-main.yml on main / dev.
-    deployMain: [
-      { environment: 'dev', workload: 'example-ecs' },
-      { environment: 'dev', workload: 'example-lambda' },
-    ],
-    // Diffed by pr-main.yml. Optional — defaults to deployMain.
-    diffMain: [
-      { environment: 'staging', workload: 'example-ecs' },
-      { environment: 'platform', workload: 'management' },
-    ],
-    // Presence enables the GitOps production flow:
-    //   - emits action-promote-pr.yml + push-production.yml
-    //   - injects promote + production-diff jobs into push-main.yml
-    deployProduction: [
-      { environment: 'prodeu', workload: 'example-ecs' },
-      { environment: 'produs', workload: 'example-ecs' },
-    ],
-    // Diffed on the auto-opened main→production promote PR.
-    // Optional — defaults to deployProduction.
-    // diffProduction: [ ... ],
-  },
-});
-```
-
-After running `yarn projen` the hand-maintained workflow files under
-`.github/workflows/` are overwritten by projen-generated equivalents. Delete
-the now-redundant copies (`action-*.yml`, `pr-main.yml`, `push-main.yml`,
-and the production variants when applicable) so projen owns them going
-forward.
+- Run `npx projen`, then delete the hand-maintained copies of `action-*.yml`, `pr-main.yml` and `push-main.yml` under `.github/workflows/` so projen owns them going forward.

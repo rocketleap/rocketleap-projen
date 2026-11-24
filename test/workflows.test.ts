@@ -10,6 +10,7 @@ import {
   addPushMainWorkflow,
   PipelineCheck,
   PipelineOptions,
+  PROMOTION_REQUIRED_MESSAGE,
   PromotionStrategy,
 } from '../src/common/workflows';
 
@@ -251,9 +252,9 @@ describe('push-main.yml', () => {
 });
 
 describe('addCdkPipelineWorkflows', () => {
-  test('emits exactly six workflow files', () => {
+  test('DIRECT emits exactly six workflow files', () => {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }], promotionStrategy: PromotionStrategy.DIRECT });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/action-build.yml']).toBeDefined();
     expect(snapshot['.github/workflows/action-synth.yml']).toBeDefined();
@@ -271,6 +272,7 @@ describe('addCdkPipelineWorkflows', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
       stages: [{ environment: 'iam' }],
+      promotionStrategy: PromotionStrategy.DIRECT,
       cdkDiff: { failOnDestructiveChanges: true },
     });
     const diff = synthSnapshot(project)['.github/workflows/action-diff.yml'];
@@ -279,7 +281,26 @@ describe('addCdkPipelineWorkflows', () => {
 
   test('empty stages throws', () => {
     const project = newProject();
-    expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow('pipeline.stages');
+    expect(() => addCdkPipelineWorkflows(project, { stages: [], promotionStrategy: PromotionStrategy.DIRECT })).toThrow(
+      'pipeline.stages must contain at least one entry',
+    );
+  });
+
+  test('empty stages throws under PR too', () => {
+    const project = newProject();
+    expect(() => addCdkPipelineWorkflows(project, { stages: [], promotion: { sourceBranch: 'dev' } })).toThrow(
+      'pipeline.stages must contain at least one entry',
+    );
+  });
+
+  test('a stages-only config without promotion throws the migration message', () => {
+    const project = newProject();
+    const attempt = () => addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
+    expect(attempt).toThrow(PROMOTION_REQUIRED_MESSAGE);
+    expect(PROMOTION_REQUIRED_MESSAGE).toContain('At least one pipeline stage must set promotion: true');
+    expect(PROMOTION_REQUIRED_MESSAGE).toContain('promotion: true');
+    expect(PROMOTION_REQUIRED_MESSAGE).toContain('PromotionStrategy.DIRECT');
+    expect(attempt).toThrowErrorMatchingSnapshot();
   });
 });
 
@@ -292,7 +313,11 @@ describe('pipeline.additionalChecks', () => {
 
   function synthBoth(checks: PipelineCheck[] = [pythonCheck]) {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { stages: [{ environment: 'governance' }], additionalChecks: checks });
+    addCdkPipelineWorkflows(project, {
+      stages: [{ environment: 'governance' }],
+      promotionStrategy: PromotionStrategy.DIRECT,
+      additionalChecks: checks,
+    });
     const snapshot = synthSnapshot(project);
     return {
       pr: snapshot['.github/workflows/pr-main.yml'],
@@ -323,6 +348,7 @@ describe('pipeline.additionalChecks', () => {
     const project = newProject();
     addCdkPipelineWorkflows(project, {
       stages: [{ environment: 'governance' }],
+      promotionStrategy: PromotionStrategy.DIRECT,
       additionalChecks: [pythonCheck],
     });
     expect(synthSnapshot(project)['.github/workflows/action-build-python.yml']).toBeUndefined();
@@ -330,7 +356,7 @@ describe('pipeline.additionalChecks', () => {
 
   test('projects that declare no checks keep the plain `needs: build` string', () => {
     const project = newProject();
-    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }] });
+    addCdkPipelineWorkflows(project, { stages: [{ environment: 'iam' }], promotionStrategy: PromotionStrategy.DIRECT });
     const snapshot = synthSnapshot(project);
     expect(snapshot['.github/workflows/pr-main.yml']).toMatch(/synth:[\s\S]*?needs: build/);
     expect(snapshot['.github/workflows/push-main.yml']).toMatch(/synth:[\s\S]*?needs: build/);
@@ -422,11 +448,13 @@ describe('pipeline.additionalChecks', () => {
 
 describe('pipeline.promotionStrategy', () => {
   const prStrategy: PipelineOptions = {
-    stages: [{ environment: 'dev' }, { environment: 'staging' }],
+    stages: [
+      { environment: 'dev' },
+      { environment: 'staging' },
+      { environment: 'platform', workload: 'management', promotion: true },
+      { environment: 'prodeu', promotion: true },
+    ],
     promotionStrategy: PromotionStrategy.PR,
-    promotion: {
-      productionStages: [{ environment: 'platform', workload: 'management' }, { environment: 'prodeu' }],
-    },
   };
 
   function synthWith(options: PipelineOptions): Record<string, string> {
@@ -441,25 +469,38 @@ describe('pipeline.promotionStrategy', () => {
       .sort();
   }
 
-  describe('DIRECT (the default)', () => {
-    // The whole point of the option: an existing project that never sets it
-    // must keep the pipeline it already has, byte for byte, across an upgrade.
-    test('omitting the option emits exactly the same files as spelling DIRECT out', () => {
-      const stages = [
-        { environment: 'dev' },
-        { environment: 'platform', workload: 'security' },
-        { environment: 'prodeu' },
-      ];
-      const implicit = synthWith({ stages });
-      const explicit = synthWith({ stages, promotionStrategy: PromotionStrategy.DIRECT });
-      expect(workflowFiles(explicit)).toEqual(workflowFiles(implicit));
-      for (const file of workflowFiles(implicit)) {
-        expect(explicit[file]).toStrictEqual(implicit[file]);
+  const defaultStrategy: PipelineOptions = { stages: prStrategy.stages };
+
+  const direct: PipelineOptions = {
+    stages: [{ environment: 'iam' }],
+    promotionStrategy: PromotionStrategy.DIRECT,
+  };
+
+  describe('default', () => {
+    test('omitting the option emits exactly the same files as spelling PR out', () => {
+      const implicit = synthWith(defaultStrategy);
+      const explicit = synthWith(prStrategy);
+      expect(workflowFiles(implicit)).toEqual(workflowFiles(explicit));
+      for (const file of workflowFiles(explicit)) {
+        expect(implicit[file]).toStrictEqual(explicit[file]);
       }
     });
 
-    test('still the six-file single-branch shape, with no promotion workflow', () => {
-      const snapshot = synthWith({ stages: [{ environment: 'iam' }] });
+    test('the source push workflow keeps the Push: Main Branch name', () => {
+      const push = synthWith(defaultStrategy)['.github/workflows/push-main.yml'];
+      expect(push).toMatch(/^name: ['"]?Push: Main Branch['"]?$/m);
+    });
+
+    test('the target workflows are named after the production branch', () => {
+      const snapshot = synthWith(defaultStrategy);
+      expect(snapshot['.github/workflows/push-production.yml']).toMatch(/^name: ['"]?Push: Production Branch['"]?$/m);
+      expect(snapshot['.github/workflows/pr-production.yml']).toMatch(/^name: ['"]?PR: Production Branch['"]?$/m);
+    });
+  });
+
+  describe('DIRECT', () => {
+    test('the six-file single-branch shape, with no promotion workflow', () => {
+      const snapshot = synthWith(direct);
       expect(workflowFiles(snapshot)).toEqual([
         '.github/workflows/action-build.yml',
         '.github/workflows/action-deploy.yml',
@@ -470,8 +511,8 @@ describe('pipeline.promotionStrategy', () => {
       ]);
     });
 
-    test('main and dev still both trigger the one pipeline', () => {
-      const snapshot = synthWith({ stages: [{ environment: 'iam' }] });
+    test('main and dev both trigger the one pipeline', () => {
+      const snapshot = synthWith(direct);
       expect(snapshot['.github/workflows/pr-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n\s*- dev/);
       expect(snapshot['.github/workflows/push-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n\s*- dev/);
     });
@@ -479,10 +520,25 @@ describe('pipeline.promotionStrategy', () => {
     test('a promotion block without the PR strategy is a synth error, not a silent no-op', () => {
       expect(() =>
         synthWith({
-          stages: [{ environment: 'iam' }],
-          promotion: { productionStages: [{ environment: 'prodeu' }] },
+          ...direct,
+          promotion: { targetBranch: 'main' },
         }),
-      ).toThrow('pipeline.promotion only applies to');
+      ).toThrow('pipeline.promotion branch overrides only apply to');
+    });
+
+    test('promotion: true under DIRECT throws', () => {
+      expect(() =>
+        synthWith({
+          ...direct,
+          stages: [{ environment: 'dev' }, { environment: 'prodeu', promotion: true }],
+        }),
+      ).toThrow(
+        'pipeline.stages[].promotion only applies to PromotionStrategy.PR; drop promotion: true or drop promotionStrategy: PromotionStrategy.DIRECT',
+      );
+    });
+
+    test('empty stages is a synth error', () => {
+      expect(() => synthWith({ ...direct, stages: [] })).toThrow('pipeline.stages must contain at least one entry');
     });
   });
 
@@ -494,48 +550,50 @@ describe('pipeline.promotionStrategy', () => {
         '.github/workflows/action-diff.yml',
         '.github/workflows/action-promote-pr.yml',
         '.github/workflows/action-synth.yml',
-        '.github/workflows/pr-dev.yml',
         '.github/workflows/pr-main.yml',
-        '.github/workflows/push-dev.yml',
+        '.github/workflows/pr-production.yml',
         '.github/workflows/push-main.yml',
+        '.github/workflows/push-production.yml',
       ]);
     });
 
-    test('each branch triggers on itself alone, so a push to dev no longer deploys prod', () => {
+    test('each branch triggers on itself alone, so a push to main no longer deploys prod', () => {
       const snapshot = synthWith(prStrategy);
-      expect(snapshot['.github/workflows/push-dev.yml']).toMatch(/branches:\s*\n\s*- dev\s*\n/);
-      expect(snapshot['.github/workflows/push-dev.yml']).not.toMatch(/- main/);
       expect(snapshot['.github/workflows/push-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n/);
+      expect(snapshot['.github/workflows/push-main.yml']).not.toMatch(/- production/);
       expect(snapshot['.github/workflows/push-main.yml']).not.toMatch(/- dev/);
+      expect(snapshot['.github/workflows/push-production.yml']).toMatch(/branches:\s*\n\s*- production\s*\n/);
+      expect(snapshot['.github/workflows/push-production.yml']).not.toMatch(/- main/);
     });
 
-    test('stages deploy from the source branch and productionStages from the target branch', () => {
+    test('unpromoted stages deploy from the source branch and promoted stages from the target branch', () => {
       const snapshot = synthWith(prStrategy);
-      const dev = snapshot['.github/workflows/push-dev.yml'];
-      const main = snapshot['.github/workflows/push-main.yml'];
-      expect(dev).toContain('deploy-dev-0:');
-      expect(dev).toContain('deploy-staging-1:');
-      expect(dev).not.toContain('deploy-prodeu');
-      expect(main).toContain('deploy-platform-management-0:');
-      expect(main).toContain('deploy-prodeu-1:');
-      expect(main).not.toContain('deploy-staging');
+      const source = snapshot['.github/workflows/push-main.yml'];
+      const target = snapshot['.github/workflows/push-production.yml'];
+      expect(source).toContain('deploy-dev-0:');
+      expect(source).toContain('deploy-staging-1:');
+      expect(source).not.toContain('deploy-prodeu');
+      expect(target).toContain('deploy-platform-management-0:');
+      expect(target).toContain('deploy-prodeu-1:');
+      expect(target).not.toContain('deploy-staging');
     });
 
     test('the production diff lands on the promotion PR, which targets the target branch', () => {
       const snapshot = synthWith(prStrategy);
-      const prMain = snapshot['.github/workflows/pr-main.yml'];
-      expect(prMain).toMatch(/branches:\s*\n\s*- main\s*\n/);
-      expect(prMain).toContain('diff-platform-management-0:');
-      expect(prMain).toContain('diff-prodeu-1:');
-      expect(snapshot['.github/workflows/pr-dev.yml']).not.toContain('diff-prodeu');
+      const prProduction = snapshot['.github/workflows/pr-production.yml'];
+      expect(prProduction).toMatch(/branches:\s*\n\s*- production\s*\n/);
+      expect(prProduction).toContain('diff-platform-management-0:');
+      expect(prProduction).toContain('diff-prodeu-1:');
+      expect(snapshot['.github/workflows/pr-main.yml']).not.toContain('diff-prodeu');
     });
 
     test('the promote job waits for every source-branch deploy before opening the PR', () => {
-      const dev = synthWith(prStrategy)['.github/workflows/push-dev.yml'];
-      expect(dev).toMatch(/promote:[\s\S]*?uses: \.\/\.github\/workflows\/action-promote-pr\.yml/);
-      expect(dev).toMatch(/promote:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
-      expect(dev).toMatch(/promote:[\s\S]*?target-branch: main/);
-      expect(dev).toMatch(/promote:[\s\S]*?source-branch: \$\{\{ github\.ref_name \}\}/);
+      const source = synthWith(prStrategy)['.github/workflows/push-main.yml'];
+      expect(source).toMatch(/promote:[\s\S]*?uses: \.\/\.github\/workflows\/action-promote-pr\.yml/);
+      expect(source).toMatch(/promote:[\s\S]*?needs:\s*\n\s*- deploy-staging-1/);
+      expect(source).toMatch(/promote:[\s\S]*?target-branch: production/);
+      expect(source).toMatch(/promote:[\s\S]*?source-branch: \$\{\{ github\.ref_name \}\}/);
+      expect(source).toMatch(/promote:[\s\S]*?name: Create production promotion PR/);
     });
 
     test('the pipeline opens the promotion PR itself — nothing is left to a human to create', () => {
@@ -547,8 +605,15 @@ describe('pipeline.promotionStrategy', () => {
       expect(promote).toMatch(/fetch-depth: ['"]?0['"]?/);
     });
 
+    test('each promotion opens a new timestamped PR describing the promoted commits', () => {
+      const promote = synthWith(prStrategy)['.github/workflows/action-promote-pr.yml'];
+      expect(promote).toContain('branch-suffix: timestamp');
+      expect(promote).toContain('## Commits');
+      expect(promote).toContain('steps.describe.outputs.sha');
+    });
+
     test('the target branch gets no promote job, so merging the PR only deploys', () => {
-      expect(synthWith(prStrategy)['.github/workflows/push-main.yml']).not.toContain('promote:');
+      expect(synthWith(prStrategy)['.github/workflows/push-production.yml']).not.toContain('promote:');
     });
 
     test('checks gate synth on every one of the four entry points', () => {
@@ -558,7 +623,7 @@ describe('pipeline.promotionStrategy', () => {
           { id: 'build-python', name: 'Build Python', uses: './.github/workflows/action-build-python.yml' },
         ],
       });
-      for (const file of ['pr-dev.yml', 'push-dev.yml', 'pr-main.yml', 'push-main.yml']) {
+      for (const file of ['pr-main.yml', 'push-main.yml', 'pr-production.yml', 'push-production.yml']) {
         expect(snapshot[`.github/workflows/${file}`]).toMatch(
           /synth:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python/,
         );
@@ -568,7 +633,7 @@ describe('pipeline.promotionStrategy', () => {
     test('custom branch names reach the file names, titles and concurrency groups', () => {
       const snapshot = synthWith({
         ...prStrategy,
-        promotion: { ...prStrategy.promotion!, sourceBranch: 'acceptance', targetBranch: 'release' },
+        promotion: { sourceBranch: 'acceptance', targetBranch: 'release' },
       });
       expect(snapshot['.github/workflows/push-acceptance.yml']).toMatch(/^name: ['"]Push: Acceptance Branch['"]$/m);
       expect(snapshot['.github/workflows/push-acceptance.yml']).toContain('concurrency: acceptance');
@@ -578,39 +643,143 @@ describe('pipeline.promotionStrategy', () => {
       expect(snapshot['.github/workflows/pr-main.yml']).toBeUndefined();
     });
 
+    test('a dev and main override keeps the dev to main promotion shape', () => {
+      const snapshot = synthWith({
+        ...prStrategy,
+        promotion: { sourceBranch: 'dev', targetBranch: 'main' },
+      });
+      expect(workflowFiles(snapshot)).toEqual([
+        '.github/workflows/action-build.yml',
+        '.github/workflows/action-deploy.yml',
+        '.github/workflows/action-diff.yml',
+        '.github/workflows/action-promote-pr.yml',
+        '.github/workflows/action-synth.yml',
+        '.github/workflows/pr-dev.yml',
+        '.github/workflows/pr-main.yml',
+        '.github/workflows/push-dev.yml',
+        '.github/workflows/push-main.yml',
+      ]);
+      expect(snapshot['.github/workflows/push-dev.yml']).toMatch(/branches:\s*\n\s*- dev\s*\n/);
+      expect(snapshot['.github/workflows/push-dev.yml']).toMatch(/promote:[\s\S]*?target-branch: main/);
+      expect(snapshot['.github/workflows/push-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n/);
+      expect(snapshot['.github/workflows/push-main.yml']).not.toContain('promote:');
+    });
+
     test('a branch name with a slash is slugified so the file name stays valid', () => {
       const snapshot = synthWith({
         ...prStrategy,
-        promotion: { ...prStrategy.promotion!, targetBranch: 'release/prod' },
+        promotion: { targetBranch: 'release/prod' },
       });
       expect(snapshot['.github/workflows/push-release-prod.yml']).toBeDefined();
       // The trigger keeps the real branch name; only the file name is slugified.
       expect(snapshot['.github/workflows/push-release-prod.yml']).toMatch(/branches:\s*\n\s*- release\/prod/);
     });
 
-    test('the PR strategy without a promotion block is a synth error', () => {
+    test('the PR strategy without a promoted stage is a synth error', () => {
       expect(() => synthWith({ stages: [{ environment: 'dev' }], promotionStrategy: PromotionStrategy.PR })).toThrow(
-        'requires pipeline.promotion',
+        PROMOTION_REQUIRED_MESSAGE,
       );
     });
 
-    test('empty productionStages is a synth error', () => {
+    test('branch overrides without a promoted stage are a synth error', () => {
       expect(() =>
         synthWith({
           stages: [{ environment: 'dev' }],
           promotionStrategy: PromotionStrategy.PR,
-          promotion: { productionStages: [] },
+          promotion: { sourceBranch: 'develop' },
         }),
-      ).toThrow('productionStages must contain at least one entry');
+      ).toThrow(PROMOTION_REQUIRED_MESSAGE);
+    });
+
+    test('a pipeline with only promoted stages opens the promotion PR from build', () => {
+      const snapshot = synthWith({ stages: [{ environment: 'prodeu', promotion: true }] });
+      expect(workflowFiles(snapshot)).toHaveLength(9);
+      const prSource = snapshot['.github/workflows/pr-main.yml'];
+      expect(prSource).toContain('build:');
+      expect(prSource).not.toContain('synth:');
+      expect(prSource).not.toContain('diff-');
+      const pushSource = snapshot['.github/workflows/push-main.yml'];
+      expect(pushSource).toMatch(/promote:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*uses:/);
+      expect(pushSource).not.toContain('synth:');
+      expect(pushSource).not.toContain('gate-');
+      expect(pushSource).not.toContain('deploy-');
+      expect(snapshot['.github/workflows/pr-production.yml']).toContain('diff-prodeu-0:');
+      expect(snapshot['.github/workflows/push-production.yml']).toContain('deploy-prodeu-0:');
+    });
+
+    test('with only promoted stages, promote also waits on every check', () => {
+      const pushSource = synthWith({
+        stages: [{ environment: 'prodeu', promotion: true }],
+        additionalChecks: [
+          { id: 'build-python', name: 'Build Python', uses: './.github/workflows/action-build-python.yml' },
+        ],
+      })['.github/workflows/push-main.yml'];
+      expect(pushSource).toMatch(/promote:[\s\S]*?needs:\s*\n\s*- build\s*\n\s*- build-python/);
+    });
+
+    test('promoted stages keep their listed order in push-production.yml', () => {
+      const target = synthWith({
+        stages: [
+          { environment: 'dev' },
+          { environment: 'platform', workload: 'management', promotion: true },
+          { environment: 'staging' },
+          { environment: 'prodeu', promotion: true },
+          { environment: 'produs', promotion: true },
+        ],
+      })['.github/workflows/push-production.yml'];
+      const gates = [...target.matchAll(/^ {2}(gate-[a-z0-9-]+):/gm)].map((match) => match[1]);
+      expect(gates).toEqual(['gate-platform-0', 'gate-prodeu-1', 'gate-produs-2']);
+      expect(target).toMatch(/gate-prodeu-1:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-0/);
+      expect(target).toMatch(/gate-produs-2:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-1/);
     });
 
     test('promoting a branch onto itself is a synth error', () => {
       expect(() =>
         synthWith({
           ...prStrategy,
-          promotion: { ...prStrategy.promotion!, sourceBranch: 'main', targetBranch: 'main' },
+          promotion: { sourceBranch: 'main', targetBranch: 'main' },
         }),
       ).toThrow('must differ');
     });
   });
+});
+
+describe('generated workflow snapshots', () => {
+  const configs: Record<string, PipelineOptions> = {
+    pr: {
+      stages: [
+        { environment: 'dev' },
+        { environment: 'staging' },
+        { environment: 'platform', workload: 'management', promotion: true },
+        { environment: 'prodeu', promotion: true },
+        { environment: 'produs', promotion: true },
+      ],
+      additionalChecks: [
+        { id: 'build-python', name: 'Build Python', uses: './.github/workflows/action-build-python.yml' },
+      ],
+    },
+    direct: {
+      stages: [
+        { environment: 'dev' },
+        { environment: 'staging' },
+        { environment: 'prodeu' },
+        { environment: 'produs' },
+      ],
+      promotionStrategy: PromotionStrategy.DIRECT,
+    },
+  };
+
+  for (const [name, options] of Object.entries(configs)) {
+    test(`${name} pipeline`, () => {
+      const project = newProject();
+      addCdkPipelineWorkflows(project, options);
+      const snapshot = synthSnapshot(project);
+      const files = Object.keys(snapshot)
+        .filter((key) => key.startsWith('.github/workflows/'))
+        .sort();
+      for (const file of files) {
+        expect(snapshot[file]).toMatchSnapshot(file);
+      }
+    });
+  }
 });

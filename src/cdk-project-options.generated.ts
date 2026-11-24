@@ -1217,7 +1217,7 @@ export interface RocketleapCdkProjectOptions {
   readonly crossStackReferences?: CrossStackReferences;
   /**
    * Configuration for the generated CDK pipeline GitHub Actions workflows.
-   * Drives the matrix of (environment, workload) pairs used by pr-main.yml and push-main.yml, and optionally enables the GitOps production-promotion flow.
+   * Ordered stages for the generated pipeline workflows. Defaults to PromotionStrategy.PR: stages deploy from the source branch, stages marked promotion: true deploy from the target branch once the promotion pull request is merged. Set PromotionStrategy.DIRECT for the single-branch pipeline.
    */
   readonly pipeline: PipelineOptions;
 }
