@@ -227,7 +227,7 @@ pipeline: {
 
 Each entry is a `PipelineStage`, `{ environment: string, workload?: string, promotion?: boolean }`, mapping to the CDK app file `bin/<environment>.ts` or `bin/<environment>/<workload>.ts`. `promotion: true` marks a stage that deploys only after the promotion PR is merged. At least one stage must set it.
 
-- `push-<source>.yml` (`push-main.yml`) deploys the stages without `promotion` on every push to the source branch, then opens or updates the promotion PR onto the target branch.
+- `push-<source>.yml` (`push-main.yml`) deploys the stages without `promotion` on every push to the source branch, then opens its own timestamped promotion PR onto the target branch. Promotion PRs are merged in order.
 - `push-<target>.yml` (`push-production.yml`) deploys the stages marked `promotion: true` when the promotion PR is merged into the target branch.
 
 Promoted stages deploy in their listed order after the unpromoted ones, whatever their position in `stages`. A pipeline with only promoted stages is valid: `push-<source>.yml` then runs `build` and opens the promotion PR straight away.
@@ -297,7 +297,7 @@ What a change goes through:
 
 1. **PR into `main`**: `pr-main.yml` diffs the pre-prod stages.
 2. **Merge to `main`**: `push-main.yml` deploys the pre-prod stages behind their Environment gates.
-3. **Promotion PR opens itself**: once every pre-prod stage has deployed, `push-main.yml` calls `action-promote-pr.yml`, which opens (or updates) `promote-main-to-production` → `production`.
+3. **Promotion PR opens itself**: once every pre-prod stage has deployed, `push-main.yml` calls `action-promote-pr.yml`, which opens a new promotion PR from a timestamped `promote-main-to-production-<timestamp>` branch onto `production`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`.
 4. **The promotion PR is the gate**: `pr-production.yml` posts the production `cdk diff` on it. The review, the diff and the merge are the durable record of who approved which production change, which is what `DIRECT` has no artefact for.
 5. **Merge to `production`**: `push-production.yml` deploys the stages marked `promotion: true` in their listed order, still behind their Environment gates.
 
@@ -348,7 +348,7 @@ pipeline: {
 }
 ```
 
-Repo that uses `dev` and `main`: point the promotion at those branches instead of `main` and `production`. This emits `pr-dev.yml` / `push-dev.yml` and `pr-main.yml` / `push-main.yml`, and the promotion branch is `promote-dev-to-main`.
+Repo that uses `dev` and `main`: point the promotion at those branches instead of `main` and `production`. This emits `pr-dev.yml` / `push-dev.yml` and `pr-main.yml` / `push-main.yml`, and the promotion branches are `promote-dev-to-main-<timestamp>`.
 
 ```typescript
 pipeline: {
@@ -363,7 +363,7 @@ Under `PromotionStrategy.PR`, the default, the generator emits nine files: the f
 
 | File | Purpose |
 | --- | --- |
-| `action-promote-pr.yml` | Reusable. Resets `promote-<source>-to-<target>` (`promote-main-to-production`) onto the source branch and opens, or updates, the promotion PR against the target branch via `peter-evans/create-pull-request`. Called by `push-<source>.yml` after every source-branch stage has deployed. |
+| `action-promote-pr.yml` | Reusable. Opens a new promotion PR against the target branch from a timestamped `promote-<source>-to-<target>-<timestamp>` branch (`promote-main-to-production-<timestamp>`) reset onto the source branch, via `peter-evans/create-pull-request`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since the target branch. Called by `push-<source>.yml` after every source-branch stage has deployed. |
 | `pr-<source>.yml` (`pr-main.yml`) / `pr-<target>.yml` (`pr-production.yml`) | On PR to that branch: `build` → `synth` (matrix over that branch's stages) → per-stage `diff`. `pr-<target>.yml` posts the production diff on the promotion PR. With no unpromoted stages, `pr-<source>.yml` is `build` and the additional checks only. |
 | `push-<source>.yml` (`push-main.yml`) | On push to the source branch: `build` → `synth` → deploy chain for the stages without `promotion` → `promote`. With no unpromoted stages, `build` → `promote`. |
 | `push-<target>.yml` (`push-production.yml`) | On push to the target branch: `build` → `synth` → deploy chain for the stages marked `promotion: true`. |

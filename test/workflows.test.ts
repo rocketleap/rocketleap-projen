@@ -605,6 +605,13 @@ describe('pipeline.promotionStrategy', () => {
       expect(promote).toMatch(/fetch-depth: ['"]?0['"]?/);
     });
 
+    test('each promotion opens a new timestamped PR describing the promoted commits', () => {
+      const promote = synthWith(prStrategy)['.github/workflows/action-promote-pr.yml'];
+      expect(promote).toContain('branch-suffix: timestamp');
+      expect(promote).toContain('## Commits');
+      expect(promote).toContain('steps.describe.outputs.sha');
+    });
+
     test('the target branch gets no promote job, so merging the PR only deploys', () => {
       expect(synthWith(prStrategy)['.github/workflows/push-production.yml']).not.toContain('promote:');
     });

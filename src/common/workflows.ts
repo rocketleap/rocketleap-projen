@@ -802,8 +802,8 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[], c
 }
 
 /**
- * Emits `action-promote-pr.yml`: a reusable workflow that opens, or updates,
- * the pull request promoting `source-branch` onto `target-branch`.
+ * Emits `action-promote-pr.yml`: a reusable workflow that opens a new,
+ * timestamped pull request promoting `source-branch` onto `target-branch`.
  *
  * Only generated under `PromotionStrategy.PR`.
  */
@@ -827,7 +827,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
           },
           outputs: {
             'pr-number': {
-              description: 'Number of the promotion pull request that was opened or updated.',
+              description: 'Number of the promotion pull request that was opened.',
               value: '${{ jobs.pr.outputs.pr-number }}',
             },
           },
@@ -862,22 +862,42 @@ export function addActionPromotePrWorkflow(project: Project): void {
               ].join('\n'),
             },
             {
-              // Fixed branch name, so later pushes to the source branch update
-              // the one open promotion PR instead of opening another.
+              name: 'Describe promotion',
+              id: 'describe',
+              run: [
+                'git fetch origin ${{ inputs.target-branch }}',
+                'sha=$(git rev-parse origin/${{ inputs.source-branch }})',
+                "log=$(git log --no-merges --format='- %h %s (%an)' origin/${{ inputs.target-branch }}..origin/${{ inputs.source-branch }})",
+                'if [ -z "$log" ]; then log=\'- No new commits; the branches are identical.\'; fi',
+                'echo "sha=$sha" >> "$GITHUB_OUTPUT"',
+                'echo "short=${sha:0:7}" >> "$GITHUB_OUTPUT"',
+                'delim=$(openssl rand -hex 8)',
+                'echo "log<<$delim" >> "$GITHUB_OUTPUT"',
+                'echo "$log" >> "$GITHUB_OUTPUT"',
+                'echo "$delim" >> "$GITHUB_OUTPUT"',
+              ].join('\n'),
+            },
+            {
+              // Timestamped branch per promotion, so each promotion is its own PR and they are merged in order.
               name: 'Create promotion PR',
               id: 'cpr',
               uses: 'peter-evans/create-pull-request@v8',
               with: {
-                title: 'Promote ${{ inputs.source-branch }} to ${{ inputs.target-branch }}',
-                base: '${{ inputs.target-branch }}',
-                branch: 'promote-${{ inputs.source-branch }}-to-${{ inputs.target-branch }}',
-                body: [
-                  'Opened by `push-${{ inputs.source-branch }}.yml` once every `${{ inputs.source-branch }}` stage had deployed.',
+                'title':
+                  'Promote ${{ inputs.source-branch }} to ${{ inputs.target-branch }} (${{ steps.describe.outputs.short }})',
+                'base': '${{ inputs.target-branch }}',
+                'branch': 'promote-${{ inputs.source-branch }}-to-${{ inputs.target-branch }}',
+                'branch-suffix': 'timestamp',
+                'body': [
+                  'Promotes `${{ inputs.source-branch }}` at ${{ steps.describe.outputs.sha }} onto `${{ inputs.target-branch }}`.',
                   '',
-                  'Merging this deploys the production stages from `${{ inputs.target-branch }}`.',
-                  'The production `cdk diff` is posted on this PR by `pr-${{ inputs.target-branch }}.yml`.',
+                  '## Commits',
+                  '',
+                  '${{ steps.describe.outputs.log }}',
+                  '',
+                  'Merging this deploys the stages marked promotion: true from `${{ inputs.target-branch }}`. The production `cdk diff` is posted on this PR by `pr-${{ inputs.target-branch }}.yml`.',
                 ].join('\n'),
-                labels: 'promotion-pr',
+                'labels': 'promotion-pr',
               },
             },
           ],

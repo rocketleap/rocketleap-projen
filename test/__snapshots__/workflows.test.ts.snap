@@ -688,7 +688,7 @@ on:
         type: string
     outputs:
       pr-number:
-        description: Number of the promotion pull request that was opened or updated.
+        description: Number of the promotion pull request that was opened.
         value: \${{ jobs.pr.outputs.pr-number }}
 env:
   GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
@@ -710,18 +710,35 @@ jobs:
         run: |-
           git fetch origin \${{ inputs.source-branch }}
           git reset --hard origin/\${{ inputs.source-branch }}
+      - name: Describe promotion
+        id: describe
+        run: |-
+          git fetch origin \${{ inputs.target-branch }}
+          sha=$(git rev-parse origin/\${{ inputs.source-branch }})
+          log=$(git log --no-merges --format='- %h %s (%an)' origin/\${{ inputs.target-branch }}..origin/\${{ inputs.source-branch }})
+          if [ -z "$log" ]; then log='- No new commits; the branches are identical.'; fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "short=\${sha:0:7}" >> "$GITHUB_OUTPUT"
+          delim=$(openssl rand -hex 8)
+          echo "log<<$delim" >> "$GITHUB_OUTPUT"
+          echo "$log" >> "$GITHUB_OUTPUT"
+          echo "$delim" >> "$GITHUB_OUTPUT"
       - name: Create promotion PR
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
-          title: Promote \${{ inputs.source-branch }} to \${{ inputs.target-branch }}
+          title: Promote \${{ inputs.source-branch }} to \${{ inputs.target-branch }} (\${{ steps.describe.outputs.short }})
           base: \${{ inputs.target-branch }}
           branch: promote-\${{ inputs.source-branch }}-to-\${{ inputs.target-branch }}
+          branch-suffix: timestamp
           body: |-
-            Opened by \`push-\${{ inputs.source-branch }}.yml\` once every \`\${{ inputs.source-branch }}\` stage had deployed.
+            Promotes \`\${{ inputs.source-branch }}\` at \${{ steps.describe.outputs.sha }} onto \`\${{ inputs.target-branch }}\`.
 
-            Merging this deploys the production stages from \`\${{ inputs.target-branch }}\`.
-            The production \`cdk diff\` is posted on this PR by \`pr-\${{ inputs.target-branch }}.yml\`.
+            ## Commits
+
+            \${{ steps.describe.outputs.log }}
+
+            Merging this deploys the stages marked promotion: true from \`\${{ inputs.target-branch }}\`. The production \`cdk diff\` is posted on this PR by \`pr-\${{ inputs.target-branch }}.yml\`.
           labels: promotion-pr
 "
 `;
