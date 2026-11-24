@@ -4,7 +4,7 @@
 
 ### Mark production stages with promotion: true
 
-The promotion pull request is now the default pipeline. Pushes to the source branch (`dev` by default) deploy the stages without `promotion`, then a promotion pull request onto the target branch (`main` by default) carries the production `cdk diff`, and merging it deploys the stages marked `promotion: true` in their listed order. A pipeline without any `promotion: true` stage fails `npx projen` with a migration message. Repos that want to keep the single-branch pipeline set `promotionStrategy: PromotionStrategy.DIRECT`.
+The promotion pull request is now the default pipeline. Pushes to the source branch (`main` by default) deploy the stages without `promotion`, then a promotion pull request onto the target branch (`production` by default) carries the production `cdk diff`, and merging it deploys the stages marked `promotion: true` in their listed order. A pipeline without any `promotion: true` stage fails `npx projen` with a migration message. Repos that want to keep the single-branch pipeline set `promotionStrategy: PromotionStrategy.DIRECT`.
 
 Before:
 
@@ -32,7 +32,7 @@ pipeline: {
 },
 ```
 
-Repos whose branches are `main` and `production` instead of `dev` and `main` add `promotion` with the branch names. `pipeline.promotion` is optional and only holds `sourceBranch` (default `dev`) and `targetBranch` (default `main`).
+Repos whose branches are `dev` and `main` instead of `main` and `production` add `promotion` with the branch names. `pipeline.promotion` is optional and only holds `sourceBranch` (default `main`) and `targetBranch` (default `production`).
 
 ```ts
 pipeline: {
@@ -40,7 +40,7 @@ pipeline: {
     { environment: 'dev' },
     { environment: 'prod', promotion: true },
   ],
-  promotion: { sourceBranch: 'main', targetBranch: 'production' },
+  promotion: { sourceBranch: 'dev', targetBranch: 'main' },
 },
 ```
 
@@ -55,9 +55,9 @@ pipeline: {
 
 **Customer action:**
 
-- Create the source branch (`dev` by default) from the target branch if it does not exist and make it the default branch of the repository.
-- Require a review on the target branch (`main` by default) so the promotion pull request is a real gate.
-- Run `npx projen` and commit the new `pr-<source>.yml`, `push-<source>.yml`, `pr-<target>.yml`, `push-<target>.yml` and `action-promote-pr.yml` workflows.
+- Create `production` from `main` if it does not exist. `main` stays the default branch of the repository.
+- Require a review on `production` so the promotion pull request is a real gate.
+- Run `npx projen` and commit the new `pr-main.yml`, `push-main.yml`, `pr-production.yml`, `push-production.yml` and `action-promote-pr.yml` workflows.
 
 ## 1.3.0:
 

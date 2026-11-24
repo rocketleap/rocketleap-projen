@@ -56,7 +56,7 @@ export interface PipelineStage {
  * This is the supported hook for checks the TypeScript `build` job cannot
  * run, such as the Python unit tests of governance-cdk's custom AWS Config
  * rules. `synth` depends on every check, so a failing check blocks the PR
- * diff and, on `main`/`dev`, every deploy behind it.
+ * diff and, on push, every deploy behind it.
  */
 export interface PipelineCheck {
   /**
@@ -160,14 +160,14 @@ export interface PipelinePromotionOptions {
    * Branch the stages without `promotion` deploy from, and the branch the
    * promotion PR promotes.
    *
-   * @default 'dev'
+   * @default 'main'
    */
   readonly sourceBranch?: string;
   /**
    * Branch the stages marked `promotion: true` deploy from, and the base
    * of the promotion PR.
    *
-   * @default 'main'
+   * @default 'production'
    */
   readonly targetBranch?: string;
 }
@@ -234,7 +234,7 @@ export interface PipelineOptions {
    * rejected under `PromotionStrategy.DIRECT`, a synth-time error rather
    * than a pipeline that merges and then does the wrong thing.
    *
-   * @default - source branch 'dev', target branch 'main'
+   * @default - source branch 'main', target branch 'production'
    */
   readonly promotion?: PipelinePromotionOptions;
 }
@@ -894,7 +894,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
  */
 export const PROMOTION_REQUIRED_MESSAGE = [
   'At least one pipeline stage must set promotion: true.',
-  "rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from the source branch (default 'dev'), then a promotion pull request onto the target branch (default 'main') carries the production cdk diff, and merging it deploys the stages marked promotion: true.",
+  "rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from the source branch (default 'main'), then a promotion pull request onto the target branch (default 'production') carries the production cdk diff, and merging it deploys the stages marked promotion: true.",
   "To migrate, add promotion: true to every production stage, for example { environment: 'prodeu', promotion: true }.",
   'Repos with a single stage, or that want the single-branch pipeline, set promotionStrategy: PromotionStrategy.DIRECT. Its GitHub Environment gates only block on GitHub Enterprise.',
 ].join('\n');
@@ -977,8 +977,8 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
   if (promoted.length === 0) {
     throw new Error(PROMOTION_REQUIRED_MESSAGE);
   }
-  const sourceBranch = options.promotion?.sourceBranch ?? 'dev';
-  const targetBranch = options.promotion?.targetBranch ?? 'main';
+  const sourceBranch = options.promotion?.sourceBranch ?? 'main';
+  const targetBranch = options.promotion?.targetBranch ?? 'production';
   if (sourceBranch === targetBranch) {
     throw new Error(`pipeline.promotion.sourceBranch and targetBranch must differ — both are '${sourceBranch}'`);
   }

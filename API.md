@@ -5648,7 +5648,7 @@ called workflow or the action without this interface knowing them.
 This is the supported hook for checks the TypeScript `build` job cannot
 run, such as the Python unit tests of governance-cdk's custom AWS Config
 rules. `synth` depends on every check, so a failing check blocks the PR
-diff and, on `main`/`dev`, every deploy behind it.
+diff and, on push, every deploy behind it.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelineCheck.Initializer"></a>
 
@@ -5880,7 +5880,7 @@ public readonly promotion: PipelinePromotionOptions;
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions">PipelinePromotionOptions</a>
-- *Default:* source branch 'dev', target branch 'main'
+- *Default:* source branch 'main', target branch 'production'
 
 Source and target branch overrides for `PromotionStrategy.PR`.
 
@@ -5941,7 +5941,7 @@ public readonly sourceBranch: string;
 ```
 
 - *Type:* string
-- *Default:* 'dev'
+- *Default:* 'main'
 
 Branch the stages without `promotion` deploy from, and the branch the promotion PR promotes.
 
@@ -5954,7 +5954,7 @@ public readonly targetBranch: string;
 ```
 
 - *Type:* string
-- *Default:* 'main'
+- *Default:* 'production'
 
 Branch the stages marked `promotion: true` deploy from, and the base of the promotion PR.
 
