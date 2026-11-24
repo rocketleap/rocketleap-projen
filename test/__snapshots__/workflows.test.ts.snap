@@ -921,6 +921,8 @@ jobs:
       fail-fast: true
       matrix:
         stage:
+          - environment: dev
+          - environment: staging
           - environment: platform
             workload: management
           - environment: prodeu
@@ -929,7 +931,23 @@ jobs:
     with:
       environment: \${{ matrix.stage.environment }}
       workload: \${{ matrix.stage.workload }}
-  diff-platform-management-0:
+  diff-dev-0:
+    name: Diff dev
+    needs:
+      - synth
+    uses: ./.github/workflows/action-diff.yml
+    with:
+      job-name: Diff dev
+      environment: dev
+  diff-staging-1:
+    name: Diff staging
+    needs:
+      - synth
+    uses: ./.github/workflows/action-diff.yml
+    with:
+      job-name: Diff staging
+      environment: staging
+  diff-platform-management-2:
     name: Diff platform (management)
     needs:
       - synth
@@ -938,7 +956,7 @@ jobs:
       job-name: Diff platform (management)
       environment: platform
       workload: management
-  diff-prodeu-1:
+  diff-prodeu-3:
     name: Diff prodeu
     needs:
       - synth
@@ -946,7 +964,7 @@ jobs:
     with:
       job-name: Diff prodeu
       environment: prodeu
-  diff-produs-2:
+  diff-produs-4:
     name: Diff produs
     needs:
       - synth
