@@ -7,6 +7,7 @@ import {
 
 const minimalPipeline = {
   stages: [{ environment: 'dev' }],
+  promotion: { productionStages: [{ environment: 'prod' }] },
 };
 
 describe('RocketleapWorkloadCdkProject .gitignore emission', () => {

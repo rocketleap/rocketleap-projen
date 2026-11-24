@@ -1,11 +1,12 @@
 import { Testing } from 'projen';
 import { RocketleapPlatformCdkProject, RocketleapWorkloadCdkProject } from '../src';
+import { PROMOTION_REQUIRED_MESSAGE } from '../src/common/workflows';
 
 test('Platform project does not generate src/main.ts or test/main.test.ts', () => {
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test' }], promotion: { productionStages: [{ environment: 'prod' }] } },
   });
 
   const snapshot = Testing.synth(project);
@@ -18,7 +19,7 @@ test('Workload project does not generate src/main.ts or test/main.test.ts', () =
   const project = new RocketleapWorkloadCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test' }], promotion: { productionStages: [{ environment: 'prod' }] } },
   });
 
   const snapshot = Testing.synth(project);
@@ -31,7 +32,7 @@ test('caller `context` is merged into cdk.json alongside crossStackReferences', 
   const project = new RocketleapPlatformCdkProject({
     company: 'test',
     project: 'test-cdk',
-    pipeline: { stages: [{ environment: 'test' }] },
+    pipeline: { stages: [{ environment: 'test' }], promotion: { productionStages: [{ environment: 'prod' }] } },
     context: {
       '@aws-cdk/aws-lambda:useCdkManagedLogGroup': false,
       'customKey': 'customValue',
@@ -42,4 +43,15 @@ test('caller `context` is merged into cdk.json alongside crossStackReferences', 
   expect(cdkJson.context['@aws-cdk/aws-lambda:useCdkManagedLogGroup']).toBe(false);
   expect(cdkJson.context.customKey).toBe('customValue');
   expect(cdkJson.context['@aws-cdk/core:defaultCrossStackReferences']).toBeDefined();
+});
+
+test('a stages-only pipeline fails at construction with the migration message', () => {
+  expect(
+    () =>
+      new RocketleapPlatformCdkProject({
+        company: 'test',
+        project: 'test-cdk',
+        pipeline: { stages: [{ environment: 'test' }] },
+      }),
+  ).toThrow(PROMOTION_REQUIRED_MESSAGE);
 });

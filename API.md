@@ -5831,10 +5831,11 @@ public readonly stages: PipelineStage[];
 
 Ordered list of stages the pipeline promotes through.
 
-Under `PromotionStrategy.DIRECT` this is the whole pipeline,
-pre-prod through prod. Under `PromotionStrategy.PR` it is only the
-pre-prod chain deployed from `promotion.sourceBranch`, and
-`promotion.productionStages` carries the rest.
+Under `PromotionStrategy.PR`, the default, it is the pre-prod chain
+deployed from `promotion.sourceBranch`, and
+`promotion.productionStages` carries the rest. Under
+`PromotionStrategy.DIRECT` it is the whole pipeline, pre-prod through
+prod. At least one entry in both cases.
 
 ---
 
@@ -5878,12 +5879,13 @@ public readonly promotion: PipelinePromotionOptions;
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions">PipelinePromotionOptions</a>
-- *Default:* none; required when promotionStrategy is PR
+- *Default:* none; required unless promotionStrategy is DIRECT
 
 Target branch and production stages for `PromotionStrategy.PR`.
 
-Required with that strategy and rejected without it — both are synth-time
-errors rather than a pipeline that merges and then does the wrong thing.
+Required under `PromotionStrategy.PR`, which is the default, and
+rejected under `PromotionStrategy.DIRECT`. Both are synth-time errors
+rather than a pipeline that merges and then does the wrong thing.
 
 ---
 
@@ -5894,15 +5896,14 @@ public readonly promotionStrategy: PromotionStrategy;
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PromotionStrategy">PromotionStrategy</a>
-- *Default:* PromotionStrategy.DIRECT
+- *Default:* PromotionStrategy.PR
 
 How a change reaches production.
 
-Leaving this unset generates the same six files with the same contents a
-project gets today, so upgrading this package never rewrites a pipeline
-that did not ask for it. Setting `PromotionStrategy.PR` changes how
-the repo deploys, and needs the matching branches and branch protection
-to exist.
+Leaving this unset selects `PromotionStrategy.PR`, which needs
+`promotion` and the matching branches and branch protection to exist.
+`PromotionStrategy.DIRECT` keeps the single-branch pipeline and is only
+a real gate on GitHub Enterprise.
 
 ---
 
@@ -5910,8 +5911,9 @@ to exist.
 
 The target-branch half of `PromotionStrategy.PR`.
 
-Required with that strategy and rejected without it, so a project cannot
-half-configure promotion and silently get the single-branch shape.
+Required under `PromotionStrategy.PR`, which is the default, and rejected
+under `PromotionStrategy.DIRECT`, so a project cannot half-configure
+promotion and silently get the single-branch shape.
 
 #### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.Initializer"></a>
 
@@ -5925,7 +5927,7 @@ const pipelinePromotionOptions: PipelinePromotionOptions = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.productionStages">productionStages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages deployed from `targetBranch` — the chain the promotion PR puts into production. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.productionStages">productionStages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages deployed from `targetBranch`: the chain the promotion PR puts into production. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.sourceBranch">sourceBranch</a></code> | <code>string</code> | Branch the pre-prod `pipeline.stages` deploy from, and the branch the promotion PR promotes. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.targetBranch">targetBranch</a></code> | <code>string</code> | Branch `productionStages` deploy from, and the base of the promotion PR. |
 
@@ -5939,7 +5941,7 @@ public readonly productionStages: PipelineStage[];
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]
 
-Ordered list of stages deployed from `targetBranch` — the chain the promotion PR puts into production.
+Ordered list of stages deployed from `targetBranch`: the chain the promotion PR puts into production.
 
 Keep it disjoint from `pipeline.stages`: a stage named in both deploys
 twice, once from each branch.
@@ -6241,7 +6243,7 @@ public readonly pipeline: PipelineOptions;
 
 Configuration for the generated CDK pipeline GitHub Actions workflows.
 
-Drives the matrix of (environment, workload) pairs used by pr-main.yml and push-main.yml, and optionally enables the GitOps production-promotion flow.
+Stages, promotion strategy and promotion branches for the generated pipeline workflows. Defaults to PromotionStrategy.PR: pipeline.stages deploy from the source branch and pipeline.promotion.productionStages deploy from the target branch once the promotion pull request is merged. Set PromotionStrategy.DIRECT for the single-branch pipeline.
 
 ---
 
@@ -13193,6 +13195,10 @@ Fewest moving parts and the fastest path to prod. Nothing durable holds
 the production diff, so the only record of what was approved is the
 Environment approval on the deploy job.
 
+GitHub enforces required reviewers on Environments only on private
+repositories under GitHub Enterprise. On Free and Team plans the gate job
+records no approval and production deploys unreviewed.
+
 ---
 
 
@@ -13208,6 +13214,8 @@ The promotion PR is the audit artefact: the production `cdk diff` is
 posted on it, and its review, description and merge are a durable record
 of who approved which production change. Pick this when a compliance
 narrative has to point at a reviewed diff.
+
+The default.
 
 ---
 

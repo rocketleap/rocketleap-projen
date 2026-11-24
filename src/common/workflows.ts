@@ -114,6 +114,10 @@ export enum PromotionStrategy {
    * Fewest moving parts and the fastest path to prod. Nothing durable holds
    * the production diff, so the only record of what was approved is the
    * Environment approval on the deploy job.
+   *
+   * GitHub enforces required reviewers on Environments only on private
+   * repositories under GitHub Enterprise. On Free and Team plans the gate job
+   * records no approval and production deploys unreviewed.
    */
   DIRECT = 'direct',
   /**
@@ -125,6 +129,8 @@ export enum PromotionStrategy {
    * posted on it, and its review, description and merge are a durable record
    * of who approved which production change. Pick this when a compliance
    * narrative has to point at a reviewed diff.
+   *
+   * The default.
    */
   PR = 'pr',
 }
@@ -132,12 +138,13 @@ export enum PromotionStrategy {
 /**
  * The target-branch half of `PromotionStrategy.PR`.
  *
- * Required with that strategy and rejected without it, so a project cannot
- * half-configure promotion and silently get the single-branch shape.
+ * Required under `PromotionStrategy.PR`, which is the default, and rejected
+ * under `PromotionStrategy.DIRECT`, so a project cannot half-configure
+ * promotion and silently get the single-branch shape.
  */
 export interface PipelinePromotionOptions {
   /**
-   * Ordered list of stages deployed from `targetBranch` — the chain the
+   * Ordered list of stages deployed from `targetBranch`: the chain the
    * promotion PR puts into production.
    *
    * Keep it disjoint from `pipeline.stages`: a stage named in both deploys
@@ -175,10 +182,11 @@ export interface PipelineOptions {
   /**
    * Ordered list of stages the pipeline promotes through.
    *
-   * Under `PromotionStrategy.DIRECT` this is the whole pipeline,
-   * pre-prod through prod. Under `PromotionStrategy.PR` it is only the
-   * pre-prod chain deployed from `promotion.sourceBranch`, and
-   * `promotion.productionStages` carries the rest.
+   * Under `PromotionStrategy.PR`, the default, it is the pre-prod chain
+   * deployed from `promotion.sourceBranch`, and
+   * `promotion.productionStages` carries the rest. Under
+   * `PromotionStrategy.DIRECT` it is the whole pipeline, pre-prod through
+   * prod. At least one entry in both cases.
    */
   readonly stages: PipelineStage[];
   /**
@@ -203,22 +211,22 @@ export interface PipelineOptions {
   /**
    * How a change reaches production.
    *
-   * Leaving this unset generates the same six files with the same contents a
-   * project gets today, so upgrading this package never rewrites a pipeline
-   * that did not ask for it. Setting `PromotionStrategy.PR` changes how
-   * the repo deploys, and needs the matching branches and branch protection
-   * to exist.
+   * Leaving this unset selects `PromotionStrategy.PR`, which needs
+   * `promotion` and the matching branches and branch protection to exist.
+   * `PromotionStrategy.DIRECT` keeps the single-branch pipeline and is only
+   * a real gate on GitHub Enterprise.
    *
-   * @default PromotionStrategy.DIRECT
+   * @default PromotionStrategy.PR
    */
   readonly promotionStrategy?: PromotionStrategy;
   /**
    * Target branch and production stages for `PromotionStrategy.PR`.
    *
-   * Required with that strategy and rejected without it — both are synth-time
-   * errors rather than a pipeline that merges and then does the wrong thing.
+   * Required under `PromotionStrategy.PR`, which is the default, and
+   * rejected under `PromotionStrategy.DIRECT`. Both are synth-time errors
+   * rather than a pipeline that merges and then does the wrong thing.
    *
-   * @default - none; required when promotionStrategy is PR
+   * @default - none; required unless promotionStrategy is DIRECT
    */
   readonly promotion?: PipelinePromotionOptions;
 }
@@ -864,48 +872,82 @@ export function addActionPromotePrWorkflow(project: Project): void {
 }
 
 /**
+ * Error raised when `PromotionStrategy.PR`, the default, is selected without
+ * `pipeline.promotion`. Explains how to migrate a single-branch pipeline.
+ */
+export const PROMOTION_REQUIRED_MESSAGE = [
+  'pipeline.promotion is required.',
+  "rocketleap-projen defaults to PromotionStrategy.PR: pipeline.stages deploy from promotion.sourceBranch (default 'dev'), then a promotion pull request onto promotion.targetBranch (default 'main') carries the production cdk diff, and merging it deploys pipeline.promotion.productionStages.",
+  'To migrate, move the production stages out of pipeline.stages into pipeline.promotion.productionStages. Never list a stage in both.',
+  'Repos with a single stage, or that want the single-branch pipeline, set promotionStrategy: PromotionStrategy.DIRECT. Its GitHub Environment gates only block on GitHub Enterprise.',
+].join('\n');
+
+/**
  * Adds the Rocketleap CDK pipeline GitHub Actions workflows.
  *
- * Under `PromotionStrategy.DIRECT`, the default, that is six files:
- * `action-build.yml`, `action-synth.yml`, `action-deploy.yml`,
- * `action-diff.yml`, `pr-main.yml`, `push-main.yml`.
+ * Under `PromotionStrategy.PR`, the default, that is nine files: the four
+ * reusable `action-build.yml`, `action-synth.yml`, `action-deploy.yml` and
+ * `action-diff.yml` workflows, `action-promote-pr.yml`, and a PR/push pair
+ * for each of the source and target branches.
  *
- * Under `PromotionStrategy.PR` it is nine: the same four reusable
- * `action-*` workflows, `action-promote-pr.yml`, and a PR/push pair for each
- * of the source and target branches.
+ * Under `PromotionStrategy.DIRECT` it is six: the same four reusable
+ * `action-*` workflows, `pr-main.yml` and `push-main.yml`.
  *
- * `options.additionalChecks` wires extra reusable workflows — local or
- * published elsewhere — and GitHub Actions into every generated entry point
+ * `options.additionalChecks` wires extra reusable workflows, local or
+ * published elsewhere, and GitHub Actions into every generated entry point
  * as gates on `synth`. Nothing they reference is generated here.
  */
 export function addCdkPipelineWorkflows(project: Project, options: PipelineOptions): void {
-  if (!options.stages || options.stages.length === 0) {
-    throw new Error('pipeline.stages must contain at least one entry');
+  const strategy = options.promotionStrategy ?? PromotionStrategy.PR;
+  if (strategy === PromotionStrategy.DIRECT) {
+    addDirectPipelineWorkflows(project, options);
+  } else {
+    addPrPipelineWorkflows(project, options);
   }
-  const strategy = options.promotionStrategy ?? PromotionStrategy.DIRECT;
-  if (strategy === PromotionStrategy.DIRECT && options.promotion) {
-    throw new Error(
-      "pipeline.promotion only applies to promotionStrategy: PromotionStrategy.PR — set that strategy or drop the 'promotion' field",
-    );
-  }
-  if (strategy === PromotionStrategy.PR && !options.promotion) {
-    throw new Error(
-      'promotionStrategy: PromotionStrategy.PR requires pipeline.promotion, naming the production stages to deploy from the target branch',
-    );
-  }
+}
 
+/**
+ * Emits the shared reusable `action-*.yml` workflows every strategy builds on.
+ */
+function addActionWorkflows(project: Project, options: PipelineOptions): void {
   addActionBuildWorkflow(project);
   addActionSynthWorkflow(project);
   addActionDeployWorkflow(project);
   addActionDiffWorkflow(project, options.cdkDiff);
+}
+
+/**
+ * `PromotionStrategy.DIRECT`: one branch pair (`main` and `dev`) carries every stage.
+ * Emits six files: the four actions plus `pr-main.yml` and `push-main.yml`.
+ */
+function addDirectPipelineWorkflows(project: Project, options: PipelineOptions): void {
+  if (options.promotion) {
+    throw new Error(
+      "pipeline.promotion only applies to promotionStrategy: PromotionStrategy.PR; set that strategy or drop the 'promotion' field",
+    );
+  }
+  if (!options.stages || options.stages.length === 0) {
+    throw new Error('pipeline.stages must contain at least one entry');
+  }
   const checks = options.additionalChecks ?? [];
 
-  if (!options.promotion) {
-    addPrMainWorkflow(project, options.stages, checks);
-    addPushMainWorkflow(project, options.stages, checks);
-    return;
-  }
+  addActionWorkflows(project, options);
+  addPrMainWorkflow(project, options.stages, checks);
+  addPushMainWorkflow(project, options.stages, checks);
+}
 
+/**
+ * `PromotionStrategy.PR`: the source branch deploys `stages` and opens a promotion
+ * pull request onto the target branch, which deploys `promotion.productionStages`.
+ * Emits nine files: the four actions, `action-promote-pr.yml`, and a pr/push pair per branch.
+ */
+function addPrPipelineWorkflows(project: Project, options: PipelineOptions): void {
+  if (!options.promotion) {
+    throw new Error(PROMOTION_REQUIRED_MESSAGE);
+  }
+  if (!options.stages || options.stages.length === 0) {
+    throw new Error('pipeline.stages must contain at least one entry');
+  }
   const productionStages = options.promotion.productionStages;
   if (!productionStages || productionStages.length === 0) {
     throw new Error('pipeline.promotion.productionStages must contain at least one entry');
@@ -915,6 +957,10 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
   if (sourceBranch === targetBranch) {
     throw new Error(`pipeline.promotion.sourceBranch and targetBranch must differ — both are '${sourceBranch}'`);
   }
+  const checks = options.additionalChecks ?? [];
+
+  addActionWorkflows(project, options);
+  addActionPromotePrWorkflow(project);
 
   const source: PipelineEntryPoint = {
     slug: branchSlug(sourceBranch),
@@ -926,8 +972,6 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
     branches: [targetBranch],
     stages: productionStages,
   };
-
-  addActionPromotePrWorkflow(project);
   addPrWorkflow(project, source, checks);
   addPushWorkflow(project, source, checks, targetBranch);
   addPrWorkflow(project, target, checks);
