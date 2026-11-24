@@ -288,7 +288,7 @@ describe('addCdkPipelineWorkflows', () => {
 
   test('empty stages throws under PR too', () => {
     const project = newProject();
-    expect(() => addCdkPipelineWorkflows(project, { stages: [], promotion: { sourceBranch: 'dev' } })).toThrow(
+    expect(() => addCdkPipelineWorkflows(project, { stages: [] })).toThrow(
       'pipeline.stages must contain at least one entry',
     );
   });
@@ -517,15 +517,6 @@ describe('pipeline.promotionStrategy', () => {
       expect(snapshot['.github/workflows/push-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n\s*- dev/);
     });
 
-    test('a promotion block without the PR strategy is a synth error, not a silent no-op', () => {
-      expect(() =>
-        synthWith({
-          ...direct,
-          promotion: { targetBranch: 'main' },
-        }),
-      ).toThrow('pipeline.promotion branch overrides only apply to');
-    });
-
     test('promotion: true under DIRECT throws', () => {
       expect(() =>
         synthWith({
@@ -557,13 +548,27 @@ describe('pipeline.promotionStrategy', () => {
       ]);
     });
 
-    test('each branch triggers on itself alone, so a push to main no longer deploys prod', () => {
+    test('main and dev trigger the source workflows and production alone triggers the target workflows', () => {
       const snapshot = synthWith(prStrategy);
-      expect(snapshot['.github/workflows/push-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n/);
-      expect(snapshot['.github/workflows/push-main.yml']).not.toMatch(/- production/);
-      expect(snapshot['.github/workflows/push-main.yml']).not.toMatch(/- dev/);
-      expect(snapshot['.github/workflows/push-production.yml']).toMatch(/branches:\s*\n\s*- production\s*\n/);
-      expect(snapshot['.github/workflows/push-production.yml']).not.toMatch(/- main/);
+      const prSource = snapshot['.github/workflows/pr-main.yml'];
+      const pushSource = snapshot['.github/workflows/push-main.yml'];
+      expect(prSource).toMatch(/pull_request:\s*\n\s*branches:\s*\n\s*- main\s*\n\s*- dev\s*\n/);
+      expect(prSource).toMatch(/^name: ['"]?PR: Main Branch['"]?$/m);
+      expect(pushSource).toMatch(/push:\s*\n\s*branches:\s*\n\s*- main\s*\n\s*- dev\s*\n/);
+      expect(pushSource).toMatch(/^name: ['"]?Push: Main Branch['"]?$/m);
+      expect(pushSource).not.toMatch(/- production/);
+      for (const file of ['pr-production.yml', 'push-production.yml']) {
+        const target = snapshot[`.github/workflows/${file}`];
+        expect(target).toMatch(/branches:\s*\n\s*- production\s*\n/);
+        expect(target).not.toMatch(/- main/);
+        expect(target).not.toMatch(/- dev/);
+      }
+    });
+
+    test('a push to main or dev promotes the pushed branch onto production', () => {
+      const pushSource = synthWith(prStrategy)['.github/workflows/push-main.yml'];
+      expect(pushSource).toMatch(/promote:[\s\S]*?source-branch: \$\{\{ github\.ref_name \}\}/);
+      expect(pushSource).toMatch(/promote:[\s\S]*?target-branch: production/);
     });
 
     test('unpromoted stages deploy from the source branch and promoted stages from the target branch', () => {
@@ -630,65 +635,10 @@ describe('pipeline.promotionStrategy', () => {
       }
     });
 
-    test('custom branch names reach the file names, titles and concurrency groups', () => {
-      const snapshot = synthWith({
-        ...prStrategy,
-        promotion: { sourceBranch: 'acceptance', targetBranch: 'release' },
-      });
-      expect(snapshot['.github/workflows/push-acceptance.yml']).toMatch(/^name: ['"]Push: Acceptance Branch['"]$/m);
-      expect(snapshot['.github/workflows/push-acceptance.yml']).toContain('concurrency: acceptance');
-      expect(snapshot['.github/workflows/push-acceptance.yml']).toMatch(/promote:[\s\S]*?target-branch: release/);
-      expect(snapshot['.github/workflows/pr-release.yml']).toMatch(/^name: ['"]PR: Release Branch['"]$/m);
-      expect(snapshot['.github/workflows/pr-release.yml']).toContain('group: pr-release-${{ github.ref }}');
-      expect(snapshot['.github/workflows/pr-main.yml']).toBeUndefined();
-    });
-
-    test('a dev and main override keeps the dev to main promotion shape', () => {
-      const snapshot = synthWith({
-        ...prStrategy,
-        promotion: { sourceBranch: 'dev', targetBranch: 'main' },
-      });
-      expect(workflowFiles(snapshot)).toEqual([
-        '.github/workflows/action-build.yml',
-        '.github/workflows/action-deploy.yml',
-        '.github/workflows/action-diff.yml',
-        '.github/workflows/action-promote-pr.yml',
-        '.github/workflows/action-synth.yml',
-        '.github/workflows/pr-dev.yml',
-        '.github/workflows/pr-main.yml',
-        '.github/workflows/push-dev.yml',
-        '.github/workflows/push-main.yml',
-      ]);
-      expect(snapshot['.github/workflows/push-dev.yml']).toMatch(/branches:\s*\n\s*- dev\s*\n/);
-      expect(snapshot['.github/workflows/push-dev.yml']).toMatch(/promote:[\s\S]*?target-branch: main/);
-      expect(snapshot['.github/workflows/push-main.yml']).toMatch(/branches:\s*\n\s*- main\s*\n/);
-      expect(snapshot['.github/workflows/push-main.yml']).not.toContain('promote:');
-    });
-
-    test('a branch name with a slash is slugified so the file name stays valid', () => {
-      const snapshot = synthWith({
-        ...prStrategy,
-        promotion: { targetBranch: 'release/prod' },
-      });
-      expect(snapshot['.github/workflows/push-release-prod.yml']).toBeDefined();
-      // The trigger keeps the real branch name; only the file name is slugified.
-      expect(snapshot['.github/workflows/push-release-prod.yml']).toMatch(/branches:\s*\n\s*- release\/prod/);
-    });
-
     test('the PR strategy without a promoted stage is a synth error', () => {
       expect(() => synthWith({ stages: [{ environment: 'dev' }], promotionStrategy: PromotionStrategy.PR })).toThrow(
         PROMOTION_REQUIRED_MESSAGE,
       );
-    });
-
-    test('branch overrides without a promoted stage are a synth error', () => {
-      expect(() =>
-        synthWith({
-          stages: [{ environment: 'dev' }],
-          promotionStrategy: PromotionStrategy.PR,
-          promotion: { sourceBranch: 'develop' },
-        }),
-      ).toThrow(PROMOTION_REQUIRED_MESSAGE);
     });
 
     test('a pipeline with only promoted stages opens the promotion PR from build', () => {
@@ -731,15 +681,6 @@ describe('pipeline.promotionStrategy', () => {
       expect(gates).toEqual(['gate-platform-0', 'gate-prodeu-1', 'gate-produs-2']);
       expect(target).toMatch(/gate-prodeu-1:[\s\S]*?needs:\s*\n\s*- deploy-platform-management-0/);
       expect(target).toMatch(/gate-produs-2:[\s\S]*?needs:\s*\n\s*- deploy-prodeu-1/);
-    });
-
-    test('promoting a branch onto itself is a synth error', () => {
-      expect(() =>
-        synthWith({
-          ...prStrategy,
-          promotion: { sourceBranch: 'main', targetBranch: 'main' },
-        }),
-      ).toThrow('must differ');
     });
   });
 });

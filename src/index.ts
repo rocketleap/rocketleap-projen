@@ -14,7 +14,6 @@ export {
   PipelineOptions,
   PipelineStage,
   PipelineCheck,
-  PipelinePromotionOptions,
   PromotionStrategy,
   CdkDiffOptions,
   addCdkPipelineWorkflows,
