@@ -23,12 +23,12 @@ export interface PipelineStage {
    */
   readonly workload?: string;
   /**
-   * Deploy this stage only after the promotion pull request onto the target
-   * branch is merged.
+   * Deploy this stage only after the promotion pull request onto
+   * `production` is merged.
    *
    * Under `PromotionStrategy.PR`, the default, stages without it deploy from
-   * the source branch and stages with it deploy from the target branch, each
-   * set in its listed order. At least one stage must set it. Rejected under
+   * `main` and `dev` and stages with it deploy from `production`, each set in
+   * its listed order. At least one stage must set it. Rejected under
    * `PromotionStrategy.DIRECT`.
    *
    * @default false
@@ -135,8 +135,9 @@ export enum PromotionStrategy {
   DIRECT = 'direct',
   /**
    * Two branch pairs with a promotion pull request between them. Stages
-   * without `promotion` deploy from the source branch; merging the promotion
-   * PR into the target branch deploys the stages marked `promotion: true`.
+   * without `promotion` deploy from pushes to `main` or `dev`, each of which
+   * opens a promotion PR onto `production`; merging it deploys the stages
+   * marked `promotion: true`. The branches are fixed.
    *
    * The promotion PR is the audit artefact: the production `cdk diff` is
    * posted on it, and its review, description and merge are a durable record
@@ -146,30 +147,6 @@ export enum PromotionStrategy {
    * The default.
    */
   PR = 'pr',
-}
-
-/**
- * Branch overrides for `PromotionStrategy.PR`.
- *
- * Optional under `PromotionStrategy.PR`, which is the default, and rejected
- * under `PromotionStrategy.DIRECT`, so a project cannot half-configure
- * promotion and silently get the single-branch shape.
- */
-export interface PipelinePromotionOptions {
-  /**
-   * Branch the stages without `promotion` deploy from, and the branch the
-   * promotion PR promotes.
-   *
-   * @default 'main'
-   */
-  readonly sourceBranch?: string;
-  /**
-   * Branch the stages marked `promotion: true` deploy from, and the base
-   * of the promotion PR.
-   *
-   * @default 'production'
-   */
-  readonly targetBranch?: string;
 }
 
 /**
@@ -189,9 +166,9 @@ export interface PipelineOptions {
    * through prod.
    *
    * Under `PromotionStrategy.PR`, the default, stages without `promotion`
-   * deploy from the source branch, and stages marked `promotion: true`
-   * deploy from the target branch once the promotion PR is merged, each set
-   * in its listed order. At least one stage must be marked. Under
+   * deploy from `main` and `dev`, and stages marked `promotion: true` deploy
+   * from `production` once the promotion PR is merged, each set in its
+   * listed order. At least one stage must be marked. Under
    * `PromotionStrategy.DIRECT` every stage deploys from the single branch
    * pair and none may be marked. At least one entry in both cases.
    */
@@ -219,24 +196,14 @@ export interface PipelineOptions {
    * How a change reaches production.
    *
    * Leaving this unset selects `PromotionStrategy.PR`, which needs at least
-   * one stage marked `promotion: true` and the matching branches and branch
-   * protection to exist.
+   * one stage marked `promotion: true` and a protected `production` branch
+   * to exist.
    * `PromotionStrategy.DIRECT` keeps the single-branch pipeline and is only
    * a real gate on GitHub Enterprise.
    *
    * @default PromotionStrategy.PR
    */
   readonly promotionStrategy?: PromotionStrategy;
-  /**
-   * Source and target branch overrides for `PromotionStrategy.PR`.
-   *
-   * Optional under `PromotionStrategy.PR`, which is the default, and
-   * rejected under `PromotionStrategy.DIRECT`, a synth-time error rather
-   * than a pipeline that merges and then does the wrong thing.
-   *
-   * @default - source branch 'main', target branch 'production'
-   */
-  readonly promotion?: PipelinePromotionOptions;
 }
 
 /**
@@ -651,11 +618,6 @@ interface PipelineEntryPoint {
   readonly stages: PipelineStage[];
 }
 
-/** Branch names reach file names and job ids, where only this character set is valid. */
-function branchSlug(branch: string): string {
-  return branch.replace(/[^a-zA-Z0-9_-]/g, '-');
-}
-
 function titleCase(slug: string): string {
   return slug.charAt(0).toUpperCase() + slug.slice(1);
 }
@@ -914,7 +876,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
  */
 export const PROMOTION_REQUIRED_MESSAGE = [
   'At least one pipeline stage must set promotion: true.',
-  "rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from the source branch (default 'main'), then a promotion pull request onto the target branch (default 'production') carries the production cdk diff, and merging it deploys the stages marked promotion: true.",
+  'rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from main (pushes to dev run the same workflows), then a promotion pull request onto production carries the production cdk diff, and merging it deploys the stages marked promotion: true.',
   "To migrate, add promotion: true to every production stage, for example { environment: 'prodeu', promotion: true }.",
   'Repos with a single stage, or that want the single-branch pipeline, set promotionStrategy: PromotionStrategy.DIRECT. Its GitHub Environment gates only block on GitHub Enterprise.',
 ].join('\n');
@@ -924,10 +886,11 @@ export const PROMOTION_REQUIRED_MESSAGE = [
  *
  * Under `PromotionStrategy.PR`, the default, that is nine files: the four
  * reusable `action-build.yml`, `action-synth.yml`, `action-deploy.yml` and
- * `action-diff.yml` workflows, `action-promote-pr.yml`, and a PR/push pair
- * for each of the source and target branches. Stages without `promotion`
- * deploy from the source branch, stages marked `promotion: true` from the
- * target branch.
+ * `action-diff.yml` workflows, `action-promote-pr.yml`, `pr-main.yml` and
+ * `push-main.yml` triggered by `main` and `dev`, and `pr-production.yml` and
+ * `push-production.yml` triggered by `production`. Stages without
+ * `promotion` deploy from `main` and `dev`, stages marked `promotion: true`
+ * from `production`.
  *
  * Under `PromotionStrategy.DIRECT` it is six: the same four reusable
  * `action-*` workflows, `pr-main.yml` and `push-main.yml`, and no stage may
@@ -959,14 +922,9 @@ function addActionWorkflows(project: Project, options: PipelineOptions): void {
 /**
  * `PromotionStrategy.DIRECT`: one branch pair (`main` and `dev`) carries every stage.
  * Emits six files: the four actions plus `pr-main.yml` and `push-main.yml`.
- * Rejects `promotion` branch overrides and stages marked `promotion: true`.
+ * Rejects stages marked `promotion: true`.
  */
 function addDirectPipelineWorkflows(project: Project, options: PipelineOptions): void {
-  if (options.promotion) {
-    throw new Error(
-      "pipeline.promotion branch overrides only apply to promotionStrategy: PromotionStrategy.PR; set that strategy or drop the 'promotion' field",
-    );
-  }
   if (!options.stages || options.stages.length === 0) {
     throw new Error('pipeline.stages must contain at least one entry');
   }
@@ -983,10 +941,10 @@ function addDirectPipelineWorkflows(project: Project, options: PipelineOptions):
 }
 
 /**
- * `PromotionStrategy.PR`: the source branch deploys the stages without `promotion`
- * and opens a promotion pull request onto the target branch, which deploys the
- * stages marked `promotion: true`. Each set keeps its listed order.
- * Emits nine files: the four actions, `action-promote-pr.yml`, and a pr/push pair per branch.
+ * `PromotionStrategy.PR`: pushes to `main` or `dev` deploy the stages without
+ * `promotion` and open a promotion pull request onto `production`, which deploys
+ * the stages marked `promotion: true`. Each set keeps its listed order.
+ * Emits nine files: the four actions, `action-promote-pr.yml`, and a pr/push pair per entry point.
  */
 function addPrPipelineWorkflows(project: Project, options: PipelineOptions): void {
   if (!options.stages || options.stages.length === 0) {
@@ -997,28 +955,15 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
   if (promoted.length === 0) {
     throw new Error(PROMOTION_REQUIRED_MESSAGE);
   }
-  const sourceBranch = options.promotion?.sourceBranch ?? 'main';
-  const targetBranch = options.promotion?.targetBranch ?? 'production';
-  if (sourceBranch === targetBranch) {
-    throw new Error(`pipeline.promotion.sourceBranch and targetBranch must differ — both are '${sourceBranch}'`);
-  }
   const checks = options.additionalChecks ?? [];
 
   addActionWorkflows(project, options);
   addActionPromotePrWorkflow(project);
 
-  const source: PipelineEntryPoint = {
-    slug: branchSlug(sourceBranch),
-    branches: [sourceBranch],
-    stages: unpromoted,
-  };
-  const target: PipelineEntryPoint = {
-    slug: branchSlug(targetBranch),
-    branches: [targetBranch],
-    stages: promoted,
-  };
+  const source: PipelineEntryPoint = { slug: 'main', branches: ['main', 'dev'], stages: unpromoted };
+  const target: PipelineEntryPoint = { slug: 'production', branches: ['production'], stages: promoted };
   addPrWorkflow(project, source, checks);
-  addPushWorkflow(project, source, checks, targetBranch);
+  addPushWorkflow(project, source, checks, 'production');
   addPrWorkflow(project, target, checks);
   addPushWorkflow(project, target, checks);
 }

@@ -5816,7 +5816,6 @@ const pipelineOptions: PipelineOptions = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.stages">stages</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage">PipelineStage</a>[]</code> | Ordered list of stages the pipeline promotes through, pre-prod through prod. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.additionalChecks">additionalChecks</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelineCheck">PipelineCheck</a>[]</code> | Extra checks to run next to `build`, gating `synth` and everything downstream of it. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.cdkDiff">cdkDiff</a></code> | <code><a href="#@rocketleap/rocketleap-projen.CdkDiffOptions">CdkDiffOptions</a></code> | Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.promotion">promotion</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions">PipelinePromotionOptions</a></code> | Source and target branch overrides for `PromotionStrategy.PR`. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineOptions.property.promotionStrategy">promotionStrategy</a></code> | <code><a href="#@rocketleap/rocketleap-projen.PromotionStrategy">PromotionStrategy</a></code> | How a change reaches production. |
 
 ---
@@ -5832,9 +5831,9 @@ public readonly stages: PipelineStage[];
 Ordered list of stages the pipeline promotes through, pre-prod through prod.
 
 Under `PromotionStrategy.PR`, the default, stages without `promotion`
-deploy from the source branch, and stages marked `promotion: true`
-deploy from the target branch once the promotion PR is merged, each set
-in its listed order. At least one stage must be marked. Under
+deploy from `main` and `dev`, and stages marked `promotion: true` deploy
+from `production` once the promotion PR is merged, each set in its
+listed order. At least one stage must be marked. Under
 `PromotionStrategy.DIRECT` every stage deploys from the single branch
 pair and none may be marked. At least one entry in both cases.
 
@@ -5873,23 +5872,6 @@ Customize the `corymhall/cdk-diff-action` step used in the PR diff workflow.
 
 ---
 
-##### `promotion`<sup>Optional</sup> <a name="promotion" id="@rocketleap/rocketleap-projen.PipelineOptions.property.promotion"></a>
-
-```typescript
-public readonly promotion: PipelinePromotionOptions;
-```
-
-- *Type:* <a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions">PipelinePromotionOptions</a>
-- *Default:* source branch 'main', target branch 'production'
-
-Source and target branch overrides for `PromotionStrategy.PR`.
-
-Optional under `PromotionStrategy.PR`, which is the default, and
-rejected under `PromotionStrategy.DIRECT`, a synth-time error rather
-than a pipeline that merges and then does the wrong thing.
-
----
-
 ##### `promotionStrategy`<sup>Optional</sup> <a name="promotionStrategy" id="@rocketleap/rocketleap-projen.PipelineOptions.property.promotionStrategy"></a>
 
 ```typescript
@@ -5902,61 +5884,10 @@ public readonly promotionStrategy: PromotionStrategy;
 How a change reaches production.
 
 Leaving this unset selects `PromotionStrategy.PR`, which needs at least
-one stage marked `promotion: true` and the matching branches and branch
-protection to exist.
+one stage marked `promotion: true` and a protected `production` branch
+to exist.
 `PromotionStrategy.DIRECT` keeps the single-branch pipeline and is only
 a real gate on GitHub Enterprise.
-
----
-
-### PipelinePromotionOptions <a name="PipelinePromotionOptions" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions"></a>
-
-Branch overrides for `PromotionStrategy.PR`.
-
-Optional under `PromotionStrategy.PR`, which is the default, and rejected
-under `PromotionStrategy.DIRECT`, so a project cannot half-configure
-promotion and silently get the single-branch shape.
-
-#### Initializer <a name="Initializer" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.Initializer"></a>
-
-```typescript
-import { PipelinePromotionOptions } from '@rocketleap/rocketleap-projen'
-
-const pipelinePromotionOptions: PipelinePromotionOptions = { ... }
-```
-
-#### Properties <a name="Properties" id="Properties"></a>
-
-| **Name** | **Type** | **Description** |
-| --- | --- | --- |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.sourceBranch">sourceBranch</a></code> | <code>string</code> | Branch the stages without `promotion` deploy from, and the branch the promotion PR promotes. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.targetBranch">targetBranch</a></code> | <code>string</code> | Branch the stages marked `promotion: true` deploy from, and the base of the promotion PR. |
-
----
-
-##### `sourceBranch`<sup>Optional</sup> <a name="sourceBranch" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.sourceBranch"></a>
-
-```typescript
-public readonly sourceBranch: string;
-```
-
-- *Type:* string
-- *Default:* 'main'
-
-Branch the stages without `promotion` deploy from, and the branch the promotion PR promotes.
-
----
-
-##### `targetBranch`<sup>Optional</sup> <a name="targetBranch" id="@rocketleap/rocketleap-projen.PipelinePromotionOptions.property.targetBranch"></a>
-
-```typescript
-public readonly targetBranch: string;
-```
-
-- *Type:* string
-- *Default:* 'production'
-
-Branch the stages marked `promotion: true` deploy from, and the base of the promotion PR.
 
 ---
 
@@ -5987,7 +5918,7 @@ const pipelineStage: PipelineStage = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment AND the GitHub Environment name. |
-| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.promotion">promotion</a></code> | <code>boolean</code> | Deploy this stage only after the promotion pull request onto the target branch is merged. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.promotion">promotion</a></code> | <code>boolean</code> | Deploy this stage only after the promotion pull request onto `production` is merged. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
 
 ---
@@ -6013,11 +5944,11 @@ public readonly promotion: boolean;
 - *Type:* boolean
 - *Default:* false
 
-Deploy this stage only after the promotion pull request onto the target branch is merged.
+Deploy this stage only after the promotion pull request onto `production` is merged.
 
 Under `PromotionStrategy.PR`, the default, stages without it deploy from
-the source branch and stages with it deploy from the target branch, each
-set in its listed order. At least one stage must set it. Rejected under
+`main` and `dev` and stages with it deploy from `production`, each set in
+its listed order. At least one stage must set it. Rejected under
 `PromotionStrategy.DIRECT`.
 
 ---
@@ -6249,7 +6180,7 @@ public readonly pipeline: PipelineOptions;
 
 Configuration for the generated CDK pipeline GitHub Actions workflows.
 
-Ordered stages for the generated pipeline workflows. Defaults to PromotionStrategy.PR: stages deploy from the source branch, stages marked promotion: true deploy from the target branch once the promotion pull request is merged. Set PromotionStrategy.DIRECT for the single-branch pipeline.
+Ordered stages for the generated pipeline workflows. Defaults to PromotionStrategy.PR: stages deploy from main and dev, stages marked promotion: true deploy from production once the promotion pull request is merged. Set PromotionStrategy.DIRECT for the single-branch pipeline.
 
 ---
 
@@ -13213,8 +13144,9 @@ records no approval and production deploys unreviewed.
 Two branch pairs with a promotion pull request between them.
 
 Stages
-without `promotion` deploy from the source branch; merging the promotion
-PR into the target branch deploys the stages marked `promotion: true`.
+without `promotion` deploy from pushes to `main` or `dev`, each of which
+opens a promotion PR onto `production`; merging it deploys the stages
+marked `promotion: true`. The branches are fixed.
 
 The promotion PR is the audit artefact: the production `cdk diff` is
 posted on it, and its review, description and merge are a durable record

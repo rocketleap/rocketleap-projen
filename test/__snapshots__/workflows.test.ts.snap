@@ -2,7 +2,7 @@
 
 exports[`addCdkPipelineWorkflows a stages-only config without promotion throws the migration message 1`] = `
 "At least one pipeline stage must set promotion: true.
-rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from the source branch (default 'main'), then a promotion pull request onto the target branch (default 'production') carries the production cdk diff, and merging it deploys the stages marked promotion: true.
+rocketleap-projen defaults to PromotionStrategy.PR: stages without promotion deploy from main (pushes to dev run the same workflows), then a promotion pull request onto production carries the production cdk diff, and merging it deploys the stages marked promotion: true.
 To migrate, add promotion: true to every production stage, for example { environment: 'prodeu', promotion: true }.
 Repos with a single stage, or that want the single-branch pipeline, set promotionStrategy: PromotionStrategy.DIRECT. Its GitHub Environment gates only block on GitHub Enterprise."
 `;
@@ -808,6 +808,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
 concurrency:
   group: pr-main-\${{ github.ref }}
   cancel-in-progress: true
@@ -935,6 +936,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch: {}
 permissions:
   actions: write
