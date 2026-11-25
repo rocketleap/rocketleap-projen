@@ -5920,6 +5920,7 @@ const pipelineStage: PipelineStage = { ... }
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment AND the GitHub Environment name. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.diff">diff</a></code> | <code>boolean</code> | Synth and diff this stage on pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.promotion">promotion</a></code> | <code>boolean</code> | Deploy this stage only after the promotion pull request onto `production` is merged. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.wave">wave</a></code> | <code>string</code> | Deploy wave. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
 
 ---
@@ -5970,6 +5971,30 @@ stages with it against the current production state. Pushes deploy
 per branch: stages without it deploy from `main` and `dev` and stages
 with it deploy from `production`, each set in its listed order. At
 least one stage must set it. Rejected under `PromotionStrategy.DIRECT`.
+
+---
+
+##### `wave`<sup>Optional</sup> <a name="wave" id="@rocketleap/rocketleap-projen.PipelineStage.property.wave"></a>
+
+```typescript
+public readonly wave: string;
+```
+
+- *Type:* string
+- *Default:* the stage's environment, so stages of one environment that follow each other share one gate.
+
+Deploy wave.
+
+Consecutive stages with the same wave deploy in parallel
+behind one gate job whose GitHub Environment is the wave name, so a wave
+is approved once. Waves run in configured order.
+
+The GitHub Environment named after the wave must exist; GitHub creates it
+on the first run. Configure required reviewers on that Environment.
+
+Under `PromotionStrategy.PR` promoted and unpromoted stages deploy from
+different workflows, so a wave shared between them forms two waves, one
+per workflow.
 
 ---
 

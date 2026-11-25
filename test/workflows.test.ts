@@ -785,6 +785,107 @@ describe('pipeline.promotionStrategy', () => {
   });
 });
 
+describe('pipeline stage waves', () => {
+  const productionWave: PipelineOptions = {
+    stages: [
+      { environment: 'dev' },
+      { environment: 'staging' },
+      { environment: 'maineu', promotion: true, wave: 'production' },
+      { environment: 'mainus', promotion: true, wave: 'production' },
+      { environment: 'prodeu', promotion: true, wave: 'production' },
+      { environment: 'produs', promotion: true, wave: 'production' },
+    ],
+  };
+
+  function synthWith(options: PipelineOptions): Record<string, string> {
+    const project = newProject();
+    addCdkPipelineWorkflows(project, options);
+    return synthSnapshot(project);
+  }
+
+  function workflowFiles(snapshot: Record<string, string>): string[] {
+    return Object.keys(snapshot)
+      .filter((key) => key.startsWith('.github/workflows/'))
+      .sort();
+  }
+
+  function jobBlock(workflow: string, id: string): string {
+    const match = workflow.match(new RegExp(`^ {2}${id}:\\n((?: {4}.*\\n|\\s*\\n)*)`, 'm'));
+    expect(match).not.toBeNull();
+    return match![1];
+  }
+
+  function needsOf(workflow: string, id: string): string[] {
+    const block = jobBlock(workflow, id);
+    const list = block.match(/^ {4}needs:\n((?: {6}- .*\n)+)/m);
+    expect(list).not.toBeNull();
+    return [...list![1].matchAll(/- (.*)/g)].map((item) => item[1]);
+  }
+
+  function gateIds(workflow: string): string[] {
+    return [...workflow.matchAll(/^ {2}(gate-[a-z0-9-]+):/gm)].map((match) => match[1]);
+  }
+
+  test('stages sharing a wave deploy in parallel behind one gate', () => {
+    const target = synthWith(productionWave)['.github/workflows/push-production.yml'];
+    const promoted = productionWave.stages.filter((stage) => stage.promotion);
+    const envs = promoted.map((stage) => stage.environment);
+    const gate = `gate-production-${promoted.findIndex((stage) => stage.environment === 'maineu')}`;
+    const deploys = envs.map((env, index) => `deploy-${env}-${index}`);
+    expect(gateIds(target)).toEqual([gate]);
+    expect(jobBlock(target, gate)).toContain('environment: production');
+    expect(needsOf(target, gate)).toEqual(['synth']);
+    for (const deploy of deploys) {
+      expect(needsOf(target, deploy)).toEqual([gate]);
+    }
+    for (const env of envs) {
+      expect(target).not.toMatch(new RegExp(`^ {2}gate-${env}-`, 'm'));
+    }
+    expect(target).not.toContain('promote:');
+
+    const withAudit = synthWith({
+      stages: [...productionWave.stages, { environment: 'audit', promotion: true }],
+    })['.github/workflows/push-production.yml'];
+    const auditGate = `gate-audit-${envs.length}`;
+    expect(gateIds(withAudit)).toEqual([gate, auditGate]);
+    expect(needsOf(withAudit, auditGate)).toEqual(deploys);
+    expect(needsOf(withAudit, `deploy-audit-${envs.length}`)).toEqual([auditGate]);
+  });
+
+  test('wave defaults to the environment', () => {
+    const stages = [
+      { environment: 'dev' },
+      { environment: 'platform', workload: 'management' },
+      { environment: 'platform', workload: 'security' },
+      { environment: 'staging' },
+      { environment: 'prodeu', promotion: true },
+      { environment: 'prodeu', workload: 'extra', promotion: true },
+      { environment: 'produs', promotion: true },
+    ];
+    const implicit = synthWith({ stages });
+    const explicit = synthWith({ stages: stages.map((stage) => ({ ...stage, wave: stage.environment })) });
+    expect(workflowFiles(implicit)).toEqual(workflowFiles(explicit));
+    for (const file of workflowFiles(explicit)) {
+      expect(implicit[file]).toStrictEqual(explicit[file]);
+    }
+  });
+
+  test('a wave under DIRECT deploys every stage behind one gate behind synth', () => {
+    const push = synthWith({
+      stages: [
+        { environment: 'dev', wave: 'all' },
+        { environment: 'staging', wave: 'all' },
+      ],
+      promotionStrategy: PromotionStrategy.DIRECT,
+    })['.github/workflows/push-main.yml'];
+    expect(gateIds(push)).toEqual(['gate-all-0']);
+    expect(jobBlock(push, 'gate-all-0')).toContain('environment: all');
+    expect(needsOf(push, 'gate-all-0')).toEqual(['synth']);
+    expect(needsOf(push, 'deploy-dev-0')).toEqual(['gate-all-0']);
+    expect(needsOf(push, 'deploy-staging-1')).toEqual(['gate-all-0']);
+  });
+});
+
 describe('generated workflow snapshots', () => {
   const configs: Record<string, PipelineOptions> = {
     pr: {
