@@ -233,6 +233,7 @@ Each entry is a `PipelineStage`, mapping to the CDK app file `bin/<environment>.
 | `workload` | `string` (optional) | none | Workload name for multi-app projects. |
 | `promotion` | `boolean` (optional) | `false` | Deploy the stage only after the promotion PR is merged. At least one stage must set it under `PromotionStrategy.PR`. |
 | `diff` | `boolean` (optional) | `true` | Synth and diff the stage on pull requests. Set `false` to remove the stage from every pull request workflow, for a stage whose account is torn down or not reachable from CI. Deploys are unaffected. At least one stage must keep it enabled. |
+| `wave` | `string` (optional) | the stage's `environment` | Deploy wave. Consecutive stages with the same wave deploy in parallel, each environment behind its own gate; waves run in configured order. |
 
 Pull requests into `main` or `dev` synth and diff every stage in configured order. Under `PromotionStrategy.PR` the promotion PR into `production` synths and diffs only the stages marked `promotion: true`. `diff: false` excludes a stage from both.
 
@@ -243,7 +244,22 @@ Promoted stages deploy in their listed order after the unpromoted ones, whatever
 
 `promotionStrategy: PromotionStrategy.DIRECT` keeps the single-branch shape with six files instead; see [`promotionStrategy`](#promotionstrategy--how-a-change-reaches-production) below.
 
-Each push workflow deploys its stages sequentially in the order listed. Every deploy job sets `environment: <environment>` at the job level; configure required reviewers on the corresponding GitHub Environment in repo settings to gate that tier. Consecutive same-`environment` stages deploy in parallel under one gate (e.g. `{ environment: 'platform', workload: 'management', promotion: true }` followed by `{ environment: 'platform', workload: 'security', promotion: true }` fan out under a single `platform` gate); between-env promotion stays sequential.
+Each push workflow deploys its stages sequentially in the order listed, unless they share a `wave`. Every deploy job sets `environment: <environment>` at the job level; configure required reviewers on the corresponding GitHub Environment in repo settings to gate that tier. Consecutive same-`environment` stages deploy in parallel under one gate (e.g. `{ environment: 'platform', workload: 'management', promotion: true }` followed by `{ environment: 'platform', workload: 'security', promotion: true }` fan out under a single `platform` gate); between-env promotion stays sequential.
+
+Set `wave` to deploy stages of different environments in parallel. Consecutive stages with the same `wave` form one wave: every environment in it gets its own gate job, all gates start together, and the next wave waits for every deploy of the previous one.
+
+```ts
+stages: [
+  { environment: 'dev' },
+  { environment: 'staging' },
+  { environment: 'maineu', promotion: true, wave: 'production' },
+  { environment: 'mainus', promotion: true, wave: 'production' },
+  { environment: 'prodeu', promotion: true, wave: 'production' },
+  { environment: 'produs', promotion: true, wave: 'production' },
+],
+```
+
+Here `maineu`, `mainus`, `prodeu` and `produs` deploy in parallel once the promotion PR is merged, each behind its own Environment gate. Without `wave` each environment is its own sequential step. Promoted and unpromoted stages deploy from different workflows, so a wave shared between them forms two waves, one per workflow.
 
 ### `cdkDiff` — customize the `corymhall/cdk-diff-action` step
 

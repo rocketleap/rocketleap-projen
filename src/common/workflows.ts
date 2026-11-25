@@ -44,6 +44,18 @@ export interface PipelineStage {
    * @default true
    */
   readonly diff?: boolean;
+  /**
+   * Deploy wave. Consecutive stages with the same wave deploy in parallel;
+   * waves run in configured order. Each environment inside a wave keeps its
+   * own Environment gate job.
+   *
+   * Under `PromotionStrategy.PR` promoted and unpromoted stages deploy from
+   * different workflows, so a wave shared between them forms two waves, one
+   * per workflow.
+   *
+   * @default - the stage's environment, so stages of one environment that follow each other deploy together.
+   */
+  readonly wave?: string;
 }
 
 /**
@@ -683,14 +695,15 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[], che
 }
 
 /**
- * Emits `push-<slug>.yml`: `build` → `synth` (matrix over every stage) → for each
- * consecutive same-`environment` group, one `gate-<env>-<idx>` job that owns
- * the GitHub Environment approval, followed by every deploy in the group
- * running in parallel behind that single gate. Between-env promotion is
- * sequential: the next group's gate waits for the previous group's deploys.
+ * Emits `push-<slug>.yml`: `build` → `synth` (matrix over every stage) → one
+ * wave per run of consecutive stages sharing a `wave`, which defaults to the
+ * stage's environment. Inside a wave every environment gets one
+ * `gate-<env>-<idx>` job that owns the GitHub Environment approval, and every
+ * deploy runs in parallel behind its environment's gate. Waves are sequential:
+ * the next wave's gates wait for every deploy of the previous wave.
  *
  * `promoteTo` appends a `promote` job that opens the promotion PR once every
- * deploy in the last group has succeeded. With no stages the workflow is
+ * deploy in the last wave has succeeded. With no stages the workflow is
  * `build` + checks, and `promote` waits on those instead.
  */
 function addPushWorkflow(
@@ -708,39 +721,48 @@ function addPushWorkflow(
     jobs.synth = synthMatrixJob(stages, { failFast: false, checks });
   }
 
-  // Group consecutive stages by environment. Each group gets ONE gate
-  // job that carries `environment: <env>` (so GH Environment protection
-  // asks for a single approval per env group), and the group's deploy
-  // jobs run in parallel behind that gate.
-  //
-  // - First group's gate needs `synth`.
-  // - Subsequent groups' gates need every deploy id from the previous group.
-  // - Deploy jobs never carry `environment:` themselves — the gate owns it.
-  let previousGroupDeploys: string[] = ['synth'];
-  let currentGroupDeploys: string[] = [];
-  let currentEnv: string | null = null;
-  let currentGateId: string | null = null;
+  // Each wave waits for every deploy of the previous wave; each environment in a wave gets one gate.
+  const waveOf = (stage: PipelineStage): string => stage.wave ?? stage.environment;
+  const waves: { stage: PipelineStage; index: number }[][] = [];
   stages.forEach((stage, index) => {
-    if (currentEnv === null || stage.environment !== currentEnv) {
-      // New group starts.
-      if (currentEnv !== null) {
-        previousGroupDeploys = currentGroupDeploys;
-        currentGroupDeploys = [];
-      }
-      currentEnv = stage.environment;
-      currentGateId = `gate-${stageSlug({ environment: stage.environment })}-${index}`;
-      jobs[currentGateId] = {
-        'name': `Await approval for ${stage.environment}`,
-        'needs': previousGroupDeploys,
-        'runs-on': 'ubuntu-latest',
-        'environment': stage.environment,
-        'steps': [{ run: `echo "Approved — starting deploys to ${stage.environment}"` }],
-      };
+    const last = waves[waves.length - 1];
+    if (last && waveOf(last[0].stage) === waveOf(stage)) {
+      last.push({ stage, index });
+    } else {
+      waves.push([{ stage, index }]);
     }
-    const deployId = `deploy-${stageSlug(stage)}-${index}`;
-    jobs[deployId] = deployJobFor(stage, [currentGateId!]);
-    currentGroupDeploys.push(deployId);
   });
+
+  let currentGroupDeploys: string[] = [];
+  for (const wave of waves) {
+    const needsPrev = currentGroupDeploys.length > 0 ? currentGroupDeploys : ['synth'];
+    const envGroups = new Map<string, { stage: PipelineStage; index: number }[]>();
+    for (const member of wave) {
+      const group = envGroups.get(member.stage.environment);
+      if (group) {
+        group.push(member);
+      } else {
+        envGroups.set(member.stage.environment, [member]);
+      }
+    }
+    const waveDeploys: string[] = [];
+    envGroups.forEach((group, environment) => {
+      const gateId = `gate-${stageSlug({ environment })}-${group[0].index}`;
+      jobs[gateId] = {
+        'name': `Await approval for ${environment}`,
+        'needs': needsPrev,
+        'runs-on': 'ubuntu-latest',
+        'environment': environment,
+        'steps': [{ run: `echo "Approved — starting deploys to ${environment}"` }],
+      };
+      for (const { stage, index } of group) {
+        const deployId = `deploy-${stageSlug(stage)}-${index}`;
+        jobs[deployId] = deployJobFor(stage, [gateId]);
+        waveDeploys.push(deployId);
+      }
+    });
+    currentGroupDeploys = waveDeploys;
+  }
 
   if (promoteTo) {
     jobs.promote = {
@@ -767,12 +789,9 @@ function addPushWorkflow(
 
 /**
  * Emits `push-main.yml` for the single-branch pipeline: `build` → `synth`
- * (matrix over every stage) → for each consecutive same-`environment` group,
- * one `gate-<env>-<idx>` job that owns the GitHub Environment approval,
- * followed by every deploy in the group running in parallel behind that
- * single gate. Between-env promotion is sequential: the next group's gate
- * waits for the previous group's deploys. Triggers on pushes to `main` and
- * `dev`.
+ * (matrix over every stage) → one wave per run of consecutive stages sharing
+ * a `wave`, each environment in a wave behind its own `gate-<env>-<idx>` job.
+ * Waves are sequential. Triggers on pushes to `main` and `dev`.
  */
 export function addPushMainWorkflow(project: Project, stages: PipelineStage[], checks: PipelineCheck[] = []): void {
   if (!stages || stages.length === 0) {
