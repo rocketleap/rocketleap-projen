@@ -119,8 +119,8 @@ new ProjenStruct(project, { name: 'RocketleapCdkProjectOptions', filePath: 'src/
     docs: {
       summary: "Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag.",
       remarks:
-        'Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.',
-      default: 'CrossStackReferences.BOTH',
+        'STRONG uses CloudFormation exports (Fn::ImportValue) and is the default. WEAK uses Fn::GetStackOutput. BOTH emits both. Switching an existing deployment between strong and weak changes the rendered references and can replace resources whose referencing property is immutable, so change it only with a reviewed cdk diff.',
+      default: 'CrossStackReferences.STRONG',
     },
   })
   .add({

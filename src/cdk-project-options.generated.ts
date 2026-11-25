@@ -1211,8 +1211,8 @@ export interface RocketleapCdkProjectOptions {
   readonly buildingBlocksVersion?: string;
   /**
    * Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag.
-   * Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.
-   * @default CrossStackReferences.BOTH
+   * STRONG uses CloudFormation exports (Fn::ImportValue) and is the default. WEAK uses Fn::GetStackOutput. BOTH emits both. Switching an existing deployment between strong and weak changes the rendered references and can replace resources whose referencing property is immutable, so change it only with a reviewed cdk diff.
+   * @default CrossStackReferences.STRONG
    */
   readonly crossStackReferences?: CrossStackReferences;
   /**

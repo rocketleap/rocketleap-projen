@@ -6894,11 +6894,11 @@ public readonly crossStackReferences: CrossStackReferences;
 ```
 
 - *Type:* <a href="#@rocketleap/rocketleap-projen.CrossStackReferences">CrossStackReferences</a>
-- *Default:* CrossStackReferences.BOTH
+- *Default:* CrossStackReferences.STRONG
 
 Sets the CDK '@aws-cdk/core:defaultCrossStackReferences' context flag.
 
-Controls whether cross-stack references use CloudFormation exports (strong), Fn::GetStackOutput (weak), or both.
+STRONG uses CloudFormation exports (Fn::ImportValue) and is the default. WEAK uses Fn::GetStackOutput. BOTH emits both. Switching an existing deployment between strong and weak changes the rendered references and can replace resources whose referencing property is immutable, so change it only with a reviewed cdk diff.
 
 ---
 
@@ -13119,7 +13119,9 @@ The project slug — used as the package name suffix (e.g. `aws-nuke-templates`)
 Controls the CDK `@aws-cdk/core:defaultCrossStackReferences` context flag.
 
 Determines how cross-stack references are materialised in synthesized
-CloudFormation templates.
+CloudFormation templates. Switching an existing deployment between strong and
+weak changes the rendered references and can replace resources whose
+referencing property is immutable, so change it only with a reviewed cdk diff.
 
 #### Members <a name="Members" id="Members"></a>
 
@@ -13134,6 +13136,8 @@ CloudFormation templates.
 ##### `STRONG` <a name="STRONG" id="@rocketleap/rocketleap-projen.CrossStackReferences.STRONG"></a>
 
 Use CloudFormation exports (`Fn::ImportValue`) for cross-stack references.
+
+This is the default.
 
 ---
 

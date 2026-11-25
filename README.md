@@ -101,6 +101,19 @@ The base class used by both project types. Can be used directly if you need cust
 | `cdkVersion`            | No       | `'2.232.1'` | The AWS CDK version to use                      |
 | `constructVersion`      | No       | `'10.4.4'`  | The constructs library version                  |
 | `buildingBlocksVersion` | No       | `'0.104.1'` | The Rocketleap building blocks CDK version      |
+| `crossStackReferences`  | No       | `STRONG`    | How cross-stack references are rendered         |
+
+### Cross-stack references
+
+`crossStackReferences` sets the `@aws-cdk/core:defaultCrossStackReferences` context flag in `cdk.json`:
+
+| Value                         | Rendered as                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `CrossStackReferences.STRONG` | CloudFormation exports (`Fn::ImportValue`). Default. |
+| `CrossStackReferences.WEAK`   | `Fn::GetStackOutput`                             |
+| `CrossStackReferences.BOTH`   | Both strong and weak references                  |
+
+Switching an existing deployment between strong and weak changes the rendered references and can replace resources whose referencing property is immutable, so change it only with a reviewed `cdk diff`.
 
 ### Extending `.gitignore`
 
