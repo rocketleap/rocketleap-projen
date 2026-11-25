@@ -26,9 +26,9 @@ export interface PipelineStage {
    * Deploy this stage only after the promotion pull request onto
    * `production` is merged.
    *
-   * Under `PromotionStrategy.PR`, the default, every pull request diffs
-   * every stage unless it sets `diff: false`, so the promotion PR shows the
-   * production diff against the current production state. Pushes deploy
+   * Under `PromotionStrategy.PR`, the default, pull requests into `main` or
+   * `dev` diff every stage and the promotion PR into `production` diffs the
+   * stages with it against the current production state. Pushes deploy
    * per branch: stages without it deploy from `main` and `dev` and stages
    * with it deploy from `production`, each set in its listed order. At
    * least one stage must set it. Rejected under `PromotionStrategy.DIRECT`.
@@ -37,8 +37,9 @@ export interface PipelineStage {
    */
   readonly promotion?: boolean;
   /**
-   * Synth and diff this stage on pull requests. Set false for a stage whose
-   * account is torn down or not reachable from CI. Deploys are unaffected.
+   * Synth and diff this stage on pull requests. Set false to remove it from
+   * every pull request workflow, for a stage whose account is torn down or
+   * not reachable from CI. Deploys are unaffected.
    *
    * @default true
    */
@@ -144,9 +145,10 @@ export enum PromotionStrategy {
   DIRECT = 'direct',
   /**
    * Two branch pairs with a promotion pull request between them.
-   * Every pull request, into `main`, `dev` or `production`, diffs every
-   * stage unless it sets `diff: false`, so the promotion PR shows the
-   * production diff against the current production state. Pushes deploy per
+   * Pull requests into `main` or `dev` diff every stage. The promotion PR
+   * into `production` diffs the stages marked `promotion: true` against the
+   * current production state. `diff: false` removes a stage from both.
+   * Pushes deploy per
    * branch: stages without `promotion` deploy from pushes to `main` or
    * `dev`, each of which opens a promotion PR onto `production`; merging it
    * deploys the stages marked `promotion: true`. The branches are fixed.
@@ -970,8 +972,9 @@ function addDirectPipelineWorkflows(project: Project, options: PipelineOptions):
 }
 
 /**
- * `PromotionStrategy.PR`: every pull request diffs every stage unless it sets `diff: false`,
- * so the promotion PR shows the production diff against the current production state.
+ * `PromotionStrategy.PR`: pull requests into `main` or `dev` diff every stage, and the
+ * promotion PR into `production` diffs the stages marked `promotion: true` against the
+ * current production state. `diff: false` removes a stage from both.
  * Pushes to `main` or `dev` deploy only the stages without `promotion` and open
  * a promotion pull request onto `production`, which deploys the stages marked
  * `promotion: true`. Each set keeps its listed order.
@@ -996,6 +999,11 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
   const target: PipelineEntryPoint = { slug: 'production', branches: ['production'], stages: promoted };
   addPrWorkflow(project, source, checks, diffStages);
   addPushWorkflow(project, source, checks, 'production');
-  addPrWorkflow(project, target, checks, diffStages);
+  addPrWorkflow(
+    project,
+    target,
+    checks,
+    promoted.filter((stage) => stage.diff !== false),
+  );
   addPushWorkflow(project, target, checks);
 }

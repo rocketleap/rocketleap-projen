@@ -232,9 +232,9 @@ Each entry is a `PipelineStage`, mapping to the CDK app file `bin/<environment>.
 | `environment` | `string` | required | CDK app file segment and GitHub Environment name. |
 | `workload` | `string` (optional) | none | Workload name for multi-app projects. |
 | `promotion` | `boolean` (optional) | `false` | Deploy the stage only after the promotion PR is merged. At least one stage must set it under `PromotionStrategy.PR`. |
-| `diff` | `boolean` (optional) | `true` | Synth and diff the stage on pull requests. Set `false` for a stage whose account is torn down or not reachable from CI. Deploys are unaffected. At least one stage must keep it enabled. |
+| `diff` | `boolean` (optional) | `true` | Synth and diff the stage on pull requests. Set `false` to remove the stage from every pull request workflow, for a stage whose account is torn down or not reachable from CI. Deploys are unaffected. At least one stage must keep it enabled. |
 
-Every pull request, into `main`, `dev` or `production`, synths and diffs every stage in configured order, except stages with `diff: false`.
+Pull requests into `main` or `dev` synth and diff every stage in configured order. Under `PromotionStrategy.PR` the promotion PR into `production` synths and diffs only the stages marked `promotion: true`. `diff: false` excludes a stage from both.
 
 - `push-main.yml` deploys the stages without `promotion` on every push to `main` or `dev`, then opens its own timestamped promotion PR that promotes the pushed branch onto `production`. Promotion PRs are merged in order.
 - `push-production.yml` deploys the stages marked `promotion: true` when the promotion PR is merged into `production`.
@@ -299,10 +299,10 @@ The branches are fixed: pushes and pull requests to `main` and `dev` run the sou
 
 What a change goes through:
 
-1. **PR into `main` or `dev`**: `pr-main.yml` diffs every stage, the promoted ones included, so reviewers see the production diff before the change lands.
+1. **PR into `main` or `dev`**: `pr-main.yml` diffs every stage, the promoted ones included, so reviewers see the production diff before the change lands. Stages with `diff: false` are skipped.
 2. **Merge to `main` or `dev`**: `push-main.yml` deploys the pre-prod stages behind their Environment gates.
 3. **Promotion PR opens itself**: once every pre-prod stage has deployed, `push-main.yml` calls `action-promote-pr.yml`, which opens a new promotion PR from a timestamped `promote-<branch>-to-production-<timestamp>` branch onto `production`, where `<branch>` is the pushed `main` or `dev`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`.
-4. **The promotion PR is the gate**: `pr-production.yml` diffs every stage again. For the unpromoted stages, already deployed from `main` or `dev`, that diff is normally empty; for the promoted stages it is the production change under review, against the current production state. The review, the diff and the merge are the durable record of who approved which production change, which is what `DIRECT` has no artefact for.
+4. **The promotion PR is the gate**: `pr-production.yml` diffs the stages marked `promotion: true`, except those with `diff: false`, against the current production state. That diff is the production change under review. The review, the diff and the merge are the durable record of who approved which production change, which is what `DIRECT` has no artefact for.
 5. **Merge to `production`**: `push-production.yml` deploys the stages marked `promotion: true` in their listed order, still behind their Environment gates.
 
 Adopting this in an existing repo is not just a projen change. `production` has to exist, and branch protection on it is what makes the promotion PR a real gate rather than a formality:
@@ -357,7 +357,7 @@ Under `PromotionStrategy.PR`, the default, the generator emits nine files: the f
 | File | Purpose |
 | --- | --- |
 | `action-promote-pr.yml` | Reusable. Opens a new promotion PR against `production` from a timestamped `promote-<branch>-to-production-<timestamp>` branch reset onto the pushed `main` or `dev`, via `peter-evans/create-pull-request`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`. Called by `push-main.yml` after every unpromoted stage has deployed. |
-| `pr-main.yml` / `pr-production.yml` | On PR to `main`/`dev` or to `production`: `build` → `synth` (matrix over every stage) → per-stage `diff`. Both diff every stage except those with `diff: false`; on the promotion PR the promoted stages show the production diff. |
+| `pr-main.yml` / `pr-production.yml` | On PR to `main`/`dev` or to `production`: `build` → `synth` (matrix) → per-stage `diff`. `pr-main.yml` diffs every stage; `pr-production.yml` diffs the stages marked `promotion: true` against the current production state. Both skip stages with `diff: false`. |
 | `push-main.yml` | On push to `main`/`dev`: `build` → `synth` → deploy chain for the stages without `promotion` → `promote`. With no unpromoted stages, `build` → `promote`. |
 | `push-production.yml` | On push to `production`: `build` → `synth` → deploy chain for the stages marked `promotion: true`. |
 

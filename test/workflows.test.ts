@@ -605,8 +605,10 @@ describe('pipeline.promotionStrategy', () => {
       const snapshot = synthWith(prStrategy);
       const prProduction = snapshot['.github/workflows/pr-production.yml'];
       expect(prProduction).toMatch(/branches:\s*\n\s*- production\s*\n/);
-      expect(prProduction).toContain('diff-platform-management-2:');
-      expect(prProduction).toContain('diff-prodeu-3:');
+      expect(prProduction).toContain('diff-platform-management-0:');
+      expect(prProduction).toContain('diff-prodeu-1:');
+      expect(prProduction).not.toContain('diff-dev');
+      expect(prProduction).not.toContain('diff-staging');
     });
 
     test('pull requests into main or dev diff every stage', () => {
@@ -618,16 +620,21 @@ describe('pipeline.promotionStrategy', () => {
           { environment: 'produs', promotion: true },
         ],
       });
-      for (const file of ['pr-main.yml', 'pr-production.yml']) {
-        const pr = snapshot[`.github/workflows/${file}`];
-        expect(pr).toMatch(
-          /matrix:\s*\n\s*stage:\s*\n\s*- environment: dev\s*\n\s*- environment: staging\s*\n\s*- environment: prodeu\s*\n\s*- environment: produs\s*\n/,
-        );
-        expect(pr).toContain('diff-dev-0:');
-        expect(pr).toContain('diff-staging-1:');
-        expect(pr).toContain('diff-prodeu-2:');
-        expect(pr).toContain('diff-produs-3:');
-      }
+      const prSource = snapshot['.github/workflows/pr-main.yml'];
+      expect(prSource).toMatch(
+        /matrix:\s*\n\s*stage:\s*\n\s*- environment: dev\s*\n\s*- environment: staging\s*\n\s*- environment: prodeu\s*\n\s*- environment: produs\s*\n/,
+      );
+      expect(prSource).toContain('diff-dev-0:');
+      expect(prSource).toContain('diff-staging-1:');
+      expect(prSource).toContain('diff-prodeu-2:');
+      expect(prSource).toContain('diff-produs-3:');
+
+      const prTarget = snapshot['.github/workflows/pr-production.yml'];
+      expect(prTarget).toMatch(/matrix:\s*\n\s*stage:\s*\n\s*- environment: prodeu\s*\n\s*- environment: produs\s*\n/);
+      expect(prTarget).toContain('diff-prodeu-0:');
+      expect(prTarget).toContain('diff-produs-1:');
+      expect(prTarget).not.toContain('diff-dev');
+      expect(prTarget).not.toContain('diff-staging');
 
       const pushSource = snapshot['.github/workflows/push-main.yml'];
       expect(pushSource).toContain('deploy-dev-0:');
@@ -651,14 +658,28 @@ describe('pipeline.promotionStrategy', () => {
           { environment: 'produs', promotion: true, diff: false },
         ],
       });
-      for (const file of ['pr-main.yml', 'pr-production.yml']) {
-        const pr = snapshot[`.github/workflows/${file}`];
-        expect(pr).toContain('- environment: prodeu');
-        expect(pr).not.toContain('- environment: produs');
-        expect(pr).toContain('diff-prodeu-2:');
-        expect(pr).not.toContain('diff-produs');
-      }
+      const prSource = snapshot['.github/workflows/pr-main.yml'];
+      expect(prSource).toContain('- environment: prodeu');
+      expect(prSource).not.toContain('- environment: produs');
+      expect(prSource).toContain('diff-prodeu-2:');
+      expect(prSource).not.toContain('diff-produs');
+      const prTarget = snapshot['.github/workflows/pr-production.yml'];
+      expect(prTarget).toContain('- environment: prodeu');
+      expect(prTarget).not.toContain('- environment: produs');
+      expect(prTarget).toContain('diff-prodeu-0:');
+      expect(prTarget).not.toContain('diff-produs');
       expect(snapshot['.github/workflows/push-production.yml']).toContain('deploy-produs-1:');
+
+      const noPromotedDiff = synthWith({
+        stages: [{ environment: 'dev' }, { environment: 'prodeu', promotion: true, diff: false }],
+      });
+      const prTargetEmpty = noPromotedDiff['.github/workflows/pr-production.yml'];
+      expect(prTargetEmpty).toContain('build:');
+      expect(prTargetEmpty).not.toContain('synth:');
+      expect(prTargetEmpty).not.toContain('diff-');
+      expect(prTargetEmpty).not.toContain('matrix:');
+      expect(noPromotedDiff['.github/workflows/pr-main.yml']).toContain('diff-dev-0:');
+      expect(noPromotedDiff['.github/workflows/push-production.yml']).toContain('deploy-prodeu-0:');
     });
 
     test('all stages with diff false throws', () => {
