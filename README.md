@@ -212,6 +212,8 @@ Removes deployed stacks. Destructive.
 
 ## Pipeline
 
+The generated pipelines are drawn in [`docs/pipelines.drawio`](docs/pipelines.drawio); each section below links the matching page.
+
 Every project sets `pipeline` on the project options. By default (`PromotionStrategy.PR`) the generator emits nine GitHub Actions workflows: the reusable `action-build.yml`, `action-synth.yml`, `action-deploy.yml`, `action-diff.yml` and `action-promote-pr.yml`, plus `pr-main.yml` / `push-main.yml` triggered by `main` and `dev` and `pr-production.yml` / `push-production.yml` triggered by `production`. The branches are fixed.
 
 ```typescript
@@ -261,6 +263,10 @@ stages: [
 
 Here `maineu`, `mainus`, `prodeu` and `produs` deploy in parallel once the promotion PR is merged and the single `production` gate is approved. Configure the required reviewers on the `production` Environment. Without `wave` each environment is its own sequential step. Promoted and unpromoted stages deploy from different workflows, so a wave shared between them forms two waves, one per workflow.
 
+![Direct pipeline with a wave](docs/pipelines-direct-waves.drawio.png)
+
+![Promotion pipeline with workloads and waves](docs/pipelines-promotion-workloads.drawio.png)
+
 ### `cdkDiff` — customize the `corymhall/cdk-diff-action` step
 
 `pipeline` accepts an optional `cdkDiff` field of type `CdkDiffOptions`:
@@ -293,6 +299,10 @@ Which one fits depends on the GitHub plan:
 | Enterprise | Enforced | `DIRECT` or `PR` |
 
 `DIRECT` gates only block on GitHub Enterprise; on other plans the gate job runs without approval.
+
+![Promotion pipeline](docs/pipelines-promotion.drawio.png)
+
+![Direct pipeline](docs/pipelines-direct.drawio.png)
 
 #### PR promotion
 
@@ -367,6 +377,8 @@ pipeline: {
 ```
 
 ## Generated GitHub Actions workflows
+
+![Branches and workflows](docs/pipelines-branches.drawio.png)
 
 Under `PromotionStrategy.PR`, the default, the generator emits nine files: the four reusable workflows below, `action-promote-pr.yml`, `pr-main.yml` / `push-main.yml` triggering on `main` and `dev`, and `pr-production.yml` / `push-production.yml` triggering on `production` alone.
 

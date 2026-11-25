@@ -1,0 +1,729 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="direct" id="page-1">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="pr-main.yml  |  pull_request: main, dev" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="560" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="synth (4 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="diff dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="50" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="diff staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="100" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="diff prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="150" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="diff prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="200" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c2" target="c3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="push-main.yml  |  push: main, dev  |  PromotionStrategy.DIRECT" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="360" width="740" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c13" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="synth (4 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c13" vertex="1">
+          <mxGeometry x="160" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="gate dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="300" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="deploy dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="440" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="gate staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="580" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="deploy staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="20" y="130" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="gate prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="160" y="130" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="deploy prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="300" y="130" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="gate prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="440" y="130" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="deploy prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="580" y="130" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c14" target="c15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c15" target="c16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c16" target="c17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c17" target="c18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c18" target="c19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c19" target="c20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c20" target="c21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c21" target="c22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c22" target="c23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="Every push deploys all stages in sequence. Each gate is a GitHub Environment job named after the environment." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="640" y="50" width="420" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="&lt;b&gt;.projenrc.ts&lt;/b&gt;&lt;br&gt;pipeline:&amp;nbsp;{&lt;br&gt;&amp;nbsp;&amp;nbsp;promotionStrategy:&amp;nbsp;PromotionStrategy.DIRECT,&lt;br&gt;&amp;nbsp;&amp;nbsp;stages:&amp;nbsp;[&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'dev'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'staging'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-eu'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-us'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;],&lt;br&gt;}" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fillColor=#f5f5f5;strokeColor=#999999;rounded=1;arcSize=6;spacing=6;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="640" y="110" width="420" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" value="rocketleap-projen pipelines. PromotionStrategy.PR is the default since 1.21.0; wave and diff since 1.24.0." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="640" y="268" width="420" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="direct-waves" id="page-2">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="pr-main.yml  |  pull_request: main, dev" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="560" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="synth (4 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="diff dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="50" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="diff staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="100" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="diff prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="150" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="diff prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="200" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c2" target="c3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="push-main.yml  |  push: main, dev  |  PromotionStrategy.DIRECT, wave 'prod'" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="360" width="1260" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c13" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="synth (4 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c13" vertex="1">
+          <mxGeometry x="160" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="gate dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="300" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="deploy dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="440" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="gate staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="580" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="deploy staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="720" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c14" target="c15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c15" target="c16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c16" target="c17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c17" target="c18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c18" target="c19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="wave: prod  (needs deploy staging)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c13" vertex="1">
+          <mxGeometry x="880" y="50" width="350" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="gate prod&lt;br&gt;(Environment: prod)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c25" vertex="1">
+          <mxGeometry x="10" y="45.0" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="deploy prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c25" vertex="1">
+          <mxGeometry x="180" y="30" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="deploy prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c25" vertex="1">
+          <mxGeometry x="180" y="80" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c26" target="c27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c26" target="c28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c19" target="c25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" value="Pre-production stays sequential. Stages sharing wave 'prod' deploy in parallel behind one gate on the GitHub Environment prod." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="640" y="50" width="440" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="&lt;b&gt;.projenrc.ts&lt;/b&gt;&lt;br&gt;pipeline:&amp;nbsp;{&lt;br&gt;&amp;nbsp;&amp;nbsp;promotionStrategy:&amp;nbsp;PromotionStrategy.DIRECT,&lt;br&gt;&amp;nbsp;&amp;nbsp;stages:&amp;nbsp;[&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'dev'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'staging'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-eu',&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-us',&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;],&lt;br&gt;}" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fillColor=#f5f5f5;strokeColor=#999999;rounded=1;arcSize=6;spacing=6;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="640" y="110" width="440" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="rocketleap-projen pipelines. PromotionStrategy.PR is the default since 1.21.0; wave and diff since 1.24.0." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="640" y="268" width="440" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="promotion" id="page-3">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="pr-main.yml  |  pull_request: main, dev" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="560" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="synth (4 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="diff dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="50" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="diff staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="100" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="diff prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="150" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="diff prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c1" vertex="1">
+          <mxGeometry x="380" y="200" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c2" target="c3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="push-main.yml  |  push: main, dev  |  PromotionStrategy.PR (default)" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="360" width="1020" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c13" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="synth (dev, staging)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c13" vertex="1">
+          <mxGeometry x="160" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="gate dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="300" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="deploy dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="440" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="gate staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c13" vertex="1">
+          <mxGeometry x="580" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="deploy staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c13" vertex="1">
+          <mxGeometry x="720" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="promote" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="c13" vertex="1">
+          <mxGeometry x="860" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c14" target="c15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c15" target="c16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c16" target="c17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c17" target="c18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c18" target="c19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c19" target="c20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="pr-production.yml  |  pull_request: production" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="660" y="40" width="560" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c27" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="synth (prod-eu, prod-us)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c27" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="diff prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c27" vertex="1">
+          <mxGeometry x="380" y="50" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="diff prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c27" vertex="1">
+          <mxGeometry x="380" y="100" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c28" target="c29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c29" target="c30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c29" target="c31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" value="opens PR&lt;br&gt;promote-&amp;lt;branch&amp;gt;-to-production-&amp;lt;timestamp&amp;gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" edge="1" source="c20" target="c27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" value="approve the held run,&lt;br&gt;review, merge" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="1300" y="90" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" value="diffs green" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c27" target="c36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" value="push-production.yml  |  push: production  |  wave 'prod'" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="1300" y="360" width="720" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c39" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c38" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c40" value="synth (2 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c38" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c39" target="c40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c42" value="wave: prod" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c38" vertex="1">
+          <mxGeometry x="350" y="50" width="350" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c43" value="gate prod&lt;br&gt;(Environment: prod)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c42" vertex="1">
+          <mxGeometry x="10" y="45.0" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c44" value="deploy prod-eu" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c42" vertex="1">
+          <mxGeometry x="180" y="30" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c45" value="deploy prod-us" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c42" vertex="1">
+          <mxGeometry x="180" y="80" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c46" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c43" target="c44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c43" target="c45">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c48" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c40" target="c42">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c49" value="push to production" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c36" target="c38">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c50" value="Every push to main or dev deploys dev and staging, then opens a promotion PR. Production deploys only after a human merges that PR." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="40" y="520" width="1020" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c51" value="&lt;b&gt;.projenrc.ts&lt;/b&gt;&lt;br&gt;pipeline:&amp;nbsp;{&lt;br&gt;&amp;nbsp;&amp;nbsp;stages:&amp;nbsp;[&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'dev'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'staging'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-eu',&amp;nbsp;promotion:&amp;nbsp;true,&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-us',&amp;nbsp;promotion:&amp;nbsp;true,&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;],&lt;br&gt;}" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fillColor=#f5f5f5;strokeColor=#999999;rounded=1;arcSize=6;spacing=6;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="40" y="580" width="560" height="138" as="geometry" />
+        </mxCell>
+        <mxCell id="c52" value="rocketleap-projen pipelines. PromotionStrategy.PR is the default since 1.21.0; wave and diff since 1.24.0." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="40" y="724" width="560" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="promotion-workloads" id="page-4">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="pr-main.yml  |  pull_request: main, dev" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="970" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="synth (9 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c1" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c2" target="c3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="diff dev" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c1" vertex="1">
+          <mxGeometry x="20" y="120" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c5" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c5" vertex="1">
+          <mxGeometry x="10" y="80" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="diff staging" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c1" vertex="1">
+          <mxGeometry x="210" y="120" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c9" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c9" vertex="1">
+          <mxGeometry x="10" y="80" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="diff platform" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c1" vertex="1">
+          <mxGeometry x="400" y="120" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="shared" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c13" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="diff prod-eu" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c1" vertex="1">
+          <mxGeometry x="590" y="120" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c16" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c16" vertex="1">
+          <mxGeometry x="10" y="80" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="diff prod-us" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c1" vertex="1">
+          <mxGeometry x="780" y="120" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c20" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c20" vertex="1">
+          <mxGeometry x="10" y="80" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c3" target="c20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="push-main.yml  |  push: main, dev  |  PromotionStrategy.PR (default)" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="40" y="400" width="1200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c24" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="synth (4 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c24" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="gate dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c24" vertex="1">
+          <mxGeometry x="360" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="deploy dev/api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c24" vertex="1">
+          <mxGeometry x="520" y="50" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="deploy dev/web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c24" vertex="1">
+          <mxGeometry x="520" y="100" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="gate staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c24" vertex="1">
+          <mxGeometry x="720" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="deploy staging/api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c24" vertex="1">
+          <mxGeometry x="880" y="50" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" value="deploy staging/web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c24" vertex="1">
+          <mxGeometry x="880" y="100" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="promote" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="c24" vertex="1">
+          <mxGeometry x="1080" y="50" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c25" target="c26">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c26" target="c27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c27" target="c28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c27" target="c29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c28" target="c30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c39" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c29" target="c30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c40" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c30" target="c31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c41" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c30" target="c32">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c42" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c31" target="c33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c43" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c32" target="c33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c44" value="pr-production.yml  |  pull_request: production" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="1300" y="40" width="590" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="c45" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c44" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c46" value="synth (5 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c44" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c45" target="c46">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c48" value="diff platform" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c44" vertex="1">
+          <mxGeometry x="20" y="120" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c49" value="shared" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c48" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c50" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c46" target="c48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c51" value="diff prod-eu" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c44" vertex="1">
+          <mxGeometry x="210" y="120" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c52" value="api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c51" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c53" value="web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c51" vertex="1">
+          <mxGeometry x="10" y="80" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c54" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c46" target="c51">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c55" value="diff prod-us" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c44" vertex="1">
+          <mxGeometry x="400" y="120" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c56" value="api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c55" vertex="1">
+          <mxGeometry x="10" y="30" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c57" value="web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c55" vertex="1">
+          <mxGeometry x="10" y="80" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c46" target="c55">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c59" value="opens PR&lt;br&gt;promote-&amp;lt;branch&amp;gt;-to-production-&amp;lt;timestamp&amp;gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.1;entryY=1;entryDx=0;entryDy=0;" parent="1" edge="1" source="c33" target="c44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c60" value="approve the held run,&lt;br&gt;review, merge" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="1960" y="90" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c61" value="diffs green" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c44" target="c60">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c62" value="push-production.yml  |  push: production  |  waves 'platform' then 'prod'" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fontStyle=1;fontSize=13;fillColor=#ffffff;strokeColor=#333333;swimlaneFillColor=#fafafa;" parent="1" vertex="1">
+          <mxGeometry x="1300" y="400" width="1140" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="c63" value="build" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c62" vertex="1">
+          <mxGeometry x="20" y="50" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c64" value="synth (5 stages)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="c62" vertex="1">
+          <mxGeometry x="180" y="50" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c65" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c63" target="c64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c66" value="wave: platform" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c62" vertex="1">
+          <mxGeometry x="350" y="50" width="350" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c67" value="gate platform&lt;br&gt;(Environment: platform)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c66" vertex="1">
+          <mxGeometry x="10" y="20.0" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c68" value="deploy platform/shared" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c66" vertex="1">
+          <mxGeometry x="180" y="30" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c69" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c67" target="c68">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c70" value="wave: prod  (needs wave platform)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="c62" vertex="1">
+          <mxGeometry x="740" y="50" width="350" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="c71" value="gate prod&lt;br&gt;(Environment: prod)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="c70" vertex="1">
+          <mxGeometry x="10" y="95.0" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c72" value="deploy prod-eu/api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c70" vertex="1">
+          <mxGeometry x="180" y="30" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c73" value="deploy prod-eu/web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c70" vertex="1">
+          <mxGeometry x="180" y="80" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c74" value="deploy prod-us/api" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c70" vertex="1">
+          <mxGeometry x="180" y="130" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c75" value="deploy prod-us/web" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c70" vertex="1">
+          <mxGeometry x="180" y="180" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="c76" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c71" target="c72">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c77" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c71" target="c73">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c78" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c71" target="c74">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c79" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c71" target="c75">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c80" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c64" target="c66">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c81" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c66" target="c70">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c82" value="push to production" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c60" target="c62">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c83" value="Workloads in the same environment deploy in parallel behind one gate. Wave 'platform' deploys first; wave 'prod' starts once it succeeded." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="40" y="580" width="1200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c84" value="&lt;b&gt;.projenrc.ts&lt;/b&gt;&lt;br&gt;pipeline:&amp;nbsp;{&lt;br&gt;&amp;nbsp;&amp;nbsp;stages:&amp;nbsp;[&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'dev',&amp;nbsp;workload:&amp;nbsp;'api'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'dev',&amp;nbsp;workload:&amp;nbsp;'web'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'staging',&amp;nbsp;workload:&amp;nbsp;'api'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'staging',&amp;nbsp;workload:&amp;nbsp;'web'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'platform',&amp;nbsp;workload:&amp;nbsp;'shared',&amp;nbsp;promotion:&amp;nbsp;true&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-eu',&amp;nbsp;workload:&amp;nbsp;'api',&amp;nbsp;promotion:&amp;nbsp;true,&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-eu',&amp;nbsp;workload:&amp;nbsp;'web',&amp;nbsp;promotion:&amp;nbsp;true,&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-us',&amp;nbsp;workload:&amp;nbsp;'api',&amp;nbsp;promotion:&amp;nbsp;true,&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;{&amp;nbsp;environment:&amp;nbsp;'prod-us',&amp;nbsp;workload:&amp;nbsp;'web',&amp;nbsp;promotion:&amp;nbsp;true,&amp;nbsp;wave:&amp;nbsp;'prod'&amp;nbsp;},&lt;br&gt;&amp;nbsp;&amp;nbsp;],&lt;br&gt;}" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fillColor=#f5f5f5;strokeColor=#999999;rounded=1;arcSize=6;spacing=6;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="40" y="640" width="640" height="208" as="geometry" />
+        </mxCell>
+        <mxCell id="c85" value="rocketleap-projen pipelines. PromotionStrategy.PR is the default since 1.21.0; wave and diff since 1.24.0." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="40" y="854" width="640" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="branches" id="page-5">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1" value="dev" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fillColor=#eeeeee;strokeColor=#333333;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="60" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="main" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fillColor=#eeeeee;strokeColor=#333333;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="60" y="300" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Release PR&lt;br&gt;tag v&amp;lt;version&amp;gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" edge="1" source="c1" target="c2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="runs on dev and main" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="1" vertex="1">
+          <mxGeometry x="340" y="80" width="320" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="pr-main.yml&lt;br&gt;diff all stages" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c4" vertex="1">
+          <mxGeometry x="20" y="50" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="push-main.yml&lt;br&gt;deploy dev, staging" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c4" vertex="1">
+          <mxGeometry x="20" y="140" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="promote" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="c4" vertex="1">
+          <mxGeometry x="20" y="230" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="1" edge="1" source="c6" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="pull_request / push" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" edge="1" source="c1" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="pull_request / push" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" parent="1" edge="1" source="c2" target="c4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="promotion PR&lt;br&gt;promote-&amp;lt;branch&amp;gt;-to-production-&amp;lt;timestamp&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="760" y="300" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="opens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c7" target="c11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="production" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;fillColor=#eeeeee;strokeColor=#333333;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="1160" y="100" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="approve the held run,&lt;br&gt;review, merge" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="1160" y="295" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" edge="1" source="c11" target="c14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="merge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;fontSize=12;fontStyle=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" edge="1" source="c14" target="c13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="runs on production" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;fontColor=#555555;fontSize=11;fontStyle=2;verticalAlign=top;align=left;spacingLeft=6;" parent="1" vertex="1">
+          <mxGeometry x="1520" y="80" width="320" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="pr-production.yml&lt;br&gt;diff promoted stages" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="c17" vertex="1">
+          <mxGeometry x="20" y="50" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="push-production.yml&lt;br&gt;deploy promoted stages" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" parent="c17" vertex="1">
+          <mxGeometry x="20" y="140" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="pull_request / push" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" edge="1" source="c13" target="c17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="dev and main run the same workflows. Every push to dev or main deploys pre-production and opens a timestamped promotion PR onto production. The promotion PR is opened by github-actions[bot]; GitHub runs its diff workflow after a user with write access approves the run." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="60" y="420" width="1000" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;pipeline stage options&lt;/b&gt;&lt;br&gt;promotion:&amp;nbsp;true&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;deploys&amp;nbsp;from&amp;nbsp;production&amp;nbsp;after&amp;nbsp;the&amp;nbsp;promotion&amp;nbsp;PR&lt;br&gt;wave:&amp;nbsp;'&amp;lt;name&amp;gt;'&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;consecutive&amp;nbsp;stages&amp;nbsp;deploy&amp;nbsp;in&amp;nbsp;parallel&amp;nbsp;behind&amp;nbsp;one&amp;nbsp;gate&amp;nbsp;on&amp;nbsp;the&amp;nbsp;GitHub&amp;nbsp;Environment&amp;nbsp;&amp;lt;name&amp;gt;&lt;br&gt;diff:&amp;nbsp;false&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;stage&amp;nbsp;skipped&amp;nbsp;on&amp;nbsp;PR&amp;nbsp;diffs&lt;br&gt;promotionStrategy:&amp;nbsp;DIRECT&amp;nbsp;&amp;nbsp;single&amp;nbsp;trunk,&amp;nbsp;every&amp;nbsp;stage&amp;nbsp;from&amp;nbsp;main&amp;nbsp;and&amp;nbsp;dev" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=11;fillColor=#f5f5f5;strokeColor=#999999;rounded=1;arcSize=6;spacing=6;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="60" y="490" width="820" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="rocketleap-projen pipelines. PromotionStrategy.PR is the default since 1.21.0; wave and diff since 1.24.0." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=12;fontColor=#555555;" parent="1" vertex="1">
+          <mxGeometry x="60" y="578" width="820" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
