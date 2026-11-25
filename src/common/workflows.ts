@@ -26,14 +26,24 @@ export interface PipelineStage {
    * Deploy this stage only after the promotion pull request onto
    * `production` is merged.
    *
-   * Under `PromotionStrategy.PR`, the default, stages without it deploy from
-   * `main` and `dev` and stages with it deploy from `production`, each set in
-   * its listed order. At least one stage must set it. Rejected under
-   * `PromotionStrategy.DIRECT`.
+   * Under `PromotionStrategy.PR`, the default, pull requests into `main` or
+   * `dev` diff every stage and the promotion PR into `production` diffs the
+   * stages with it against the current production state. Pushes deploy
+   * per branch: stages without it deploy from `main` and `dev` and stages
+   * with it deploy from `production`, each set in its listed order. At
+   * least one stage must set it. Rejected under `PromotionStrategy.DIRECT`.
    *
    * @default false
    */
   readonly promotion?: boolean;
+  /**
+   * Synth and diff this stage on pull requests. Set false to remove it from
+   * every pull request workflow, for a stage whose account is torn down or
+   * not reachable from CI. Deploys are unaffected.
+   *
+   * @default true
+   */
+  readonly diff?: boolean;
 }
 
 /**
@@ -134,10 +144,14 @@ export enum PromotionStrategy {
    */
   DIRECT = 'direct',
   /**
-   * Two branch pairs with a promotion pull request between them. Stages
-   * without `promotion` deploy from pushes to `main` or `dev`, each of which
-   * opens a promotion PR onto `production`; merging it deploys the stages
-   * marked `promotion: true`. The branches are fixed.
+   * Two branch pairs with a promotion pull request between them.
+   * Pull requests into `main` or `dev` diff every stage. The promotion PR
+   * into `production` diffs the stages marked `promotion: true` against the
+   * current production state. `diff: false` removes a stage from both.
+   * Pushes deploy per
+   * branch: stages without `promotion` deploy from pushes to `main` or
+   * `dev`, each of which opens a promotion PR onto `production`; merging it
+   * deploys the stages marked `promotion: true`. The branches are fixed.
    *
    * The promotion PR is the audit artefact: the production `cdk diff` is
    * posted on it, and its review, description and merge are a durable record
@@ -614,7 +628,7 @@ interface PipelineEntryPoint {
   readonly slug: string;
   /** Branches the generated workflow triggers on. */
   readonly branches: string[];
-  /** Stages this entry point synths, diffs and deploys. May be empty for the source branch. */
+  /** Stages the push workflow deploys. May be empty for the source branch. */
   readonly stages: PipelineStage[];
 }
 
@@ -623,11 +637,15 @@ function titleCase(slug: string): string {
 }
 
 /**
- * Emits `pr-<slug>.yml`: `build` + checks → `synth` (matrix over every stage) → per-stage `diff`.
+ * Emits `pr-<slug>.yml`: `build` + checks → `synth` (matrix over the given stages) → per-stage `diff`.
  * With no stages it is `build` + checks only.
  */
-function addPrWorkflow(project: Project, entry: PipelineEntryPoint, checks: PipelineCheck[]): void {
-  const stages = entry.stages ?? [];
+function addPrWorkflow(
+  project: Project,
+  entry: PipelineEntryPoint,
+  checks: PipelineCheck[],
+  stages: PipelineStage[],
+): void {
   const jobs: Record<string, unknown> = {
     build: { name: 'Build', uses: './.github/workflows/action-build.yml' },
     ...checkJobs(checks),
@@ -661,7 +679,7 @@ export function addPrMainWorkflow(project: Project, stages: PipelineStage[], che
   if (!stages || stages.length === 0) {
     throw new Error('pr-main.yml: stages must contain at least one entry');
   }
-  addPrWorkflow(project, { slug: 'main', branches: ['main', 'dev'], stages }, checks);
+  addPrWorkflow(project, { slug: 'main', branches: ['main', 'dev'], stages }, checks, stages);
 }
 
 /**
@@ -910,6 +928,17 @@ export function addCdkPipelineWorkflows(project: Project, options: PipelineOptio
 }
 
 /**
+ * Stages the pull request workflows synth and diff, in configured order.
+ */
+function diffEnabledStages(stages: PipelineStage[]): PipelineStage[] {
+  const enabled = stages.filter((stage) => stage.diff !== false);
+  if (enabled.length === 0) {
+    throw new Error('pipeline.stages must contain at least one stage with diff enabled');
+  }
+  return enabled;
+}
+
+/**
  * Emits the shared reusable `action-*.yml` workflows every strategy builds on.
  */
 function addActionWorkflows(project: Project, options: PipelineOptions): void {
@@ -922,6 +951,7 @@ function addActionWorkflows(project: Project, options: PipelineOptions): void {
 /**
  * `PromotionStrategy.DIRECT`: one branch pair (`main` and `dev`) carries every stage.
  * Emits six files: the four actions plus `pr-main.yml` and `push-main.yml`.
+ * Pull requests diff every stage unless it sets `diff: false`; pushes deploy every stage.
  * Rejects stages marked `promotion: true`.
  */
 function addDirectPipelineWorkflows(project: Project, options: PipelineOptions): void {
@@ -933,17 +963,21 @@ function addDirectPipelineWorkflows(project: Project, options: PipelineOptions):
       'pipeline.stages[].promotion only applies to PromotionStrategy.PR; drop promotion: true or drop promotionStrategy: PromotionStrategy.DIRECT',
     );
   }
+  const diffStages = diffEnabledStages(options.stages);
   const checks = options.additionalChecks ?? [];
 
   addActionWorkflows(project, options);
-  addPrMainWorkflow(project, options.stages, checks);
+  addPrMainWorkflow(project, diffStages, checks);
   addPushMainWorkflow(project, options.stages, checks);
 }
 
 /**
- * `PromotionStrategy.PR`: pushes to `main` or `dev` deploy the stages without
- * `promotion` and open a promotion pull request onto `production`, which deploys
- * the stages marked `promotion: true`. Each set keeps its listed order.
+ * `PromotionStrategy.PR`: pull requests into `main` or `dev` diff every stage, and the
+ * promotion PR into `production` diffs the stages marked `promotion: true` against the
+ * current production state. `diff: false` removes a stage from both.
+ * Pushes to `main` or `dev` deploy only the stages without `promotion` and open
+ * a promotion pull request onto `production`, which deploys the stages marked
+ * `promotion: true`. Each set keeps its listed order.
  * Emits nine files: the four actions, `action-promote-pr.yml`, and a pr/push pair per entry point.
  */
 function addPrPipelineWorkflows(project: Project, options: PipelineOptions): void {
@@ -955,6 +989,7 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
   if (promoted.length === 0) {
     throw new Error(PROMOTION_REQUIRED_MESSAGE);
   }
+  const diffStages = diffEnabledStages(options.stages);
   const checks = options.additionalChecks ?? [];
 
   addActionWorkflows(project, options);
@@ -962,8 +997,13 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
 
   const source: PipelineEntryPoint = { slug: 'main', branches: ['main', 'dev'], stages: unpromoted };
   const target: PipelineEntryPoint = { slug: 'production', branches: ['production'], stages: promoted };
-  addPrWorkflow(project, source, checks);
+  addPrWorkflow(project, source, checks, diffStages);
   addPushWorkflow(project, source, checks, 'production');
-  addPrWorkflow(project, target, checks);
+  addPrWorkflow(
+    project,
+    target,
+    checks,
+    diffStages.filter((stage) => stage.promotion),
+  );
   addPushWorkflow(project, target, checks);
 }

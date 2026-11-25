@@ -5918,6 +5918,7 @@ const pipelineStage: PipelineStage = { ... }
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.environment">environment</a></code> | <code>string</code> | The CDK app file segment AND the GitHub Environment name. |
+| <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.diff">diff</a></code> | <code>boolean</code> | Synth and diff this stage on pull requests. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.promotion">promotion</a></code> | <code>boolean</code> | Deploy this stage only after the promotion pull request onto `production` is merged. |
 | <code><a href="#@rocketleap/rocketleap-projen.PipelineStage.property.workload">workload</a></code> | <code>string</code> | Optional workload name for multi-app projects. |
 
@@ -5935,6 +5936,23 @@ The CDK app file segment AND the GitHub Environment name.
 
 ---
 
+##### `diff`<sup>Optional</sup> <a name="diff" id="@rocketleap/rocketleap-projen.PipelineStage.property.diff"></a>
+
+```typescript
+public readonly diff: boolean;
+```
+
+- *Type:* boolean
+- *Default:* true
+
+Synth and diff this stage on pull requests.
+
+Set false to remove it from
+every pull request workflow, for a stage whose account is torn down or
+not reachable from CI. Deploys are unaffected.
+
+---
+
 ##### `promotion`<sup>Optional</sup> <a name="promotion" id="@rocketleap/rocketleap-projen.PipelineStage.property.promotion"></a>
 
 ```typescript
@@ -5946,10 +5964,12 @@ public readonly promotion: boolean;
 
 Deploy this stage only after the promotion pull request onto `production` is merged.
 
-Under `PromotionStrategy.PR`, the default, stages without it deploy from
-`main` and `dev` and stages with it deploy from `production`, each set in
-its listed order. At least one stage must set it. Rejected under
-`PromotionStrategy.DIRECT`.
+Under `PromotionStrategy.PR`, the default, pull requests into `main` or
+`dev` diff every stage and the promotion PR into `production` diffs the
+stages with it against the current production state. Pushes deploy
+per branch: stages without it deploy from `main` and `dev` and stages
+with it deploy from `production`, each set in its listed order. At
+least one stage must set it. Rejected under `PromotionStrategy.DIRECT`.
 
 ---
 
@@ -13143,10 +13163,13 @@ records no approval and production deploys unreviewed.
 
 Two branch pairs with a promotion pull request between them.
 
-Stages
-without `promotion` deploy from pushes to `main` or `dev`, each of which
-opens a promotion PR onto `production`; merging it deploys the stages
-marked `promotion: true`. The branches are fixed.
+Pull requests into `main` or `dev` diff every stage. The promotion PR
+into `production` diffs the stages marked `promotion: true` against the
+current production state. `diff: false` removes a stage from both.
+Pushes deploy per
+branch: stages without `promotion` deploy from pushes to `main` or
+`dev`, each of which opens a promotion PR onto `production`; merging it
+deploys the stages marked `promotion: true`. The branches are fixed.
 
 The promotion PR is the audit artefact: the production `cdk diff` is
 posted on it, and its review, description and merge are a durable record
