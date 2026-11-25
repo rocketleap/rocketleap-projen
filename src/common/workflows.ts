@@ -763,6 +763,11 @@ function addPushWorkflow(
         'target-branch': promoteTo,
         'source-branch': '${{ github.ref_name }}',
       },
+      secrets: {
+        'promotion-token': '${{ secrets.PROMOTION_TOKEN }}',
+        'promotion-app-id': '${{ secrets.PROMOTION_APP_ID }}',
+        'promotion-app-private-key': '${{ secrets.PROMOTION_APP_PRIVATE_KEY }}',
+      },
     };
   }
 
@@ -790,9 +795,16 @@ export function addPushMainWorkflow(project: Project, stages: PipelineStage[], c
   addPushWorkflow(project, { slug: 'main', branches: ['main', 'dev'], stages }, checks);
 }
 
+const PROMOTION_TOKEN_EXPRESSION =
+  '${{ steps.app-token.outputs.token || secrets.promotion-token || secrets.GITHUB_TOKEN }}';
+
 /**
  * Emits `action-promote-pr.yml`: a reusable workflow that opens a new,
  * timestamped pull request promoting `source-branch` onto `target-branch`.
+ * The pull request is opened with a GitHub App token when the optional
+ * `promotion-app-id` and `promotion-app-private-key` secrets are set, else
+ * with the optional `promotion-token` secret, so the diff workflow on it runs
+ * without manual approval. Without either the default `GITHUB_TOKEN` is used.
  *
  * Only generated under `PromotionStrategy.PR`.
  */
@@ -814,6 +826,22 @@ export function addActionPromotePrWorkflow(project: Project): void {
               type: 'string',
             },
           },
+          secrets: {
+            'promotion-token': {
+              description:
+                'Token used to open the promotion pull request. A fine-grained PAT or GitHub App token with contents and pull requests write. Without it the default GITHUB_TOKEN is used and the diff workflow on the promotion pull request waits for manual approval.',
+              required: false,
+            },
+            'promotion-app-id': {
+              description:
+                'ID of the GitHub App used to open the promotion pull request. Takes precedence over promotion-token.',
+              required: false,
+            },
+            'promotion-app-private-key': {
+              description: 'Private key of the GitHub App used to open the promotion pull request.',
+              required: false,
+            },
+          },
           outputs: {
             'pr-number': {
               description: 'Number of the promotion pull request that was opened.',
@@ -822,7 +850,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
           },
         },
       },
-      env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' },
+      env: { GITHUB_TOKEN: '${{ secrets.promotion-token || secrets.GITHUB_TOKEN }}' },
       permissions: {
         'pull-requests': 'write',
         'contents': 'write',
@@ -833,6 +861,20 @@ export function addActionPromotePrWorkflow(project: Project): void {
           'runs-on': 'ubuntu-latest',
           'steps': [
             {
+              name: 'Detect promotion app',
+              run: 'echo "HAS_APP=${{ secrets.promotion-app-private-key != \'\' }}" >> "$GITHUB_ENV"',
+            },
+            {
+              name: 'Create promotion app token',
+              id: 'app-token',
+              if: "${{ env.HAS_APP == 'true' }}",
+              uses: 'actions/create-github-app-token@v3',
+              with: {
+                'app-id': '${{ secrets.promotion-app-id }}',
+                'private-key': '${{ secrets.promotion-app-private-key }}',
+              },
+            },
+            {
               // fetch-depth: 0 — the promotion branch is reset onto another
               // branch's tip and then pushed. From a shallow clone that push
               // fails with "shallow update not allowed".
@@ -841,6 +883,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
               with: {
                 'ref': '${{ inputs.target-branch }}',
                 'fetch-depth': 0,
+                'token': PROMOTION_TOKEN_EXPRESSION,
               },
             },
             {
@@ -872,6 +915,7 @@ export function addActionPromotePrWorkflow(project: Project): void {
               id: 'cpr',
               uses: 'peter-evans/create-pull-request@v8',
               with: {
+                'token': PROMOTION_TOKEN_EXPRESSION,
                 'title':
                   'Promote ${{ inputs.source-branch }} to ${{ inputs.target-branch }} (${{ steps.describe.outputs.short }})',
                 'base': '${{ inputs.target-branch }}',

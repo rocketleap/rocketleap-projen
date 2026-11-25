@@ -686,12 +686,22 @@ on:
         description: Branch whose state is promoted.
         required: true
         type: string
+    secrets:
+      promotion-token:
+        description: Token used to open the promotion pull request. A fine-grained PAT or GitHub App token with contents and pull requests write. Without it the default GITHUB_TOKEN is used and the diff workflow on the promotion pull request waits for manual approval.
+        required: false
+      promotion-app-id:
+        description: ID of the GitHub App used to open the promotion pull request. Takes precedence over promotion-token.
+        required: false
+      promotion-app-private-key:
+        description: Private key of the GitHub App used to open the promotion pull request.
+        required: false
     outputs:
       pr-number:
         description: Number of the promotion pull request that was opened.
         value: \${{ jobs.pr.outputs.pr-number }}
 env:
-  GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: \${{ secrets.promotion-token || secrets.GITHUB_TOKEN }}
 permissions:
   pull-requests: write
   contents: write
@@ -701,11 +711,21 @@ jobs:
       pr-number: \${{ steps.cpr.outputs.pull-request-number }}
     runs-on: ubuntu-latest
     steps:
+      - name: Detect promotion app
+        run: echo "HAS_APP=\${{ secrets.promotion-app-private-key != '' }}" >> "$GITHUB_ENV"
+      - name: Create promotion app token
+        id: app-token
+        if: \${{ env.HAS_APP == 'true' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: \${{ secrets.promotion-app-id }}
+          private-key: \${{ secrets.promotion-app-private-key }}
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: \${{ inputs.target-branch }}
           fetch-depth: 0
+          token: \${{ steps.app-token.outputs.token || secrets.promotion-token || secrets.GITHUB_TOKEN }}
       - name: Reset onto the promoted branch
         run: |-
           git fetch origin \${{ inputs.source-branch }}
@@ -727,6 +747,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
+          token: \${{ steps.app-token.outputs.token || secrets.promotion-token || secrets.GITHUB_TOKEN }}
           title: Promote \${{ inputs.source-branch }} to \${{ inputs.target-branch }} (\${{ steps.describe.outputs.short }})
           base: \${{ inputs.target-branch }}
           branch: promote-\${{ inputs.source-branch }}-to-\${{ inputs.target-branch }}
@@ -1034,6 +1055,10 @@ jobs:
     with:
       target-branch: production
       source-branch: \${{ github.ref_name }}
+    secrets:
+      promotion-token: \${{ secrets.PROMOTION_TOKEN }}
+      promotion-app-id: \${{ secrets.PROMOTION_APP_ID }}
+      promotion-app-private-key: \${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
 "
 `;
 

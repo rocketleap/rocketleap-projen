@@ -718,6 +718,40 @@ describe('pipeline.promotionStrategy', () => {
       expect(promote).toContain('steps.describe.outputs.sha');
     });
 
+    test('action-promote-pr.yml declares the optional promotion-token secret and falls back to GITHUB_TOKEN', () => {
+      const promote = synthWith(prStrategy)['.github/workflows/action-promote-pr.yml'];
+      const fallback =
+        /token: \$\{\{ steps\.app-token\.outputs\.token \|\| secrets\.promotion-token \|\| secrets\.GITHUB_TOKEN \}\}/;
+      for (const secret of ['promotion-token', 'promotion-app-id', 'promotion-app-private-key']) {
+        expect(promote).toMatch(
+          new RegExp(
+            `workflow_call:[\\s\\S]*?secrets:[\\s\\S]*?\\n {6}${secret}:\\s*\\n\\s*description:[^\\n]*\\n\\s*required: false\\s*\\n`,
+          ),
+        );
+      }
+      expect(promote).toMatch(new RegExp(`id: cpr[\\s\\S]*?with:\\s*\\n\\s*${fallback.source}`));
+      expect(promote).toMatch(new RegExp(`name: Checkout[\\s\\S]*?${fallback.source}[\\s\\S]*?name: Reset`));
+      expect(promote).toMatch(
+        /env:\s*\n\s*GITHUB_TOKEN: \$\{\{ secrets\.promotion-token \|\| secrets\.GITHUB_TOKEN \}\}/,
+      );
+    });
+
+    test('action-promote-pr.yml mints a GitHub App token only when the app private key is set', () => {
+      const promote = synthWith(prStrategy)['.github/workflows/action-promote-pr.yml'];
+      expect(promote).toContain(`HAS_APP=\${{ secrets.promotion-app-private-key != '' }}`);
+      expect(promote).toMatch(
+        /id: app-token\s*\n\s*if: \$\{\{ env\.HAS_APP == 'true' \}\}\s*\n\s*uses: actions\/create-github-app-token@v3\s*\n\s*with:\s*\n\s*app-id: \$\{\{ secrets\.promotion-app-id \}\}\s*\n\s*private-key: \$\{\{ secrets\.promotion-app-private-key \}\}/,
+      );
+      expect(promote.indexOf('id: app-token')).toBeLessThan(promote.indexOf('name: Checkout'));
+    });
+
+    test('push workflows forward PROMOTION_TOKEN to the promote job', () => {
+      const push = synthWith(prStrategy)['.github/workflows/push-main.yml'];
+      expect(push).toMatch(
+        /promote:[\s\S]*?secrets:\s*\n\s*promotion-token: \$\{\{ secrets\.PROMOTION_TOKEN \}\}\s*\n\s*promotion-app-id: \$\{\{ secrets\.PROMOTION_APP_ID \}\}\s*\n\s*promotion-app-private-key: \$\{\{ secrets\.PROMOTION_APP_PRIVATE_KEY \}\}/,
+      );
+    });
+
     test('the target branch gets no promote job, so merging the PR only deploys', () => {
       expect(synthWith(prStrategy)['.github/workflows/push-production.yml']).not.toContain('promote:');
     });

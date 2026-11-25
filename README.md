@@ -328,6 +328,18 @@ Adopting this in an existing repo is not just a projen change. `production` has 
 
 `promote` needs the last pre-production deploys, so a failed pre-production deploy does not open the promotion PR. With no unpromoted stages it needs `build` and the additional checks instead. Remove a stage from `pipeline.stages` when its account is torn down, and re-run `push-main.yml` via `workflow_dispatch` after a transient failure.
 
+##### Promotion token
+
+Since June 2026 GitHub runs workflows on pull requests opened by `github-actions[bot]` only after a user approves them. With the default `GITHUB_TOKEN` the promotion PR is opened by that bot, so the `pr-production.yml` run on it shows "action required" under Actions and the production diff is only posted after someone approves the run.
+
+`push-main.yml` forwards three optional secrets to `action-promote-pr.yml`, which checks out, pushes the promotion branch and opens the PR with the first token available:
+
+1. **GitHub App (preferred)**: create a GitHub App with `contents: write` and `pull-requests: write`, install it on the repos, and create the organization secrets `PROMOTION_APP_ID` (the App ID) and `PROMOTION_APP_PRIVATE_KEY` (a private key of the App). The workflow mints a short-lived installation token for the current repo on every run.
+2. **PAT (simple alternative)**: create a repository or organization secret `PROMOTION_TOKEN` holding a fine-grained PAT, ideally of a machine user, with `contents: write` and `pull-requests: write` on the repo.
+3. **`GITHUB_TOKEN` (fallback)**: without either secret the flow still works, but someone must approve each diff run on the promotion PR.
+
+The PR author becomes the token's identity, so with a PAT that user cannot also be the required reviewer on `production`.
+
 #### Migrating an existing pipeline
 
 A pipeline with no stage marked `promotion: true` fails `npx projen` with `At least one pipeline stage must set promotion: true.` Pick one of the following.
@@ -372,7 +384,7 @@ Under `PromotionStrategy.PR`, the default, the generator emits nine files: the f
 
 | File | Purpose |
 | --- | --- |
-| `action-promote-pr.yml` | Reusable. Opens a new promotion PR against `production` from a timestamped `promote-<branch>-to-production-<timestamp>` branch reset onto the pushed `main` or `dev`, via `peter-evans/create-pull-request`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`. Called by `push-main.yml` after every unpromoted stage has deployed. |
+| `action-promote-pr.yml` | Reusable. Opens a new promotion PR against `production` from a timestamped `promote-<branch>-to-production-<timestamp>` branch reset onto the pushed `main` or `dev`, via `peter-evans/create-pull-request`. Each promotion is its own PR, and promotions are merged in order. The PR body lists the promoted commit and the commits since `production`. Called by `push-main.yml` after every unpromoted stage has deployed, which forwards the optional `PROMOTION_APP_ID`, `PROMOTION_APP_PRIVATE_KEY` and `PROMOTION_TOKEN` secrets; see [Promotion token](#promotion-token). |
 | `pr-main.yml` / `pr-production.yml` | On PR to `main`/`dev` or to `production`: `build` → `synth` (matrix) → per-stage `diff`. `pr-main.yml` diffs every stage; `pr-production.yml` diffs the stages marked `promotion: true` against the current production state. Both skip stages with `diff: false`. |
 | `push-main.yml` | On push to `main`/`dev`: `build` → `synth` → deploy chain for the stages without `promotion` → `promote`. With no unpromoted stages, `build` → `promote`. |
 | `push-production.yml` | On push to `production`: `build` → `synth` → deploy chain for the stages marked `promotion: true`. |
