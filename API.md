@@ -5981,13 +5981,16 @@ public readonly wave: string;
 ```
 
 - *Type:* string
-- *Default:* the stage's environment, so stages of one environment that follow each other deploy together.
+- *Default:* the stage's environment, so stages of one environment that follow each other share one gate.
 
 Deploy wave.
 
-Consecutive stages with the same wave deploy in parallel;
-waves run in configured order. Each environment inside a wave keeps its
-own Environment gate job.
+Consecutive stages with the same wave deploy in parallel
+behind one gate job whose GitHub Environment is the wave name, so a wave
+is approved once. Waves run in configured order.
+
+The GitHub Environment named after the wave must exist; GitHub creates it
+on the first run. Configure required reviewers on that Environment.
 
 Under `PromotionStrategy.PR` promoted and unpromoted stages deploy from
 different workflows, so a wave shared between them forms two waves, one

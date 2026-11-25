@@ -826,22 +826,30 @@ describe('pipeline stage waves', () => {
     return [...workflow.matchAll(/^ {2}(gate-[a-z0-9-]+):/gm)].map((match) => match[1]);
   }
 
-  test('stages sharing a wave deploy in parallel behind per-environment gates', () => {
+  test('stages sharing a wave deploy in parallel behind one gate', () => {
     const target = synthWith(productionWave)['.github/workflows/push-production.yml'];
-    const envs = ['maineu', 'mainus', 'prodeu', 'produs'];
-    expect(gateIds(target)).toEqual(envs.map((env, index) => `gate-${env}-${index}`));
-    envs.forEach((env, index) => {
-      expect(needsOf(target, `gate-${env}-${index}`)).toEqual(['synth']);
-      expect(jobBlock(target, `gate-${env}-${index}`)).toContain(`environment: ${env}`);
-      expect(needsOf(target, `deploy-${env}-${index}`)).toEqual([`gate-${env}-${index}`]);
-    });
+    const promoted = productionWave.stages.filter((stage) => stage.promotion);
+    const envs = promoted.map((stage) => stage.environment);
+    const gate = `gate-production-${promoted.findIndex((stage) => stage.environment === 'maineu')}`;
+    const deploys = envs.map((env, index) => `deploy-${env}-${index}`);
+    expect(gateIds(target)).toEqual([gate]);
+    expect(jobBlock(target, gate)).toContain('environment: production');
+    expect(needsOf(target, gate)).toEqual(['synth']);
+    for (const deploy of deploys) {
+      expect(needsOf(target, deploy)).toEqual([gate]);
+    }
+    for (const env of envs) {
+      expect(target).not.toMatch(new RegExp(`^ {2}gate-${env}-`, 'm'));
+    }
     expect(target).not.toContain('promote:');
 
     const withAudit = synthWith({
       stages: [...productionWave.stages, { environment: 'audit', promotion: true }],
     })['.github/workflows/push-production.yml'];
-    expect(needsOf(withAudit, 'gate-audit-4')).toEqual(envs.map((env, index) => `deploy-${env}-${index}`));
-    expect(needsOf(withAudit, 'deploy-audit-4')).toEqual(['gate-audit-4']);
+    const auditGate = `gate-audit-${envs.length}`;
+    expect(gateIds(withAudit)).toEqual([gate, auditGate]);
+    expect(needsOf(withAudit, auditGate)).toEqual(deploys);
+    expect(needsOf(withAudit, `deploy-audit-${envs.length}`)).toEqual([auditGate]);
   });
 
   test('wave defaults to the environment', () => {
@@ -862,7 +870,7 @@ describe('pipeline stage waves', () => {
     }
   });
 
-  test('a wave under DIRECT gives each environment its own gate behind synth', () => {
+  test('a wave under DIRECT deploys every stage behind one gate behind synth', () => {
     const push = synthWith({
       stages: [
         { environment: 'dev', wave: 'all' },
@@ -870,11 +878,11 @@ describe('pipeline stage waves', () => {
       ],
       promotionStrategy: PromotionStrategy.DIRECT,
     })['.github/workflows/push-main.yml'];
-    expect(gateIds(push)).toEqual(['gate-dev-0', 'gate-staging-1']);
-    expect(needsOf(push, 'gate-dev-0')).toEqual(['synth']);
-    expect(needsOf(push, 'gate-staging-1')).toEqual(['synth']);
-    expect(needsOf(push, 'deploy-dev-0')).toEqual(['gate-dev-0']);
-    expect(needsOf(push, 'deploy-staging-1')).toEqual(['gate-staging-1']);
+    expect(gateIds(push)).toEqual(['gate-all-0']);
+    expect(jobBlock(push, 'gate-all-0')).toContain('environment: all');
+    expect(needsOf(push, 'gate-all-0')).toEqual(['synth']);
+    expect(needsOf(push, 'deploy-dev-0')).toEqual(['gate-all-0']);
+    expect(needsOf(push, 'deploy-staging-1')).toEqual(['gate-all-0']);
   });
 });
 
