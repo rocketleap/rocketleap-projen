@@ -1003,7 +1003,7 @@ function addPrPipelineWorkflows(project: Project, options: PipelineOptions): voi
     project,
     target,
     checks,
-    promoted.filter((stage) => stage.diff !== false),
+    diffStages.filter((stage) => stage.promotion),
   );
   addPushWorkflow(project, target, checks);
 }
