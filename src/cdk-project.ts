@@ -38,9 +38,9 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
   protected constructor(options: RocketleapCdkProjectOptions) {
     const company = options.company;
     const project = options.project;
-    const cdkVersion = options.cdkVersion ?? '2.261.0';
-    const constructVersion = options.constructVersion ?? '10.6.0';
-    const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.110.0';
+    const cdkVersion = options.cdkVersion ?? '2.275.0';
+    const constructVersion = options.constructVersion ?? '10.8.1';
+    const buildingBlocksVersion = options.buildingBlocksVersion ?? '0.111.0';
     const crossStackReferences = options.crossStackReferences ?? CrossStackReferences.BOTH;
 
     super({
@@ -94,7 +94,6 @@ abstract class RocketleapBaseCdkProject extends awscdk.AwsCdkTypeScriptApp {
     ];
     const dependencies = [
       `@rocketleap/building-blocks-cdk@npm:@${company}/building-blocks-cdk@${buildingBlocksVersion}`,
-      `@aws-cdk/aws-dsql-alpha@${cdkVersion}-alpha.0`,
       `constructs@=${constructVersion}`,
       'source-map-support@^0.5.21',
     ];
@@ -167,8 +166,8 @@ export class RocketleapLibraryCdkProject extends typescript.TypeScriptProject {
   constructor(options: RocketleapLibraryCdkProjectOptions) {
     const company = options.company;
     const project = options.project;
-    const cdkVersion = options.cdkVersion ?? '2.261.0';
-    const constructVersion = options.constructVersion ?? '10.6.0';
+    const cdkVersion = options.cdkVersion ?? '2.275.0';
+    const constructVersion = options.constructVersion ?? '10.8.1';
 
     super({
       ...options,
