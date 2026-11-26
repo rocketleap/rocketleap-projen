@@ -175,4 +175,6 @@ new ProjenStruct(project, {
     },
   });
 
+project.npmignore?.exclude('/docs/');
+
 project.synth();
