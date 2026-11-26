@@ -84,6 +84,9 @@ export const SWC_CONFIGURATION = {
   projenrcTsOptions: { swc: true },
   jestOptions: {
     jestConfig: {
+      // Resolve .ts before .js so stale compiled output never shadows the sources.
+      moduleFileExtensions: ['ts', 'tsx', 'js', 'mjs', 'cjs', 'json', 'node'],
+      modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/lib/'],
       transform: {
         '^.+\\.[t]sx?$': new Transform('@swc/jest', {
           jsc: { target: COMPILE_TARGET.toLowerCase() },
